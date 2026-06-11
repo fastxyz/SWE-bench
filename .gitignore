@@ -170,3 +170,6 @@ cython_debug/
 data/repos/copies
 notebooks/
 *logs/
+
+# Local Claude Code scratchpad (not for upstream)
+.claude/

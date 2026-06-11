@@ -1,0 +1,8 @@
+model: deepseek/deepseek-v4-pro
+api_key: env:API_KEY               # env:NAME -> reads $NAME (shell env or mini's global .env); never written to disk
+api_base: https://api.deepseek.com   # uncomment / change to point at another OpenAI-compatible endpoint
+subset: verified
+split: test
+slice: "0:10"
+workers: 4
+mode: inject        # inject = append prompt.md after the default system prompt; replace = prompt.md is the whole system prompt

@@ -1,0 +1,40 @@
+astropy__astropy-12907:
+- sympy__sympy-13031
+- sympy__sympy-13647
+- sympy__sympy-17630
+astropy__astropy-13033:
+- django__django-13212
+- django__django-13933
+- pallets__flask-5014
+astropy__astropy-13236:
+- astropy__astropy-8872
+- pydata__xarray-2905
+- pydata__xarray-3095
+astropy__astropy-13398:
+- django__django-14792
+- django__django-15499
+- astropy__astropy-14369
+astropy__astropy-13453:
+- django__django-11119
+- matplotlib__matplotlib-13989
+- scikit-learn__scikit-learn-12682
+astropy__astropy-13579:
+- astropy__astropy-14598
+- scikit-learn__scikit-learn-13142
+- matplotlib__matplotlib-26113
+astropy__astropy-13977:
+- sympy__sympy-13091
+- sympy__sympy-18211
+- astropy__astropy-7606
+astropy__astropy-14096:
+- django__django-13925
+- astropy__astropy-7166
+- sympy__sympy-12489
+astropy__astropy-14182:
+- astropy__astropy-14365
+- astropy__astropy-14369
+- django__django-15278
+astropy__astropy-14309:
+- astropy__astropy-14365
+- astropy__astropy-14369
+- astropy__astropy-14508

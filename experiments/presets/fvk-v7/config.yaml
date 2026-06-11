@@ -1,0 +1,11 @@
+mode: jointembed       # jointembed = run gen_prompts.py first; each task's prompt is baked into
+                       # that task's problem_statement (the agent's system prompt stays default).
+                       # The augmented dataset is always written to / read from experiments/data/<preset>/.
+model: deepseek/deepseek-v4-pro
+api_key: env:API_KEY                  # env:NAME -> reads $NAME (shell env or experiments/.env); never written to disk
+api_base: https://api.deepseek.com    # OpenAI-compatible endpoint
+subset: verified                      # verified | lite | full -- also the candidate pool for retrieval (minus the test slice)
+split: test                           # HF dataset split to load; Verified has only `test`
+slice: "0:10"
+workers: 4
+k: 3                                  # how many solved examples the selector AI picks per task
