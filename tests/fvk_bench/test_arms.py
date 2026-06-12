@@ -523,3 +523,93 @@ def test_control_resume_after_killed_fvk_scrubs_materials(
         ws / ".fvk_bench" / "solutions" / "solution_control.patch"
     ).read_bytes()
     assert control_patch == baseline_patch
+
+
+# ---------------------------------------------------------------------------
+# 11. retry-failed fvk after control completed: staging scrubs control's
+#     artifacts so the hash precondition passes (order-independent retries)
+# ---------------------------------------------------------------------------
+
+def test_fvk_retry_after_control_completed(
+    local_clone_url, fixture_instance, fake_claude_bin, tmp_path, monkeypatch
+):
+    """A fvk arm that failed transiently and is retried *after* control already
+    completed must stage a genuinely post-baseline workspace: control's
+    artifacts (review/ and the hash-included reports/control_notes.md) are
+    scrubbed before the staging hash precondition, so the legitimate retry
+    runs instead of failing with staging_hash_mismatch."""
+    edits = _write_dispatch_edits(tmp_path)
+    bin_path = _wrapper_bin(tmp_path, fake_claude_bin, edits=edits)
+
+    first = _run(fixture_instance, tmp_path, bin_path)
+    ws = _ws(tmp_path, fixture_instance)
+    assert {a: first["arms"][a]["status"] for a in config.ARMS} == {
+        "baseline": "completed", "fvk": "completed", "control": "completed",
+    }
+    old_fvk_sid = first["arms"]["fvk"]["session_id"]
+
+    # Precondition (the live incident's trigger): control left its artifacts
+    # in the workspace, and reports/control_notes.md is in the *hashed* tree.
+    assert (ws / "reports" / "control_notes.md").is_file()
+    assert (ws / "review" / "FINDINGS.md").is_file()
+
+    # Force fvk back to failed, as if its session had died on a transient API
+    # error before control ran. Plant a stale audit so the retry's fresh audit
+    # is distinguishable from the old one.
+    state = arms_mod.load_state(ws)
+    state["arms"]["fvk"]["status"] = "failed"
+    state["arms"]["fvk"]["reason"] = "nonzero_exit:1"
+    state["arms"]["fvk"]["audit"] = {"ok": False, "violations": ["Bash"]}
+    arms_mod.save_state(ws, state)
+
+    # Give the retried session a clean transcript so its audit lands ok=True
+    # (the stale audit above has ok=False, so mix-ups are detectable).
+    transcript = tmp_path / "clean.jsonl"
+    transcript.write_text(
+        json.dumps(
+            {
+                "type": "assistant",
+                "message": {
+                    "content": [{"type": "tool_use", "name": "Read", "input": {}}]
+                },
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        claude_runner, "transcript_path", lambda ws, sid: transcript
+    )
+
+    final = _run(fixture_instance, tmp_path, bin_path, retry_failed=True)
+
+    # The retried fvk arm completed in a fresh session; attempts accumulate.
+    fvk = final["arms"]["fvk"]
+    assert fvk["status"] == "completed"
+    assert fvk["reason"] is None
+    assert fvk["attempts"] == 2
+    assert fvk["session_id"] and fvk["session_id"] != old_fvk_sid
+    # The audit reflects the NEW session, not the stale failed attempt.
+    assert fvk["audit"]["ok"] is True
+
+    # Control was not re-run and its snapshot artifacts are intact.
+    assert final["arms"]["control"]["status"] == "completed"
+    artifacts = ws / ".fvk_bench" / "artifacts"
+    assert (artifacts / "control" / "review" / "FINDINGS.md").is_file()
+    assert (artifacts / "control" / "reports" / "control_notes.md").is_file()
+
+    # Control's live-workspace artifacts were scrubbed for the fvk retry and
+    # never recreated (control never ran again).
+    assert not (ws / "reports" / "control_notes.md").exists()
+    assert not (ws / "review").exists()
+
+    # The retried fvk patch is cumulative: baseline edit plus fresh fvk edit.
+    fvk_patch = (
+        ws / ".fvk_bench" / "solutions" / "solution_fvk.patch"
+    ).read_bytes()
+    assert b"# baseline edit" in fvk_patch and b"# fvk edit" in fvk_patch
+
+    # The fvk scrub still ran after the retried session.
+    assert not (ws / "fvk_materials").exists()
+    assert not (ws / "fvk").exists()
+    assert not (ws / "reports" / "fvk_notes.md").exists()

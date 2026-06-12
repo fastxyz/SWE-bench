@@ -213,6 +213,23 @@ def scrub_fvk(ws: Path) -> None:
     (ws / "reports" / "fvk_notes.md").unlink(missing_ok=True)
 
 
+def scrub_control(ws: Path) -> None:
+    """Remove every control trace from the workspace (missing entries tolerated).
+
+    Deletes ``review/`` and ``reports/control_notes.md``. Control's own
+    artifacts are snapshotted to ``.fvk_bench/artifacts/control/`` before this
+    ever matters, so nothing is lost; scrubbing enables order-independent
+    retries (a fvk arm retried after control already completed must stage a
+    genuinely post-baseline workspace — ``reports/`` is hash-included) and
+    prevents cross-arm reads of control's artifacts.
+    """
+    ws = Path(ws)
+    review = ws / "review"
+    if review.exists():
+        shutil.rmtree(review)
+    (ws / "reports" / "control_notes.md").unlink(missing_ok=True)
+
+
 def snapshot_artifacts(ws: Path, arm: str) -> None:
     """Copy ``arm``'s artifacts into ``.fvk_bench/artifacts/<arm>/``.
 
@@ -281,9 +298,20 @@ def _eligible(arm_state: dict, retry_failed: bool) -> bool:
     if arm_state["status"] == "failed":
         if not retry_failed:
             return False
+        # Reset to pending and clear every per-arm field left over from the
+        # failed attempt so the state never mixes stale and fresh session
+        # data; ``attempts`` stays cumulative — it counts launched sessions.
         arm_state["status"] = "pending"
-        arm_state["reason"] = None
-        arm_state["audit"] = None
+        for field in (
+            "reason",
+            "session_id",
+            "started_at",
+            "ended_at",
+            "num_turns",
+            "duration_seconds",
+            "audit",
+        ):
+            arm_state[field] = None
     return True  # pending, skipped, or failed-being-retried
 
 
@@ -391,6 +419,13 @@ def run_instance(
     # --- fvk: forked resume with FVK materials staged, always scrubbed ------
     fvk = state["arms"]["fvk"]
     if "fvk" in arms and _eligible(fvk, retry_failed):
+        # Staging must reproduce the genuinely post-baseline tree, whatever
+        # ran before: scrub stale fvk leftovers (crashed earlier attempt) and
+        # control artifacts (a retried fvk arm may run *after* control
+        # completed — control's artifacts are snapshotted, so this loses
+        # nothing) before the hash precondition.
+        scrub_fvk(ws)
+        scrub_control(ws)
         stage_fvk(ws)
         if core_tree_hash(ws) != state["core_hash_post_baseline"]:
             # The staging reset itself failed to reproduce the post-baseline
@@ -433,6 +468,10 @@ def run_instance(
     control = state["arms"]["control"]
     if "control" in arms and _eligible(control, retry_failed):
         scrub_fvk(ws)
+        # Also remove control's OWN stale leftovers (review/, hash-included
+        # reports/control_notes.md) from a previously failed control attempt;
+        # the fresh empty review/ is recreated below, after the hash check.
+        scrub_control(ws)
         reset_repo_to_v1(ws)
         if core_tree_hash(ws) != state["core_hash_post_baseline"]:
             # Something outside repo/ drifted since baseline (e.g. a stray fvk
