@@ -87,7 +87,7 @@ third_party/
   swebench-fvk-reproducibility/     # submodule — source of truth for the 45 problem IDs
   formal-verification-kit/          # submodule — source of fvk_materials/
 results/
-  .gitignore                        # re-includes *.patch / *.jsonl (root .gitignore excludes them)
+  .gitignore                        # re-includes *.patch, *.jsonl, *.jsonl.* (root .gitignore excludes them)
   <run_id>/...                      # committed run artifacts (schema below)
 START.md                            # how anyone (human or Claude session) starts testing
 ```
@@ -168,6 +168,30 @@ Design notes:
 - If the baseline arm produced an empty diff, the run is still carried through (review arms review
   "no change"; predictions with empty patches are recorded as unresolved at eval time, not dropped).
 
+## CLI surface (running selected problems must be easy)
+
+```
+python -m fvk_bench list                         # the 45 IDs, grouped by repo, with status per run
+python -m fvk_bench doctor [--canary] [--probe-model]
+python -m fvk_bench validate-gold --run-id X --instances ID [ID...] | --all
+python -m fvk_bench run        --run-id X --instances ID [ID...] | --all  [--arms ...] [--retry-failed]
+python -m fvk_bench evaluate   --run-id X
+python -m fvk_bench report     --run-id X
+```
+
+- `--instances` takes one or more exact instance IDs; `--all` selects all 45. IDs are validated
+  against the list derived from the submodule before anything runs.
+- `--run-id` defaults to `<UTC-timestamp>-<hostname>`; reusing a run-id resumes it (completed
+  arms are skipped, so a single problem or the full 45 can be processed incrementally with the
+  same three commands).
+- `run` executes scaffold → 3 arms → harvest per instance; `evaluate` and `report` operate on
+  whatever instances the run contains. The happy path for "test one problem" is exactly:
+  `run --instances X`, `evaluate`, `report`.
+- `report` writes `scores.md`/`scores.json` covering **every instance in the run × every arm** —
+  failed or skipped arms appear explicitly as `failed(<reason>)`/`skipped`, never omitted — and
+  refreshes a cross-run `results/INDEX.md` (run_id, machine, model, instance count, per-arm
+  resolved totals) so all documented results are discoverable from one file.
+
 ## Claude invocation contract (the standardization core)
 
 One function in `claude_runner.py` builds every invocation:
@@ -225,9 +249,46 @@ cd <workspace> && env -i \
 - Sequential execution only (one session at a time) — subscription rate limits and machine-load
   fairness; `run` accepts multiple instances and loops.
 
+### CLI option audit and rejected alternatives
+
+Every flag above was checked against `claude` 2.1.169 `--help` on this machine. Two findings from
+the owner's prior transcript audits are encoded as hard rules:
+
+- **Use `--tools`, never `--allowedTools`.** `--allowedTools` is a permission allowlist, not an
+  availability restriction — in the prior HumanEval run it left Bash usable (actually used in
+  157/164 sessions) and left deferred-tool and agent-listing attachments in transcripts.
+  `--tools` restricts the actual built-in tool set. The post-arm transcript audit exists precisely
+  to catch a regression here.
+- **`--bare` is rejected**, although it would be the most minimal session: bare mode skips
+  OAuth/keychain auth and demands an API key — it cannot authenticate a subscription. Our flag
+  set is the strictest invocation that still authenticates via subscription login, and the canary
+  proves the resulting transcripts carry no deferred-tool/agent-listing/MCP attachments.
+- `--permission-mode bypassPermissions` is a valid mode (choices verified); with a 5-tool
+  read/search/edit surface it grants nothing dangerous and removes interactive prompts.
+- `--model claude-opus-4-8` is a pinned ID, not the drifting `opus` alias; `doctor --probe-model`
+  (optional, single 1-turn session) confirms the account can access it before a long run.
+
+### Repeatability of the numbers
+
+What this infrastructure standardizes: inputs (vendored instance data), prompts (hashed
+templates), the full flag set, tool surface, env allowlist, cwd shape, session lineage
+(fork-from-frozen-baseline), and the evaluation route (official dockerized harness, prebuilt
+images). What it cannot standardize: server-side sampling — the CLI exposes no seed, so two runs
+of the same arm are two draws from the same distribution, and per-instance flips across machines
+are expected noise. Therefore:
+
+- Cross-machine comparisons are made at the **aggregate** level (per-arm resolved counts, flip
+  counts), not per instance.
+- Repeat runs are first-class: each gets its own `run_id`; `results/INDEX.md` aggregates across
+  runs so variance is visible rather than hidden.
+- Every manifest records enough (versions, flags, hashes, timestamps, machine) to explain any
+  two runs' differences honestly.
+
 ### Preflight: `python -m fvk_bench doctor`
 
 - `claude` present; version printed and recorded (warn if ≠ the version this infra was tested with).
+- `--probe-model` (optional): a single 1-turn session with the pinned production model to confirm
+  the subscription can access `claude-opus-4-8` before committing to a long run.
 - git, docker daemon reachable (eval only), CPU arch is x86_64 (required by the pinned instances),
   `datasets`/`swebench` importable, disk space check (eval needs ~120GB free).
 - Workspace-root ancestry contains no `CLAUDE.md` / `.claude/` directories.
@@ -314,9 +375,11 @@ prove they used identical prompts.
    (max_workers configurable; default 4).
 3. Harvest each instance's `report.json` (resolved flag, FAIL_TO_PASS / PASS_TO_PASS outcomes →
    stored as counts) into `results/`.
-4. `python -m fvk_bench report --run-id X` renders `scores.md`: per-instance × arm table
-   (resolved, FTP x/y, PTP x/y) + aggregates (resolved counts per arm, baseline→fvk and
-   baseline→control flips, fvk-vs-control delta).
+4. `python -m fvk_bench report --run-id X` renders `scores.md`: a per-instance × arm table
+   (resolved, FTP x/y, PTP x/y) covering every instance in the run — failed/skipped arms and
+   empty patches shown explicitly — plus aggregates (resolved counts per arm, baseline→fvk and
+   baseline→control flip counts with +/− direction, fvk-vs-control delta), and updates the
+   cross-run `results/INDEX.md`.
 
 Evaluation runs only after all arms of the selected instances are frozen — no arm ever observes
 test results (matching the reproducibility protocol's "no test results available" discipline).
@@ -367,7 +430,9 @@ results/<run_id>/
     eval/{baseline,fvk,control}.report.json
 ```
 
-`results/.gitignore` re-includes `*.patch` and `*.jsonl*` (the repo root `.gitignore` excludes them globally).
+`results/.gitignore` re-includes `*.patch`, `*.jsonl`, and `*.jsonl.*` — the repo root
+`.gitignore` excludes all three globally (verified), and `*.jsonl.*` is what matches the
+gzipped transcripts. No results subdirectory may end in `logs` (root ignores `*logs/`).
 
 ## Testing strategy (for the infra itself)
 
@@ -390,6 +455,42 @@ results/<run_id>/
    (`doctor` → `validate-gold` → `run` → `evaluate` → `report`), how to select instances, and how
    to contribute results from a new machine (one directory per `run_id`; machine identity in
    `run_manifest.json`).
+
+## Appendix: file-existence audit
+
+Every external file/path this spec relies on, with verification status (2026-06-12, this machine):
+
+**Verified to exist:**
+
+- `fastxyz/swebench-fvk-reproducibility` → `prompts/<instance_id>.md` × 45 (cloned & counted;
+  IDs enumerated in recon, incl. `sympy__sympy-12489` used for live validation).
+- `grosu/formal-verification-kit` → `README.md`, `AGENTS.md`, `commands/formalize.md`,
+  `commands/verify.md`, `knowledge/k-framework.md`, `knowledge/matching-logic.md`,
+  `knowledge/reachability-and-circularities.md`, `knowledge/sources.md` (cloned & listed; these
+  8 files are the `fvk_materials/` copy set).
+- `swebench.harness.run_evaluation` with `--predictions_path gold` (run_evaluation.py:608),
+  default `--namespace swebench` (run_evaluation.py:285,654); dataset names pass through to
+  HuggingFace so `princeton-nlp/SWE-bench_Verified` loads as-is (harness/utils.py:151-167).
+- Per-repo install specs incl. non-Python steps: `swebench/harness/constants/python.py`.
+- Eval report location: `logs/run_evaluation/<run_id>/<model_name_or_path>/<instance_id>/report.json`.
+- Root `.gitignore` patterns requiring the results re-include: `*.patch`, `*.jsonl`, `*.jsonl.*`,
+  `*logs/` (read directly).
+- Claude CLI 2.1.169 flags: `--tools`, `--effort` (max), `--fork-session`, `--session-id`,
+  `--resume`, `--setting-sources`, `--strict-mcp-config`, `--disable-slash-commands`,
+  `--permission-mode bypassPermissions` (help output read directly).
+- Session transcript location pattern `~/.claude/projects/<munged-cwd>/<session-id>.jsonl`
+  (observed on this machine).
+
+**Created by this project (do not exist yet):**
+
+- `fvk_bench/**` (package, `prompts/{baseline,fvk,control}.md`, `data/instances.json`),
+  `tests/fvk_bench/**`, `third_party/` submodule wiring + `.gitmodules`, `results/**`
+  (incl. `.gitignore`, `INDEX.md`, per-run trees), `START.md`.
+- At runtime only (never committed): workspace trees under `~/.swe-fvk-runs/`
+  (`benchmark/`, `repo/`, `reports/`, `fvk/`, `review/`, `fvk_materials/`, `.fvk_bench/`).
+
+**Deliberately absent everywhere:** gold patches, `test_patch` contents, hidden test names —
+they exist only inside the eval harness's own dataset download at evaluation time.
 
 ## Out of scope (YAGNI)
 
