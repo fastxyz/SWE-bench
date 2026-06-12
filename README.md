@@ -26,6 +26,8 @@
 
 ---
 
+> **Benchmarking Claude Code with FVK?** See [START.md](START.md).
+
 Code and data for the following works:
 * [ICLR 2025] <a href="https://arxiv.org/abs/2410.03859">SWE-bench Multimodal: Do AI Systems Generalize to Visual Software Domains?</a>
 * [ICLR 2024 Oral] <a href="https://arxiv.org/abs/2310.06770">SWE-bench: Can Language Models Resolve Real-World GitHub Issues?</a>
