@@ -17,6 +17,9 @@ runner code path without a real CLI, network, or subscription:
         Prints a non-JSON line and exits 0.
     ``exit2``
         Prints an error result envelope to stdout, "boom" to stderr, exits 2.
+    ``agenterror``
+        Prints an ``is_error: true`` / ``subtype: error_max_turns`` result
+        envelope (agent-level failure on a clean process exit) and exits 0.
 
 ``FAKE_CLAUDE_SESSION_ID``
     Session id to echo in the ``ok`` envelope when no ``--session-id`` is in
@@ -52,6 +55,21 @@ def main() -> int:
         print(json.dumps({"type": "result", "subtype": "error", "is_error": True}))
         print("boom", file=sys.stderr)
         return 2
+
+    if scenario == "agenterror":
+        print(
+            json.dumps(
+                {
+                    "type": "result",
+                    "subtype": "error_max_turns",
+                    "is_error": True,
+                    "session_id": "fake-agenterr",
+                    "num_turns": 200,
+                    "usage": {},
+                }
+            )
+        )
+        return 0
 
     # Default scenario: "ok".
     with open("fake_claude_capture.json", "w", encoding="utf-8") as fh:

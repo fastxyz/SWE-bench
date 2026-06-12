@@ -39,14 +39,31 @@ _EMPTY_MCP_CONFIG = '{"mcpServers":{}}'
 _AUDIT_MARKERS = ("Available agent types", "mcp__", "<functions>")
 
 
+def _coerce_text(data: str | bytes | None) -> str:
+    """Normalize partial pipe output to ``str``.
+
+    :class:`subprocess.TimeoutExpired` carries whatever was read so far as
+    *bytes* even for text-mode pipes (CPython joins the raw chunks), and may
+    carry ``None`` when nothing was read at all.
+    """
+    if data is None:
+        return ""
+    if isinstance(data, bytes):
+        return data.decode("utf-8", errors="replace")
+    return data
+
+
 @dataclass
 class ClaudeResult:
     """Outcome of one ``claude`` invocation.
 
     ``error`` is ``None`` on a clean run, else one of ``"timeout"``,
-    ``"nonzero_exit:<n>"`` or ``"bad_json"``. ``ok`` additionally requires the
-    parsed envelope to not carry ``is_error``; an envelope with
-    ``is_error: true`` on a zero exit yields ``ok=False`` with ``error=None``.
+    ``"nonzero_exit:<n>"``, ``"bad_json"``, ``"agent_error:<subtype>"`` (zero
+    exit, parsed envelope, but ``is_error`` truthy) or ``"spawn_failure:<msg>"``
+    (the ``claude`` binary could not be spawned at all).
+
+    Invariant: ``ok=False ⇔ error is not None`` — ``ok`` is exactly
+    ``error is None``, never anything subtler.
     """
 
     ok: bool
@@ -124,14 +141,29 @@ def run_arm_session(
 ) -> ClaudeResult:
     """Run one arm session in workspace ``ws`` and capture everything.
 
-    The prompt is persisted to ``<ws>/.fvk_bench/prompts/<arm>.md`` (artifact
-    of record) and passed verbatim via argv. The child runs with cwd ``ws``,
-    the scrubbed allowlist environment, and its own process group so a timeout
-    kills the entire process tree. Raw stdout/stderr are always written to
-    ``<ws>/.fvk_bench/raw/<arm>.stdout.json`` / ``<arm>.stderr.txt``, even on
-    timeout or failure — stdout is parsed for forensics whenever possible.
+    ``ws`` must already exist (scaffolded by the workspace step) — running an
+    arm against a missing directory is a sequencing bug, not something to
+    paper over with ``mkdir``. The prompt is persisted to
+    ``<ws>/.fvk_bench/prompts/<arm>.md`` (artifact of record) and passed
+    verbatim via argv. The child runs with cwd ``ws``, the scrubbed allowlist
+    environment, stdin pinned to ``/dev/null`` (the real CLI consumes piped
+    stdin as prompt context — determinism demands there be none), and its own
+    process group so a timeout kills the entire process tree; a try/finally
+    guard ensures no detached ``claude`` survives this call on *any* exception
+    path (``KeyboardInterrupt`` included). Raw stdout/stderr are always
+    written to ``<ws>/.fvk_bench/raw/<arm>.stdout.json`` / ``<arm>.stderr.txt``,
+    even on timeout, spawn failure or other failure — stdout is parsed for
+    forensics whenever possible.
+
+    Raises:
+        RuntimeError: if ``ws`` is not an existing directory.
     """
     ws = Path(ws)
+    if not ws.is_dir():
+        raise RuntimeError(
+            f"workspace {ws} is not an existing directory — scaffold the "
+            "workspace before running an arm session"
+        )
     prompt_path = ws / ".fvk_bench" / "prompts" / f"{arm}.md"
     prompt_path.parent.mkdir(parents=True, exist_ok=True)
     prompt_path.write_text(prompt_text, encoding="utf-8")
@@ -145,32 +177,78 @@ def run_arm_session(
         model=model,
     )
 
-    timed_out = False
-    start = time.monotonic()
-    proc = subprocess.Popen(
-        argv,
-        cwd=ws,
-        env=config.session_env(),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        start_new_session=True,  # own process group: timeout kills the whole tree
-    )
-    try:
-        stdout, stderr = proc.communicate(timeout=timeout)
-    except subprocess.TimeoutExpired:
-        timed_out = True
-        try:
-            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
-        except ProcessLookupError:
-            pass  # process group died between the timeout and the kill
-        stdout, stderr = proc.communicate()  # drain whatever was buffered
-    duration = time.monotonic() - start
-
     raw_dir = ws / ".fvk_bench" / "raw"
     raw_dir.mkdir(parents=True, exist_ok=True)
-    (raw_dir / f"{arm}.stdout.json").write_text(stdout or "", encoding="utf-8")
-    (raw_dir / f"{arm}.stderr.txt").write_text(stderr or "", encoding="utf-8")
+    stdout_path = raw_dir / f"{arm}.stdout.json"
+    stderr_path = raw_dir / f"{arm}.stderr.txt"
+
+    timed_out = False
+    start = time.monotonic()
+    try:
+        proc = subprocess.Popen(
+            argv,
+            cwd=ws,
+            env=config.session_env(),
+            stdin=subprocess.DEVNULL,  # determinism: no piped prompt context
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            start_new_session=True,  # own process group: timeout kills the whole tree
+        )
+    except OSError as exc:
+        # Spawn failures (missing binary, EACCES, ...) still leave forensics.
+        stdout_path.write_text("", encoding="utf-8")
+        stderr_path.write_text(f"spawn_failure:{exc}\n", encoding="utf-8")
+        return ClaudeResult(
+            ok=False,
+            session_id=None,
+            num_turns=None,
+            subtype=None,
+            duration_seconds=time.monotonic() - start,
+            raw_json=None,
+            error=f"spawn_failure:{exc}",
+        )
+
+    stdout: str = ""
+    stderr: str = ""
+    try:
+        try:
+            stdout, stderr = proc.communicate(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            timed_out = True
+            try:
+                os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+            except ProcessLookupError:
+                pass  # process group died between the timeout and the kill
+            try:
+                # Bounded drain: the group is SIGKILLed, but a pipe inherited
+                # by something outside the group could keep it open forever.
+                stdout, stderr = proc.communicate(timeout=30)
+            except subprocess.TimeoutExpired as drain_exc:
+                # Record whatever was captured (possibly empty), abandon the
+                # pipes rather than hang, and best-effort reap the child.
+                stdout = _coerce_text(drain_exc.stdout)
+                stderr = _coerce_text(drain_exc.stderr)
+                for stream in (proc.stdout, proc.stderr):
+                    if stream is not None:
+                        stream.close()
+                try:
+                    proc.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    pass
+    finally:
+        # Orphan guard: whatever happened above (KeyboardInterrupt included),
+        # no detached claude may survive the parent.
+        if proc.poll() is None:
+            try:
+                os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            proc.wait(timeout=10)
+    duration = time.monotonic() - start
+
+    stdout_path.write_text(stdout or "", encoding="utf-8")
+    stderr_path.write_text(stderr or "", encoding="utf-8")
 
     parsed: dict | None = None
     try:
@@ -189,17 +267,13 @@ def run_arm_session(
         error = f"nonzero_exit:{rc}"
     elif parsed is None:
         error = "bad_json"
+    elif parsed.get("is_error"):
+        error = f"agent_error:{parsed.get('subtype') or 'unknown'}"
     else:
         error = None
 
-    ok = (
-        not timed_out
-        and rc == 0
-        and parsed is not None
-        and not parsed.get("is_error", False)
-    )
     return ClaudeResult(
-        ok=ok,
+        ok=error is None,
         session_id=parsed.get("session_id") if parsed else None,
         num_turns=parsed.get("num_turns") if parsed else None,
         subtype=parsed.get("subtype") if parsed else None,
@@ -230,9 +304,13 @@ def transcript_path(ws: Path, session_id: str) -> Path | None:
 
 def audit_transcript(
     jsonl_path: Path,
-    allowed_tools: tuple[str, ...] = ("Read", "Write", "Edit", "Glob", "Grep"),
+    allowed_tools: tuple[str, ...] | None = None,
 ) -> dict:
     """Audit a session transcript for tool-surface cleanliness.
+
+    ``allowed_tools`` defaults to the pinned :data:`fvk_bench.config.TOOLS`
+    surface so the audit can never drift from the experiment specification;
+    pass an explicit tuple to audit against a different surface.
 
     Streams the jsonl line by line (transcripts can be large) and returns::
 
@@ -248,6 +326,8 @@ def audit_transcript(
     are replaced rather than raised so an audit cannot crash on a weird
     transcript.
     """
+    if allowed_tools is None:
+        allowed_tools = tuple(config.TOOLS.split(","))
     tool_uses: Counter = Counter()
     marker_warnings: list[int] = []
     unparseable = 0

@@ -9,6 +9,7 @@ library's env scrubbing fully exercised (nothing is monkeypatched around it).
 """
 
 import json
+import time
 from pathlib import Path
 
 import pytest
@@ -135,6 +136,20 @@ def test_run_ok_captures_everything(tmp_path, fake_claude_bin, monkeypatch):
 
 
 # ---------------------------------------------------------------------------
+# 3b. workspace guard: ws must be scaffolded before an arm session runs
+# ---------------------------------------------------------------------------
+
+def test_run_rejects_missing_workspace(tmp_path, fake_claude_bin):
+    missing = tmp_path / "never_scaffolded"
+    with pytest.raises(RuntimeError, match="scaffold"):
+        claude_runner.run_arm_session(
+            missing, "baseline", PROMPT, session_id=SID,
+            claude_bin=str(fake_claude_bin),
+        )
+    assert not missing.exists()  # the guard fired before any auto-create
+
+
+# ---------------------------------------------------------------------------
 # 4. timeout kills the whole process group, quickly
 # ---------------------------------------------------------------------------
 
@@ -153,6 +168,45 @@ def test_run_timeout_kills(tmp_path, fake_claude_bin):
     # Raw files are written even on timeout; the fake did start.
     assert (ws / ".fvk_bench" / "raw" / "baseline.stdout.json").exists()
     assert (ws / "fake_claude_invocations.log").exists()
+
+
+# ---------------------------------------------------------------------------
+# 4b. timeout kill reaches the WHOLE group, not just the direct child
+# ---------------------------------------------------------------------------
+
+def test_run_timeout_kills_whole_group(tmp_path, fake_claude_bin):
+    """A backgrounded grandchild (spawned without exec) must die with the group.
+
+    The wrapper forks ``(sleep 8 && touch escaped.flag) &`` — a subshell that
+    is NOT the direct child the runner Popen'd — then exec's the slow fake.
+    If the runner killed only its direct child, the orphaned grandchild would
+    touch ``escaped.flag`` ~8s in; the group kill must prevent that.
+    """
+    wrapper = tmp_path / "scenario_bin" / "claude"
+    wrapper.parent.mkdir(parents=True, exist_ok=True)
+    wrapper.write_text(
+        "#!/bin/sh\n"
+        "(sleep 8 && touch escaped.flag) &\n"
+        f'FAKE_CLAUDE_SCENARIO=slow exec "{fake_claude_bin}" "$@"\n',
+        encoding="utf-8",
+    )
+    wrapper.chmod(0o755)
+    ws = tmp_path / "ws"
+    ws.mkdir()
+
+    start = time.monotonic()
+    result = claude_runner.run_arm_session(
+        ws, "baseline", PROMPT, session_id=SID, timeout=2, claude_bin=str(wrapper)
+    )
+
+    assert result.ok is False
+    assert result.error == "timeout"
+    assert result.duration_seconds < 10  # bounded drain: pipes did not stall us
+
+    # Wait until well past the grandchild's would-be touch time (8s after
+    # spawn), then prove it never escaped the group kill.
+    time.sleep(max(0.0, 11 - (time.monotonic() - start)))
+    assert not (ws / "escaped.flag").exists()
 
 
 # ---------------------------------------------------------------------------
@@ -197,6 +251,48 @@ def test_run_nonzero_exit(tmp_path, fake_claude_bin):
     assert result.session_id is None
     stderr = ws / ".fvk_bench" / "raw" / "baseline.stderr.txt"
     assert "boom" in stderr.read_text(encoding="utf-8")
+
+
+# ---------------------------------------------------------------------------
+# 6b. agent-level error: zero exit, parsed envelope, is_error true
+# ---------------------------------------------------------------------------
+
+def test_run_agent_error(tmp_path, fake_claude_bin):
+    err_bin = _scenario_bin(tmp_path, fake_claude_bin, "agenterror")
+    ws = tmp_path / "ws"
+    ws.mkdir()
+
+    result = claude_runner.run_arm_session(
+        ws, "baseline", PROMPT, session_id=SID, claude_bin=str(err_bin)
+    )
+
+    assert result.ok is False
+    assert result.error == "agent_error:error_max_turns"
+    # Forensics still harvested from the parsed envelope.
+    assert result.session_id == "fake-agenterr"
+    assert result.num_turns == 200
+    assert result.subtype == "error_max_turns"
+
+
+# ---------------------------------------------------------------------------
+# 6c. spawn failure: binary missing — error recorded, forensics still exist
+# ---------------------------------------------------------------------------
+
+def test_run_spawn_failure(tmp_path):
+    ws = tmp_path / "ws"
+    ws.mkdir()
+
+    result = claude_runner.run_arm_session(
+        ws, "baseline", PROMPT, session_id=SID, claude_bin="/nonexistent/claude"
+    )
+
+    assert result.ok is False
+    assert result.error.startswith("spawn_failure:")
+    assert result.raw_json is None
+    assert result.session_id is None
+    stderr = ws / ".fvk_bench" / "raw" / "baseline.stderr.txt"
+    assert stderr.exists()
+    assert "spawn_failure:" in stderr.read_text(encoding="utf-8")
 
 
 # ---------------------------------------------------------------------------
