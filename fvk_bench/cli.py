@@ -167,6 +167,37 @@ def _cmd_vendor_instances(args) -> int:
 # run
 # ---------------------------------------------------------------------------
 
+def _write_stub_manifest(
+    inst_dir: Path, run_id: str, iid: str, arm_list: tuple[str, ...], error: str
+) -> None:
+    """Record an orchestration failure so the instance still appears in scores.
+
+    Every requested arm is marked ``failed(orchestration_error)``. Never
+    overwrites an existing manifest — if harvest already produced one it
+    carries real per-arm state that must win.
+    """
+    manifest_path = inst_dir / "manifest.json"
+    if manifest_path.is_file():
+        return
+    inst_dir.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "run_id": run_id,
+                "instance_id": iid,
+                "orchestration_error": error,
+                "arms": {
+                    arm: {"status": "failed", "reason": "orchestration_error"}
+                    for arm in arm_list
+                },
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
 def _cmd_run(args) -> int:
     known = _load_instances_or_explain()
     if known is None:
@@ -198,12 +229,15 @@ def _cmd_run(args) -> int:
                 retry_failed=args.retry_failed,
                 cache_dir=ws_root / "cache" / "repos",
             )
-        except RuntimeError as exc:
+            harvest.harvest_instance(
+                ws_root / run_id / iid, run_id, known[iid], results_dir=results_dir
+            )
+        except (RuntimeError, OSError) as exc:
             print(f"[{index}/{len(ids)}] {iid}: error: {exc}")
+            _write_stub_manifest(
+                results_dir / run_id / iid, run_id, iid, arm_list, str(exc)
+            )
             continue
-        harvest.harvest_instance(
-            ws_root / run_id / iid, run_id, known[iid], results_dir=results_dir
-        )
         labels = []
         for arm in arm_list:
             arm_state = state["arms"][arm]

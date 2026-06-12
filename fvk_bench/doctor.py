@@ -55,6 +55,17 @@ def _check_claude() -> tuple[str, bool | None, str]:
     if proc.returncode != 0:
         return ("claude", False, f"{path} (--version exited {proc.returncode})")
     version = proc.stdout.strip() or "version unknown"
+    # `claude --version` prints e.g. "2.1.169 (Claude Code)"; the leading
+    # token is the version proper. Any version other than the one this infra
+    # was validated against is suspicious but not blocking → warn.
+    leading = version.split()[0]
+    if leading != config.TESTED_CLAUDE_VERSION:
+        return (
+            "claude",
+            None,
+            f"untested version {leading}"
+            f" (validated against {config.TESTED_CLAUDE_VERSION})",
+        )
     return ("claude", True, f"{version} ({path})")
 
 

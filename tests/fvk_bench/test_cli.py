@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+import fvk_bench.arms as arms_mod
 import fvk_bench.cli as cli
 import fvk_bench.doctor as doctor_mod
 import fvk_bench.evaluate as evaluate_mod
@@ -184,6 +185,74 @@ def test_run_partial_exits_2(
     out = capsys.readouterr().out
     assert "baseline=completed" in out
     assert "error" in out
+
+
+def test_run_orchestration_error_stub_in_scores(
+    cli_env, fixture_instance, monkeypatch, tmp_path, capsys
+):
+    """An instance whose orchestration raises still appears in the scores table."""
+    def boom(*args, **kwargs):
+        raise RuntimeError("mirror clone failed")
+
+    monkeypatch.setattr(arms_mod, "run_instance", boom)
+
+    rc = cli.main([
+        "run",
+        "--instances", fixture_instance.instance_id,
+        "--run-id", "te",
+        "--workspace-root", str(tmp_path / "wsroot"),
+    ])
+
+    assert rc == 1  # nothing completed → nonzero
+    manifest_path = cli_env / "te" / fixture_instance.instance_id / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert manifest["run_id"] == "te"
+    assert manifest["instance_id"] == fixture_instance.instance_id
+    assert manifest["orchestration_error"] == "mirror clone failed"
+    assert manifest["arms"] == {
+        arm: {"status": "failed", "reason": "orchestration_error"}
+        for arm in config.ARMS
+    }
+    assert "error: mirror clone failed" in capsys.readouterr().out
+
+    # The stub surfaces through the report pipeline like any other failed arm.
+    assert cli.main(["report", "--run-id", "te"]) == 0
+    md = (cli_env / "te" / "scores.md").read_text(encoding="utf-8")
+    row = next(
+        line for line in md.splitlines()
+        if line.startswith(f"| {fixture_instance.instance_id} ")
+    )
+    assert row.count("failed(orchestration_error)") == len(config.ARMS)
+
+
+def test_run_orchestration_error_keeps_existing_manifest(
+    cli_env, fixture_instance, monkeypatch, tmp_path
+):
+    """A manifest harvested by an earlier attempt is never clobbered by the stub."""
+    inst_dir = cli_env / "tk" / fixture_instance.instance_id
+    inst_dir.mkdir(parents=True)
+    existing = {
+        "run_id": "tk",
+        "instance_id": fixture_instance.instance_id,
+        "arms": {"baseline": {"status": "completed", "reason": None}},
+    }
+    (inst_dir / "manifest.json").write_text(json.dumps(existing), encoding="utf-8")
+
+    def boom(*args, **kwargs):
+        raise OSError("disk full")
+
+    monkeypatch.setattr(arms_mod, "run_instance", boom)
+
+    rc = cli.main([
+        "run",
+        "--instances", fixture_instance.instance_id,
+        "--run-id", "tk",
+        "--workspace-root", str(tmp_path / "wsroot"),
+    ])
+
+    assert rc == 1
+    on_disk = json.loads((inst_dir / "manifest.json").read_text(encoding="utf-8"))
+    assert on_disk == existing  # no orchestration_error stub written over it
 
 
 def test_run_unknown_instance_id(cli_env, capsys):

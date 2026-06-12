@@ -56,6 +56,7 @@ RESULTS_DIR: Path = REPO_ROOT / "results"
 PERMISSION_MODE: str = "bypassPermissions"  # value for `claude --permission-mode`; safe because the tool surface has no execution/network tools
 SETTING_SOURCES: str = "project,local"  # value for `claude --setting-sources`; excludes user-level settings where personal skills/plugins/hooks live
 CANARY_MODEL: str = "claude-haiku-4-5-20251001"  # cheap model used only by `doctor --canary` session-cleanliness probes, never for benchmark arms
+TESTED_CLAUDE_VERSION: str = "2.1.169"  # the claude-code version this infra was validated against; doctor warns on mismatch
 
 
 # ---------------------------------------------------------------------------

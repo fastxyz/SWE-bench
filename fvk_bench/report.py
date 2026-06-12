@@ -7,7 +7,9 @@ can be regenerated from a results tree alone on any machine.
 Reporting discipline (from the design spec): every instance in the run × every
 arm appears in the table; failed or skipped arms show their status and reason
 explicitly, empty patches are flagged explicitly, and per-arm resolved counts
-are stated over the instances that actually have eval reports. Cross-machine
+are stated over the evaluated instances — those with eval reports plus
+completed arms whose empty patch scores unresolved without ever reaching the
+harness (producing nothing IS that arm's answer). Cross-machine
 comparisons belong at the aggregate level (resolved counts, flip counts), so
 the aggregates section carries baseline→fvk / baseline→control flips with
 direction and the fvk-vs-control delta.
@@ -46,9 +48,12 @@ def _eval_summary(inst_dir: Path, arm: str) -> dict | None:
 def _aggregates(instances: dict) -> dict:
     """Per-arm resolved counts, directional flips, and the fvk/control delta.
 
-    Counts are over instances with an eval report for that arm; flips compare
-    only instances where BOTH arms have eval reports (an unevaluated arm can
-    neither gain nor lose an instance).
+    Counts are over evaluated instances for that arm: those with an eval
+    report, plus completed arms whose empty patch is scored unresolved by
+    :func:`collect_scores`. Failed/skipped arms and completed arms with a
+    patch but no report (eval not run yet, or a harness error) stay out of
+    the denominator. Flips compare only instances where BOTH arms are
+    evaluated (an unevaluated arm can neither gain nor lose an instance).
     """
     arms_agg: dict = {}
     for arm in config.ARMS:
@@ -97,7 +102,15 @@ def collect_scores(run_id: str, results_dir: Path = config.RESULTS_DIR) -> dict:
     is an instance. For each arm the result carries the manifest's status /
     reason / session_id / num_turns / duration_seconds, an ``empty_patch``
     flag (solution patch absent or zero bytes), and the eval summary parsed
-    from the copied ``<arm>.report.json`` (None when not evaluated).
+    from the copied ``<arm>.report.json``.
+
+    A COMPLETED arm with an empty patch never reaches the harness (empty
+    predictions are filtered), so no report exists — but producing nothing is
+    that arm's answer: its eval is synthesized as
+    ``{"resolved": False, "ftp": "0/0", "ptp": "0/0", "reason": "empty_patch"}``
+    so it counts as evaluated-and-unresolved in aggregates and flips. All
+    other report-less arms (failed/skipped, or completed with a patch whose
+    eval has not run / errored) keep ``eval=None`` (not evaluated).
     """
     run_dir = Path(results_dir) / run_id
     instances: dict = {}
@@ -111,14 +124,23 @@ def collect_scores(run_id: str, results_dir: Path = config.RESULTS_DIR) -> dict:
             for arm in config.ARMS:
                 state = arms_state.get(arm) or {}
                 patch = inst_dir / "solutions" / f"solution_{arm}.patch"
+                empty_patch = not patch.is_file() or patch.stat().st_size == 0
+                ev = _eval_summary(inst_dir, arm)
+                if ev is None and empty_patch and state.get("status") == "completed":
+                    ev = {
+                        "resolved": False,
+                        "ftp": "0/0",
+                        "ptp": "0/0",
+                        "reason": "empty_patch",
+                    }
                 per_arm[arm] = {
                     "status": state.get("status"),
                     "reason": state.get("reason"),
                     "session_id": state.get("session_id"),
                     "num_turns": state.get("num_turns"),
                     "duration_seconds": state.get("duration_seconds"),
-                    "empty_patch": not patch.is_file() or patch.stat().st_size == 0,
-                    "eval": _eval_summary(inst_dir, arm),
+                    "empty_patch": empty_patch,
+                    "eval": ev,
                 }
             instances[inst_dir.name] = per_arm
     return {
@@ -191,7 +213,7 @@ def render_scores_md(scores: dict, run_manifest: dict | None) -> str:
         counts = agg["arms"][arm]
         lines.append(
             f"- {arm} resolved: {counts['resolved']}/{counts['evaluated']}"
-            " (over instances with eval reports)"
+            " (over evaluated instances; completed empty patches score unresolved)"
         )
     for key, label in (
         ("baseline_to_fvk", "baseline→fvk"),

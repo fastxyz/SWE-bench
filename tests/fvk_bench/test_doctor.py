@@ -76,6 +76,32 @@ def test_run_checks_all_ok(healthy_host):
     # (it is required for subscription auth and excluded via setting-sources).
 
 
+def test_run_checks_tested_claude_version_ok(healthy_host):
+    # healthy_host's fake `claude --version` prints the validated version.
+    by_name = {name: (ok, detail) for name, ok, detail in doctor.run_checks()}
+
+    ok, detail = by_name["claude"]
+    assert ok is True
+    assert config.TESTED_CLAUDE_VERSION in detail
+
+
+def test_run_checks_untested_claude_version_warns(monkeypatch, healthy_host):
+    def fake_run(argv, **kwargs):
+        if argv[0] == "docker":
+            return SimpleNamespace(returncode=0, stdout="docker info ok\n", stderr="")
+        return SimpleNamespace(returncode=0, stdout="9.9.9 (Claude Code)\n", stderr="")
+
+    monkeypatch.setattr(doctor.subprocess, "run", fake_run)
+
+    by_name = {name: (ok, detail) for name, ok, detail in doctor.run_checks()}
+
+    ok, detail = by_name["claude"]
+    assert ok is None  # WARN, not a hard failure
+    assert detail == (
+        f"untested version 9.9.9 (validated against {config.TESTED_CLAUDE_VERSION})"
+    )
+
+
 def test_run_checks_failures(monkeypatch, healthy_host):
     monkeypatch.setattr(
         doctor.shutil,

@@ -16,6 +16,17 @@ from fvk_bench import config
 RID = "20260613T000000Z-testhost"
 IID_A = "demo__demo-1"
 IID_B = "demo__demo-2"
+IID_C = "demo__demo-3"
+
+#: Eval entry synthesized for a completed arm whose patch is empty: the
+#: harness never runs empty predictions, so the arm scores
+#: evaluated-and-unresolved with an explicit reason.
+EMPTY_PATCH_EVAL = {
+    "resolved": False,
+    "ftp": "0/0",
+    "ptp": "0/0",
+    "reason": "empty_patch",
+}
 
 
 def _arm_state(status, reason=None, *, sid="sid", turns=7, dur=12.5):
@@ -58,12 +69,16 @@ def _eval_report(iid, *, resolved, ftp, ptp):
 
 @pytest.fixture()
 def fake_run(tmp_path) -> Path:
-    """results/<RID>/ with two instances:
+    """results/<RID>/ with three instances:
 
     - IID_A: baseline+fvk completed, control failed(timeout); eval reports for
       baseline (unresolved) and fvk (resolved) → one baseline→fvk up-flip.
-    - IID_B: all completed; fvk patch EMPTY (no eval report); baseline and
-      control both resolved.
+    - IID_B: all completed; fvk patch EMPTY (no eval report → scores
+      evaluated-and-unresolved); baseline and control both resolved → one
+      baseline→fvk down-flip.
+    - IID_C: all completed; baseline resolved; fvk has a patch but NO eval
+      report (eval not run yet → stays unevaluated); control patch EMPTY →
+      one baseline→control down-flip.
     """
     results_dir = tmp_path / "results"
     run_dir = results_dir / RID
@@ -116,6 +131,28 @@ def fake_run(tmp_path) -> Path:
         encoding="utf-8",
     )
 
+    c = run_dir / IID_C
+    (c / "solutions").mkdir(parents=True)
+    (c / "eval").mkdir()
+    (c / "manifest.json").write_text(json.dumps({
+        "run_id": RID,
+        "instance_id": IID_C,
+        "arms": {
+            "baseline": _arm_state("completed"),
+            "fvk": _arm_state("completed"),
+            "control": _arm_state("completed"),
+        },
+    }), encoding="utf-8")
+    (c / "solutions" / "solution_baseline.patch").write_text("diff e\n", encoding="utf-8")
+    (c / "solutions" / "solution_fvk.patch").write_text("diff f\n", encoding="utf-8")
+    (c / "solutions" / "solution_control.patch").write_text("", encoding="utf-8")  # EMPTY
+    (c / "eval" / "baseline.report.json").write_text(
+        json.dumps(_eval_report(IID_C, resolved=True, ftp=(1, 0), ptp=(2, 0))),
+        encoding="utf-8",
+    )
+    # fvk eval report deliberately absent: a completed arm WITH a patch but
+    # no report (eval not run yet) must stay out of denominators and flips.
+
     # The run-level eval dir (predictions, harness logs) is not an instance.
     (run_dir / "eval").mkdir()
 
@@ -138,7 +175,7 @@ def test_collect_scores(fake_run):
     scores = report_mod.collect_scores(RID, results_dir=fake_run)
 
     assert scores["run_id"] == RID
-    assert sorted(scores["instances"]) == [IID_A, IID_B]
+    assert sorted(scores["instances"]) == [IID_A, IID_B, IID_C]
 
     a = scores["instances"][IID_A]
     assert a["baseline"]["status"] == "completed"
@@ -151,23 +188,31 @@ def test_collect_scores(fake_run):
     assert a["control"]["status"] == "failed"
     assert a["control"]["reason"] == "timeout"
     assert a["control"]["empty_patch"] is True  # patch absent
-    assert a["control"]["eval"] is None
+    assert a["control"]["eval"] is None  # failed arm: explained by its status
 
     b = scores["instances"][IID_B]
     assert b["fvk"]["status"] == "completed"
     assert b["fvk"]["empty_patch"] is True  # zero-byte patch
-    assert b["fvk"]["eval"] is None  # empty patch never ran → no report
+    # A completed arm with an empty patch never reaches the harness, but it
+    # IS evaluated: producing nothing scores unresolved, with the reason explicit.
+    assert b["fvk"]["eval"] == EMPTY_PATCH_EVAL
     assert b["baseline"]["eval"]["resolved"] is True
     assert b["control"]["eval"]["resolved"] is True
 
+    c = scores["instances"][IID_C]
+    assert c["fvk"]["empty_patch"] is False
+    assert c["fvk"]["eval"] is None  # patch present but eval not run → unevaluated
+    assert c["control"]["empty_patch"] is True
+    assert c["control"]["eval"] == EMPTY_PATCH_EVAL  # control empty patch too
+
     agg = scores["aggregates"]
     assert agg["arms"] == {
-        "baseline": {"resolved": 1, "evaluated": 2},
-        "fvk": {"resolved": 1, "evaluated": 1},
-        "control": {"resolved": 1, "evaluated": 1},
+        "baseline": {"resolved": 2, "evaluated": 3},
+        "fvk": {"resolved": 1, "evaluated": 2},
+        "control": {"resolved": 1, "evaluated": 2},
     }
-    assert agg["flips"]["baseline_to_fvk"] == {"up": [IID_A], "down": []}
-    assert agg["flips"]["baseline_to_control"] == {"up": [], "down": []}
+    assert agg["flips"]["baseline_to_fvk"] == {"up": [IID_A], "down": [IID_B]}
+    assert agg["flips"]["baseline_to_control"] == {"up": [], "down": [IID_C]}
     assert agg["fvk_vs_control_delta"] == 0
 
 
@@ -204,16 +249,23 @@ def test_render_scores_md(fake_run):
     assert "[empty patch]" not in row_a
 
     row_b = next(line for line in md.splitlines() if line.startswith(f"| {IID_B} "))
-    assert "[empty patch]" in row_b  # empty fvk patch flagged explicitly
-    assert "—" in row_b  # no eval for the empty-patch arm
+    assert "[empty patch]" in row_b  # empty fvk patch flagged explicitly...
+    assert "✗" in row_b  # ...and scored unresolved, not left unevaluated
+    assert "0/0" in row_b  # synthesized FTP/PTP counts for the empty patch
+    assert "—" not in row_b  # every arm of B is evaluated now
+
+    row_c = next(line for line in md.splitlines() if line.startswith(f"| {IID_C} "))
+    assert "[empty patch]" in row_c  # control empty patch flagged too...
+    assert "✗" in row_c  # ...and scored unresolved
+    assert "—" in row_c  # fvk has a patch but no report → still unevaluated
 
     # Aggregates section.
     assert "## Aggregates" in md
-    assert "- baseline resolved: 1/2" in md
-    assert "- fvk resolved: 1/1" in md
-    assert "- control resolved: 1/1" in md
-    assert f"- flips baseline→fvk: +1/-0 (up: {IID_A}; down: none)" in md
-    assert "- flips baseline→control: +0/-0" in md
+    assert "- baseline resolved: 2/3" in md
+    assert "- fvk resolved: 1/2" in md
+    assert "- control resolved: 1/2" in md
+    assert f"- flips baseline→fvk: +1/-1 (up: {IID_A}; down: {IID_B})" in md
+    assert f"- flips baseline→control: +0/-1 (up: none; down: {IID_C})" in md
     assert "- fvk vs control resolved delta: +0" in md
 
 
@@ -272,8 +324,8 @@ def test_refresh_index(fake_run):
     scored_row = lines[3]
     assert "testhost" in scored_row
     assert config.MODEL in scored_row
-    assert "| 2 |" in scored_row  # two instances
-    assert "1/2" in scored_row and "1/1" in scored_row
+    assert "| 3 |" in scored_row  # three instances
+    assert "2/3" in scored_row and "1/2" in scored_row
     assert "2026-06-13T02:00:00+00:00" in scored_row
 
     bare_row = lines[2]

@@ -12,6 +12,10 @@ def test_pinned_invocation_constants():
     assert config.ARM_TIMEOUT_SECONDS == 4 * 3600
     assert config.DATASET_NAME == "princeton-nlp/SWE-bench_Verified"
 
+def test_tested_claude_version_pinned():
+    # The version this infra was validated against; doctor warns on mismatch.
+    assert config.TESTED_CLAUDE_VERSION == "2.1.169"
+
 def test_fvk_materials_copy_set():
     assert config.FVK_MATERIALS_FILES == (
         "README.md", "AGENTS.md", "commands/formalize.md", "commands/verify.md",
