@@ -15,10 +15,12 @@ from pathlib import Path
 MODEL: str = "claude-opus-4-8"
 EFFORT: str = "max"
 MAX_TURNS: dict[str, int] = {"baseline": 200, "fvk": 200, "control": 200}
-TOOLS: str = "Read,Write,Edit,Glob,Grep"
+TOOLS: str = "Read,Write,Edit,Glob,Grep"  # passed verbatim to `claude --tools`; restricts actual built-in tool surface (NOT a permission list)
 ARMS: tuple[str, ...] = ("baseline", "fvk", "control")
 ARM_TIMEOUT_SECONDS: int = 4 * 3600
 DATASET_NAME: str = "princeton-nlp/SWE-bench_Verified"
+
+assert set(MAX_TURNS) == set(ARMS), "MAX_TURNS keys must match ARMS"
 
 # ---------------------------------------------------------------------------
 # FVK materials files to copy into the fvk arm workspace
@@ -51,9 +53,9 @@ RESULTS_DIR: Path = REPO_ROOT / "results"
 # Session / runner constants
 # ---------------------------------------------------------------------------
 
-PERMISSION_MODE: str = "bypassPermissions"
-SETTING_SOURCES: str = "project,local"
-CANARY_MODEL: str = "claude-haiku-4-5-20251001"
+PERMISSION_MODE: str = "bypassPermissions"  # value for `claude --permission-mode`; safe because the tool surface has no execution/network tools
+SETTING_SOURCES: str = "project,local"  # value for `claude --setting-sources`; excludes user-level settings where personal skills/plugins/hooks live
+CANARY_MODEL: str = "claude-haiku-4-5-20251001"  # cheap model used only by `doctor --canary` session-cleanliness probes, never for benchmark arms
 
 
 # ---------------------------------------------------------------------------

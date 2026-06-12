@@ -1,3 +1,5 @@
+# Re-include benchmark artifacts that the repo root .gitignore suppresses
+# (*.patch, *.jsonl, *.jsonl.*). Everything else under results/ is committed normally.
 !*.patch
 !*.jsonl
 !*.jsonl.*
