@@ -1,0 +1,73 @@
+{
+  "run_id": "20260612T170620Z-XC-MINI-PRO-AHP",
+  "instances": {
+    "sympy__sympy-12489": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "efc02de7-64a8-4ab6-a156-e7b08c92569e",
+        "num_turns": 53,
+        "duration_seconds": 695.3170438169909,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "8/8"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "bd040149-f936-4376-8d10-8ed328863a43",
+        "num_turns": 26,
+        "duration_seconds": 908.2771813599975,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "8/8"
+        }
+      },
+      "control": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "23f98bf4-c6c3-4ffe-8b2b-2dd5b612864d",
+        "num_turns": 20,
+        "duration_seconds": 514.4050857060065,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "8/8"
+        }
+      }
+    }
+  },
+  "aggregates": {
+    "arms": {
+      "baseline": {
+        "resolved": 1,
+        "evaluated": 1
+      },
+      "fvk": {
+        "resolved": 1,
+        "evaluated": 1
+      },
+      "control": {
+        "resolved": 1,
+        "evaluated": 1
+      }
+    },
+    "flips": {
+      "baseline_to_fvk": {
+        "up": [],
+        "down": []
+      },
+      "baseline_to_control": {
+        "up": [],
+        "down": []
+      }
+    },
+    "fvk_vs_control_delta": 0
+  }
+}
