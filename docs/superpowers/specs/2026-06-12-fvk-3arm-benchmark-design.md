@@ -356,7 +356,8 @@ Prompt design checklist (acceptance criteria for the deliverable):
       construction and reasoning.
 - [ ] fvk.md and control.md differ **only** in the methodology/tasks middle section (diffable);
       artifact burden is comparable (findings file + notes + optional repo edits in both).
-- [ ] Baseline prompt forbids reading `reports/`, `fvk/`, `review/` (must not anticipate review arms).
+- [ ] Baseline prompt must not anticipate the review arms: allowed inputs are a whitelist, and
+      `fvk/`, `review/`, `fvk_materials/` neither exist at baseline time nor are mentioned.
 - [ ] No prompt mentions scoring, resolved-iff thresholds, or the existence of other arms.
 - [ ] Wording reviewed for leakage (nothing hints at gold-patch shape or test names).
 
