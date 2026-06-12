@@ -8,7 +8,10 @@ and workspace tests clone from a ``file://`` mirror built directly with git.
 import dataclasses
 import json
 import os
+import shutil
 import subprocess
+import threading
+import time
 from pathlib import Path
 
 import pytest
@@ -114,6 +117,82 @@ def test_mirror_tmp_suffix_thread_unique(tmp_path):
         assert f".tmp-{os.getpid()}-" in p.name
         # ensure_mirror's stale-cleanup glob must still match these names.
         assert p.match("demo__demo.git.tmp-*")
+
+
+# ---------------------------------------------------------------------------
+# 1d. concurrent ensure_mirror callers for one repo produce exactly one clone
+# ---------------------------------------------------------------------------
+
+def test_concurrent_ensure_mirror_single_clone(fixture_remote_repo, tmp_path, monkeypatch):
+    """Two threads racing ensure_mirror for the same repo must clone exactly once.
+
+    The clone is slowed down so both threads are guaranteed to be in flight at
+    the same time; without per-destination locking each entrant would clone
+    (and its stale-tmp cleanup could delete the other's in-progress temp dir).
+    """
+    remote_path, _ = fixture_remote_repo
+    cache = tmp_path / "cache"
+    monkeypatch.setattr(scaffold, "_clone_url", lambda repo: f"file://{remote_path}")
+
+    real_git = scaffold._git
+    clone_calls: list[str] = []  # list.append is thread-safe under the GIL
+
+    def slow_counting_git(*args, **kwargs):
+        if args and args[0] == "clone":
+            clone_calls.append(args[0])
+            time.sleep(0.5)  # hold the race window open for the second thread
+        return real_git(*args, **kwargs)
+
+    monkeypatch.setattr(scaffold, "_git", slow_counting_git)
+
+    results: list[Path] = []
+    errors: list[BaseException] = []
+
+    def worker() -> None:
+        try:
+            results.append(scaffold.ensure_mirror("demo/demo", cache))
+        except BaseException as exc:  # noqa: BLE001 — surfaced via assert below
+            errors.append(exc)
+
+    threads = [threading.Thread(target=worker) for _ in range(2)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert errors == [], f"no thread may fail: {errors}"
+    assert clone_calls == ["clone"], "exactly one clone must happen"
+    assert results == [cache / "demo__demo.git"] * 2, "both threads get the same mirror"
+    assert _git_out(["rev-parse", "--is-bare-repository"], cwd=results[0]) == "true"
+    assert list(cache.glob("*.tmp-*")) == [], "no temp dirs may be left behind"
+
+
+# ---------------------------------------------------------------------------
+# 1e. stale-tmp cleanup is age-guarded: fresh tmps survive, hour-old ones go
+# ---------------------------------------------------------------------------
+
+def test_stale_tmp_age_guard(fixture_remote_repo, tmp_path, monkeypatch):
+    """Cleanup only removes *.tmp-* siblings older than _STALE_TMP_SECONDS."""
+    remote_path, _ = fixture_remote_repo
+    cache = tmp_path / "cache"
+    cache.mkdir()
+    monkeypatch.setattr(scaffold, "_clone_url", lambda repo: f"file://{remote_path}")
+
+    tmp_dir = cache / "demo__demo.git.tmp-999-deadbeef"
+    tmp_dir.mkdir()
+
+    # Fresh mtime: could be another process's in-flight clone — leave it alone.
+    mirror = scaffold.ensure_mirror("demo/demo", cache)
+    assert mirror.is_dir()
+    assert tmp_dir.is_dir(), "fresh tmp dirs must be left alone"
+
+    # Backdate past the age guard: now it is a crash leftover — remove it.
+    two_hours_ago = time.time() - 2 * 60 * 60
+    os.utime(tmp_dir, (two_hours_ago, two_hours_ago))
+    shutil.rmtree(mirror)  # force the cache-miss (cleanup + clone) path again
+    mirror = scaffold.ensure_mirror("demo/demo", cache)
+    assert mirror.is_dir()
+    assert not tmp_dir.exists(), "hour-old tmp dirs are crash leftovers and must go"
 
 
 # ---------------------------------------------------------------------------

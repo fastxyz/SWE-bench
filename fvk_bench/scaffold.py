@@ -13,11 +13,24 @@ import json
 import os
 import shutil
 import subprocess
+import threading
+import time
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
 from fvk_bench.instances import Instance
+
+#: Only ``*.tmp-*`` siblings older than this are deleted by stale cleanup.
+#: In-flight clones take minutes, so an hour-old tmp dir can only be a crash
+#: leftover — anything younger may belong to a live clone in another process
+#: and must be left alone.
+_STALE_TMP_SECONDS = 3600
+
+#: Per-destination locks so same-process ensure_mirror callers serialize on a
+#: single clone instead of racing (and deleting each other's temp dirs).
+_MIRROR_LOCKS: dict[str, threading.Lock] = {}
+_MIRROR_LOCKS_GUARD = threading.Lock()
 
 #: Directories created inside every workspace (relative to the workspace root).
 _WORKSPACE_DIRS: tuple[str, ...] = (
@@ -78,51 +91,73 @@ def _clone_tmp_path(dst: Path) -> Path:
     return dst.with_name(f"{dst.name}.tmp-{os.getpid()}-{uuid.uuid4().hex[:8]}")
 
 
+def _mirror_lock(dst: Path) -> threading.Lock:
+    """Return the process-wide lock for mirror destination ``dst``."""
+    with _MIRROR_LOCKS_GUARD:
+        return _MIRROR_LOCKS.setdefault(str(dst), threading.Lock())
+
+
 def ensure_mirror(repo: str, cache_dir: Path) -> Path:
     """Return the bare mirror of ``repo`` under ``cache_dir``, cloning on first use.
 
     A cache hit returns immediately with no subprocess or network activity, so
     22 instances of one repo cost one GitHub clone, not 22.
 
+    Concurrency: same-process callers (``run --max-parallel`` worker threads)
+    serialize on a per-destination lock around the whole exists-check/cleanup/
+    clone/rename sequence — the second entrant sees ``dst`` exists and returns
+    immediately, so one repo never clones twice and entrants cannot delete
+    each other's temp dirs. Cross-process races remain handled only by the
+    atomic rename below.
+
     Clone-safety: the actual clone goes into a thread-unique
     ``<dst>.tmp-<pid>-<uuid>`` sibling so a kill-9 mid-clone never leaves a
     half-initialised directory that would be mistaken for a valid cache entry.
     On success the temp dir is atomically renamed to ``dst``; if ``dst``
     already exists (lost race or pre-existing) the temp dir is discarded and
-    the winner is returned.  Any stale ``*.tmp-*`` siblings left by a previous
-    process are removed (best effort) before the clone starts.
+    the winner is returned.  Stale ``*.tmp-*`` siblings left by a previous
+    crashed process are removed (best effort) before the clone starts, but
+    only when older than :data:`_STALE_TMP_SECONDS` — a younger sibling may be
+    another process's in-flight clone.
     """
     dst = _mirror_path(repo, cache_dir)
-    if dst.exists():
+    with _mirror_lock(dst):
+        if dst.exists():
+            return dst
+        Path(cache_dir).mkdir(parents=True, exist_ok=True)
+
+        # Best-effort, age-guarded: clean up stale temp dirs from previous
+        # killed processes. In-flight clones take minutes; an hour-old tmp is
+        # a crash leftover, anything younger might be a live clone elsewhere.
+        now = time.time()
+        for stale in Path(cache_dir).glob(f"{dst.name}.tmp-*"):
+            try:
+                if now - stale.stat().st_mtime < _STALE_TMP_SECONDS:
+                    continue
+                shutil.rmtree(stale)
+            except Exception:  # noqa: BLE001
+                pass
+
+        tmp = _clone_tmp_path(dst)
+        try:
+            _git("clone", "--mirror", _clone_url(repo), str(tmp))
+        except Exception:
+            # Clean up partial clone so it can never be a cache hit.
+            try:
+                shutil.rmtree(tmp)
+            except Exception:  # noqa: BLE001
+                pass
+            raise
+        try:
+            os.rename(tmp, dst)
+        except OSError:
+            # dst appeared between our check and rename (cross-process race
+            # or pre-existing).
+            try:
+                shutil.rmtree(tmp)
+            except Exception:  # noqa: BLE001
+                pass
         return dst
-    Path(cache_dir).mkdir(parents=True, exist_ok=True)
-
-    # Best-effort: clean up stale temp dirs from previous killed processes.
-    for stale in Path(cache_dir).glob(f"{dst.name}.tmp-*"):
-        try:
-            shutil.rmtree(stale)
-        except Exception:  # noqa: BLE001
-            pass
-
-    tmp = _clone_tmp_path(dst)
-    try:
-        _git("clone", "--mirror", _clone_url(repo), str(tmp))
-    except Exception:
-        # Clean up partial clone so it can never be a cache hit.
-        try:
-            shutil.rmtree(tmp)
-        except Exception:  # noqa: BLE001
-            pass
-        raise
-    try:
-        os.rename(tmp, dst)
-    except OSError:
-        # dst appeared between our check and rename (lost race or pre-existing).
-        try:
-            shutil.rmtree(tmp)
-        except Exception:  # noqa: BLE001
-            pass
-    return dst
 
 
 def refresh_mirror(repo: str, cache_dir: Path) -> None:

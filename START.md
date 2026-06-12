@@ -119,7 +119,9 @@ control arms fork the baseline's frozen transcript, so they cannot start until b
 finishes. **Fairness note:** sequential (`--max-parallel 1`) is the canonical comparable mode.
 Parallel sessions contend for CPU/RAM and subscription rate limits, which can affect session
 behavior. Use the same setting across runs you intend to compare; the setting is recorded in
-`run_manifest.json`.
+`run_manifest.json`. Note that interrupting a parallel run (Ctrl-C) is not immediate — in-flight
+instances finish their remaining arms before the command exits, so prefer letting a batch
+complete or size `--max-parallel` accordingly.
 
 **Duration.** A sequential 9-problem batch (`--max-parallel 1`) runs roughly a working day of
 wall clock: 3 arms × ~10–15 min/arm × 9 instances, plus variance from hard instances and
