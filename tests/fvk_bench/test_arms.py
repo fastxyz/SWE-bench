@@ -461,3 +461,65 @@ def test_dirty_transcript_marks_contaminated_session(
         / ".fvk_bench" / "solutions" / "solution_baseline.patch"
     )
     assert patch.exists() and b"newmod.py" in patch.read_bytes()
+
+
+# ---------------------------------------------------------------------------
+# 10. SIGKILL-resume: stale fvk material is scrubbed before control staging
+# ---------------------------------------------------------------------------
+
+def test_control_resume_after_killed_fvk_scrubs_materials(
+    local_clone_url, fixture_instance, fake_claude_bin, tmp_path
+):
+    """Control run after a simulated mid-fvk SIGKILL must scrub leftover fvk
+    material before staging, so the control arm never sees fvk_materials/ or
+    fvk/ and the resulting patch is byte-equal to the baseline-only patch."""
+    edits = _write_dispatch_edits(tmp_path)
+    bin_path = _wrapper_bin(tmp_path, fake_claude_bin, edits=edits)
+    ws = _ws(tmp_path, fixture_instance)
+
+    # Step 1: run baseline only to establish a completed baseline + saved state.
+    _run(fixture_instance, tmp_path, bin_path, arms=("baseline",))
+    assert arms_mod.load_state(ws)["arms"]["baseline"]["status"] == "completed"
+
+    # Capture the baseline patch bytes for later byte-equality check.
+    baseline_patch = (
+        ws / ".fvk_bench" / "solutions" / "solution_baseline.patch"
+    ).read_bytes()
+    assert baseline_patch  # sanity: non-empty
+
+    # Step 2: simulate a mid-fvk SIGKILL by:
+    #   a. creating fvk_materials/, fvk/, and reports/fvk_notes.md leftovers
+    #   b. marking fvk arm as failed(timeout) in state.json
+    (ws / "fvk_materials").mkdir(parents=True, exist_ok=True)
+    (ws / "fvk_materials" / "README.md").write_text(
+        "leftover fvk material\n", encoding="utf-8"
+    )
+    (ws / "fvk").mkdir(parents=True, exist_ok=True)
+    (ws / "fvk" / "SPEC.md").write_text("leftover spec\n", encoding="utf-8")
+    (ws / "reports").mkdir(parents=True, exist_ok=True)
+    (ws / "reports" / "fvk_notes.md").write_text(
+        "leftover notes\n", encoding="utf-8"
+    )
+
+    state = arms_mod.load_state(ws)
+    state["arms"]["fvk"]["status"] = "failed"
+    state["arms"]["fvk"]["reason"] = "timeout"
+    arms_mod.save_state(ws, state)
+
+    # Step 3: resume with arms=("control",) only.
+    final_state = _run(fixture_instance, tmp_path, bin_path, arms=("control",))
+
+    # Control must have completed.
+    assert final_state["arms"]["control"]["status"] == "completed"
+
+    # The stale fvk paths must be absent from the workspace after control staging.
+    assert not (ws / "fvk_materials").exists(), "fvk_materials/ still present"
+    assert not (ws / "fvk").exists(), "fvk/ still present"
+    assert not (ws / "reports" / "fvk_notes.md").exists(), "reports/fvk_notes.md still present"
+
+    # The control patch must be byte-equal to the baseline-only patch (the
+    # control edits script appends nothing extra that would show in the diff).
+    control_patch = (
+        ws / ".fvk_bench" / "solutions" / "solution_control.patch"
+    ).read_bytes()
+    assert control_patch == baseline_patch

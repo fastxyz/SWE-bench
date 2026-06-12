@@ -432,6 +432,7 @@ def run_instance(
     # --- control: second independent fork, gated on a pristine core tree ----
     control = state["arms"]["control"]
     if "control" in arms and _eligible(control, retry_failed):
+        scrub_fvk(ws)
         reset_repo_to_v1(ws)
         if core_tree_hash(ws) != state["core_hash_post_baseline"]:
             # Something outside repo/ drifted since baseline (e.g. a stray fvk
