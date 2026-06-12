@@ -19,10 +19,14 @@ machine), so a single problem or all 45 can be processed incrementally.
 import argparse
 import json
 import socket
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from fvk_bench import arms, config, doctor, evaluate, harvest, instances, report
+from fvk_bench import (
+    arms, batches, config, doctor, evaluate, harvest, instances, report, scaffold,
+)
 
 
 def _default_run_id() -> str:
@@ -43,16 +47,24 @@ def _parse_arms(spec: str) -> tuple[str, ...] | None:
     return requested
 
 
-def _resolve_ids(args, known: dict) -> list[str] | None:
-    """Resolve --instances/--all against the loaded instance set."""
+def _resolve_selection(args, known: dict) -> list[str] | None:
+    """Resolve the --instances|--all|--batch selection against the loaded set."""
     if args.all:
         return sorted(known)
-    unknown = [iid for iid in args.instances if iid not in known]
+    if args.batch:
+        try:
+            ids = list(batches.batch_instances(args.batch))
+        except KeyError as exc:
+            print(f"error: {exc.args[0]}")
+            return None
+    else:
+        ids = list(dict.fromkeys(args.instances))  # de-dup, keep order
+    unknown = [iid for iid in ids if iid not in known]
     if unknown:
         print("error: unknown instance ids: " + ", ".join(unknown))
         print("hint: `python -m fvk_bench list` shows the 45 benchmark instances")
         return None
-    return list(dict.fromkeys(args.instances))  # de-dup, keep order
+    return ids
 
 
 def _load_instances_or_explain() -> dict | None:
@@ -81,12 +93,22 @@ def _cmd_list(args) -> int:
     except RuntimeError as exc:
         print(f"error: {exc}")
         return 1
+    if args.batch:
+        try:
+            members = set(batches.batch_instances(args.batch))
+        except KeyError as exc:
+            print(f"error: {exc.args[0]}")
+            return 1
+        ids = [iid for iid in ids if iid in members]
 
     groups: dict[str, list[str]] = {}
     for iid in ids:
         groups.setdefault(iid.rsplit("-", 1)[0], []).append(iid)
     print(f"{len(ids)} instances across {len(groups)} repos")
 
+    batch_of = {
+        iid: name for name, batch_ids in batches.BATCHES.items() for iid in batch_ids
+    }
     annotations: dict[str, str] = {}
     if args.run_id:
         run_dir = config.RESULTS_DIR / args.run_id
@@ -108,10 +130,17 @@ def _cmd_list(args) -> int:
     for prefix in sorted(groups):
         print(f"\n{prefix} ({len(groups[prefix])})")
         for iid in groups[prefix]:
-            line = f"  {iid}"
+            extras = []
+            if iid in batch_of:
+                extras.append(f"[{batch_of[iid]}]")
+            if iid in batches.HARD_INSTANCES:
+                extras.append("[H]")
             if args.run_id:
-                line = f"  {iid:<36} {annotations[iid]}"
-            print(line)
+                extras.append(annotations[iid])
+            if extras:
+                print(f"  {iid:<36} " + " ".join(extras))
+            else:
+                print(f"  {iid}")
     return 0
 
 
@@ -202,7 +231,7 @@ def _cmd_run(args) -> int:
     known = _load_instances_or_explain()
     if known is None:
         return 1
-    ids = _resolve_ids(args, known)
+    ids = _resolve_selection(args, known)
     if ids is None:
         return 1
     arm_list = _parse_arms(args.arms)
@@ -212,12 +241,32 @@ def _cmd_run(args) -> int:
     run_id = args.run_id or _default_run_id()
     ws_root = Path(args.workspace_root) if args.workspace_root else config.workspace_root()
     results_dir = config.RESULTS_DIR
+    cache_dir = ws_root / "cache" / "repos"
+    max_parallel = max(1, args.max_parallel)
 
     print(f"run {run_id}: {len(ids)} instance(s), arms: {', '.join(arm_list)}")
-    completed_arms = 0
-    requested_arms = len(ids) * len(arm_list)
-    for index, iid in enumerate(ids, start=1):
-        print(f"[{index}/{len(ids)}] {iid}: running...")
+
+    # Pre-warm the mirror cache sequentially so concurrent workers never race
+    # to clone the same repo. Failures are non-fatal: the worker retries the
+    # clone and reports the real error through the per-instance stub path.
+    for repo in dict.fromkeys(known[iid].repo for iid in ids):
+        try:
+            scaffold.ensure_mirror(repo, cache_dir)
+        except (RuntimeError, OSError) as exc:
+            print(f"warning: mirror pre-warm failed for {repo}: {exc}")
+
+    total = len(ids)
+    print_lock = threading.Lock()
+
+    def _run_one(numbered: tuple[int, str]) -> tuple[str, dict | None]:
+        """Run + harvest one instance; returns (iid, state) with None on error.
+
+        Runs on a worker thread: no chdir, no shared mutable state beyond the
+        print lock; workspace/results paths are disjoint per instance.
+        """
+        index, iid = numbered
+        with print_lock:
+            print(f"[{index}/{total}] {iid}: running...")
         try:
             state = arms.run_instance(
                 run_id,
@@ -227,26 +276,39 @@ def _cmd_run(args) -> int:
                 claude_bin=args.claude_bin,
                 timeout=args.timeout,
                 retry_failed=args.retry_failed,
-                cache_dir=ws_root / "cache" / "repos",
+                cache_dir=cache_dir,
             )
             harvest.harvest_instance(
                 ws_root / run_id / iid, run_id, known[iid], results_dir=results_dir
             )
         except (RuntimeError, OSError) as exc:
-            print(f"[{index}/{len(ids)}] {iid}: error: {exc}")
+            with print_lock:
+                print(f"[{index}/{total}] {iid}: error: {exc}")
             _write_stub_manifest(
                 results_dir / run_id / iid, run_id, iid, arm_list, str(exc)
             )
-            continue
-        labels = []
-        for arm in arm_list:
-            arm_state = state["arms"][arm]
-            labels.append(f"{arm}={_arm_label(arm_state)}")
-            if arm_state["status"] == "completed":
-                completed_arms += 1
-        print(f"[{index}/{len(ids)}] {iid}: " + " ".join(labels))
+            return iid, None
+        labels = " ".join(f"{arm}={_arm_label(state['arms'][arm])}" for arm in arm_list)
+        with print_lock:
+            print(f"[{index}/{total}] {iid}: {labels}")
+        return iid, state
 
-    manifest_path = harvest.write_run_manifest(run_id, results_dir=results_dir)
+    # Rolling execution: all instances are queued up front; at most
+    # max_parallel run at once and each finished slot starts the next.
+    with ThreadPoolExecutor(max_workers=max_parallel) as ex:
+        results = list(ex.map(_run_one, enumerate(ids, start=1)))
+
+    completed_arms = sum(
+        1
+        for _iid, state in results
+        if state is not None
+        for arm in arm_list
+        if state["arms"][arm]["status"] == "completed"
+    )
+    requested_arms = len(ids) * len(arm_list)
+    manifest_path = harvest.write_run_manifest(
+        run_id, results_dir=results_dir, extra={"max_parallel": max_parallel}
+    )
     print(f"run manifest: {manifest_path}")
     print(
         f"summary: {completed_arms}/{requested_arms} requested arm sessions completed"
@@ -264,7 +326,7 @@ def _cmd_validate_gold(args) -> int:
     known = _load_instances_or_explain()
     if known is None:
         return 1
-    ids = _resolve_ids(args, known)
+    ids = _resolve_selection(args, known)
     if ids is None:
         return 1
 
@@ -370,6 +432,10 @@ def _add_instance_selection(sub: argparse.ArgumentParser) -> None:
     group.add_argument(
         "--all", action="store_true", help="process all 45 benchmark instances"
     )
+    group.add_argument(
+        "--batch", metavar="NAME",
+        help=f"process one fixed batch ({', '.join(sorted(batches.BATCHES))})",
+    )
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -381,6 +447,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser("list", help="list the 45 instance ids grouped by repo")
     p.add_argument("--run-id", help="annotate each instance with its arm statuses from this run")
+    p.add_argument("--batch", metavar="NAME",
+                   help=f"only list one fixed batch ({', '.join(sorted(batches.BATCHES))})")
     p.set_defaults(func=_cmd_list)
 
     p = sub.add_parser("doctor", help="preflight checks (and optional session canary)")
@@ -407,6 +475,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--workspace-root", help="override the workspace root directory")
     p.add_argument("--timeout", type=int, default=config.ARM_TIMEOUT_SECONDS,
                    help="per-arm wall-clock timeout in seconds")
+    p.add_argument("--max-parallel", type=int, default=1,
+                   help="run up to N instances concurrently (default 1 = sequential; "
+                        "arms within an instance always stay sequential)")
     p.set_defaults(func=_cmd_run)
 
     p = sub.add_parser("validate-gold",

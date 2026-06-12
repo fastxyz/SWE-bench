@@ -11,6 +11,7 @@ at the function boundary.
 import dataclasses
 import json
 import re
+import threading
 from pathlib import Path
 
 import pytest
@@ -19,9 +20,10 @@ import fvk_bench.arms as arms_mod
 import fvk_bench.cli as cli
 import fvk_bench.doctor as doctor_mod
 import fvk_bench.evaluate as evaluate_mod
+import fvk_bench.harvest as harvest_mod
 import fvk_bench.instances as instances_mod
 import fvk_bench.scaffold as scaffold
-from fvk_bench import config
+from fvk_bench import batches, config
 
 # Same dispatch logic as test_arms.py: relocate fake-claude byproducts out of
 # the hashed core tree, then edit per arm (order makes dispatch unambiguous).
@@ -278,6 +280,163 @@ def test_default_run_id_shape():
 
 
 # ---------------------------------------------------------------------------
+# run: batch selection + parallel execution
+# ---------------------------------------------------------------------------
+
+def _completed_state() -> dict:
+    return {
+        "arms": {
+            arm: {"status": "completed", "reason": None} for arm in config.ARMS
+        }
+    }
+
+
+def _fake_45_instances(fixture_instance, monkeypatch) -> dict:
+    """45 cheap fixture clones whose ids are the real submodule ids."""
+    insts = {
+        iid: dataclasses.replace(fixture_instance, instance_id=iid)
+        for iid in instances_mod.submodule_instance_ids()
+    }
+    monkeypatch.setattr(instances_mod, "load_instances", lambda *a, **k: insts)
+    return insts
+
+
+def test_run_batch_selection(cli_env, fixture_instance, monkeypatch, tmp_path):
+    _fake_45_instances(fixture_instance, monkeypatch)
+    dispatched: list[str] = []
+    harvested: list[str] = []
+
+    def fake_run_instance(run_id, inst, ws_root, **kwargs):
+        dispatched.append(inst.instance_id)
+        return _completed_state()
+
+    monkeypatch.setattr(arms_mod, "run_instance", fake_run_instance)
+    monkeypatch.setattr(
+        harvest_mod,
+        "harvest_instance",
+        lambda ws, rid, inst, results_dir=None: harvested.append(inst.instance_id),
+    )
+
+    rc = cli.main([
+        "run", "--batch", "batch5", "--run-id", "t",
+        "--workspace-root", str(tmp_path / "wsroot"),
+    ])
+
+    assert rc == 0
+    assert dispatched == list(batches.BATCHES["batch5"])  # exactly those 9, in order
+    assert harvested == dispatched
+
+
+def test_run_rejects_batch_with_instances(cli_env, capsys):
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main([
+            "run", "--instances", "demo__demo-1", "--batch", "batch1",
+            "--run-id", "t",
+        ])
+
+    assert exc_info.value.code == 2
+    assert "not allowed with" in capsys.readouterr().err
+
+
+def test_run_max_parallel_rolling(cli_env, fixture_instance, monkeypatch, tmp_path):
+    """With --max-parallel 2 the first two instances provably run concurrently."""
+    insts = {
+        iid: dataclasses.replace(fixture_instance, instance_id=iid)
+        for iid in ("demo__demo-1", "demo__demo-2", "demo__demo-3")
+    }
+    monkeypatch.setattr(instances_mod, "load_instances", lambda *a, **k: insts)
+
+    barrier = threading.Barrier(2, timeout=10)
+    calls: list[tuple[str, str]] = []
+    calls_lock = threading.Lock()
+
+    def fake_run_instance(run_id, inst, ws_root, **kwargs):
+        with calls_lock:
+            calls.append((inst.instance_id, threading.current_thread().name))
+            position = len(calls)
+        if position <= 2:
+            # Both of the first two calls must be in flight at once or this
+            # times out, breaks the barrier, and the run exits non-zero.
+            barrier.wait()
+        return _completed_state()
+
+    monkeypatch.setattr(arms_mod, "run_instance", fake_run_instance)
+    harvested: list[str] = []
+    monkeypatch.setattr(
+        harvest_mod,
+        "harvest_instance",
+        lambda ws, rid, inst, results_dir=None: harvested.append(inst.instance_id),
+    )
+
+    rc = cli.main([
+        "run", "--instances", *insts, "--run-id", "t",
+        "--workspace-root", str(tmp_path / "wsroot"),
+        "--max-parallel", "2",
+    ])
+
+    assert rc == 0
+    assert not barrier.broken, "first two instances never overlapped"
+    assert calls[0][1] != calls[1][1], "first two calls must run on distinct threads"
+    assert sorted(iid for iid, _ in calls) == sorted(insts)
+    assert sorted(harvested) == sorted(insts)
+
+
+def test_run_max_parallel_records_manifest(
+    cli_env, fixture_instance, monkeypatch, tmp_path
+):
+    monkeypatch.setattr(arms_mod, "run_instance", lambda *a, **k: _completed_state())
+    monkeypatch.setattr(harvest_mod, "harvest_instance", lambda *a, **k: None)
+
+    rc = cli.main([
+        "run", "--instances", fixture_instance.instance_id, "--run-id", "t",
+        "--workspace-root", str(tmp_path / "wsroot"),
+        "--max-parallel", "3",
+    ])
+
+    assert rc == 0
+    manifest = json.loads(
+        (cli_env / "t" / "run_manifest.json").read_text(encoding="utf-8")
+    )
+    assert manifest["max_parallel"] == 3
+
+
+def test_run_prewarms_mirrors_once(cli_env, fixture_instance, monkeypatch, tmp_path):
+    """One sequential ensure_mirror per unique repo, before any run_instance."""
+    insts = {
+        iid: dataclasses.replace(fixture_instance, instance_id=iid)
+        for iid in ("demo__demo-1", "demo__demo-2", "demo__demo-3")
+    }
+    monkeypatch.setattr(instances_mod, "load_instances", lambda *a, **k: insts)
+
+    events: list[tuple] = []
+    ws_root = tmp_path / "wsroot"
+
+    def fake_ensure_mirror(repo, cache_dir):
+        events.append(("mirror", repo, Path(cache_dir)))
+        return Path(cache_dir) / "demo__demo.git"
+
+    def fake_run_instance(run_id, inst, ws_root, **kwargs):
+        events.append(("run", inst.instance_id))
+        return _completed_state()
+
+    monkeypatch.setattr(scaffold, "ensure_mirror", fake_ensure_mirror)
+    monkeypatch.setattr(arms_mod, "run_instance", fake_run_instance)
+    monkeypatch.setattr(harvest_mod, "harvest_instance", lambda *a, **k: None)
+
+    rc = cli.main([
+        "run", "--instances", *insts, "--run-id", "t",
+        "--workspace-root", str(ws_root),
+        "--max-parallel", "3",
+    ])
+
+    assert rc == 0
+    mirror_events = [e for e in events if e[0] == "mirror"]
+    assert mirror_events == [("mirror", "demo/demo", ws_root / "cache" / "repos")]
+    assert events[0] == mirror_events[0], "pre-warm must precede every run_instance"
+    assert sorted(e[1] for e in events if e[0] == "run") == sorted(insts)
+
+
+# ---------------------------------------------------------------------------
 # list
 # ---------------------------------------------------------------------------
 
@@ -326,6 +485,31 @@ def test_list_annotates_run_statuses(monkeypatch, tmp_path, capsys):
     assert "control=skipped(baseline_failed)" in line1
     line2 = next(l for l in out.splitlines() if "demo__demo-2" in l)
     assert "no results" in line2
+
+
+def test_list_annotates_batches(capsys):
+    """The full listing (real submodule ids) tags batch membership and [H]."""
+    rc = cli.main(["list"])
+
+    assert rc == 0
+    out = capsys.readouterr().out
+    hard_line = next(l for l in out.splitlines() if "astropy__astropy-13398" in l)
+    assert "[batch1]" in hard_line and "[H]" in hard_line
+    easy_line = next(l for l in out.splitlines() if "django__django-10554" in l)
+    assert "[batch1]" in easy_line and "[H]" not in easy_line
+    for name in batches.BATCHES:
+        assert f"[{name}]" in out
+
+
+def test_list_batch_filter(capsys):
+    rc = cli.main(["list", "--batch", "batch4"])
+
+    assert rc == 0
+    out = capsys.readouterr().out
+    # Instance lines are indented; repo-group headers start at column 0.
+    listed = [l.split()[0] for l in out.splitlines() if l.startswith("  ")]
+    assert sorted(listed) == sorted(batches.BATCHES["batch4"])
+    assert "9 instances" in out
 
 
 # ---------------------------------------------------------------------------
@@ -477,6 +661,22 @@ def test_validate_gold_failure(cli_env, fixture_instance, monkeypatch, capsys):
     ])
 
     assert rc == 1
+
+
+def test_validate_gold_batch(cli_env, fixture_instance, monkeypatch):
+    _fake_45_instances(fixture_instance, monkeypatch)
+    received: dict = {}
+
+    def fake_gold_eval(rid, ids, **kwargs):
+        received["ids"] = list(ids)
+        return {iid: True for iid in ids}
+
+    monkeypatch.setattr(evaluate_mod, "gold_eval", fake_gold_eval)
+
+    rc = cli.main(["validate-gold", "--run-id", "g", "--batch", "batch3"])
+
+    assert rc == 0
+    assert received["ids"] == list(batches.BATCHES["batch3"])
 
 
 # ---------------------------------------------------------------------------

@@ -7,6 +7,7 @@ and workspace tests clone from a ``file://`` mirror built directly with git.
 
 import dataclasses
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -94,6 +95,25 @@ def test_ensure_mirror_clone_failure_raises(tmp_path, monkeypatch):
     # No *.tmp-* leftovers must remain.
     tmp_leftovers = list(cache.glob("*.tmp-*"))
     assert tmp_leftovers == [], f"stale tmp dirs must be cleaned up: {tmp_leftovers}"
+
+
+# ---------------------------------------------------------------------------
+# 1c. clone temp paths are thread-unique (pid alone is shared across threads)
+# ---------------------------------------------------------------------------
+
+def test_mirror_tmp_suffix_thread_unique(tmp_path):
+    """Two temp paths for the same destination never collide within one process."""
+    dst = tmp_path / "demo__demo.git"
+
+    a = scaffold._clone_tmp_path(dst)
+    b = scaffold._clone_tmp_path(dst)
+
+    assert a != b, "same-pid callers (threads) must get distinct temp paths"
+    assert a.parent == dst.parent and b.parent == dst.parent
+    for p in (a, b):
+        assert f".tmp-{os.getpid()}-" in p.name
+        # ensure_mirror's stale-cleanup glob must still match these names.
+        assert p.match("demo__demo.git.tmp-*")
 
 
 # ---------------------------------------------------------------------------

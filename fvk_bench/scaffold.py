@@ -13,6 +13,7 @@ import json
 import os
 import shutil
 import subprocess
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -67,19 +68,29 @@ def _mirror_path(repo: str, cache_dir: Path) -> Path:
     return Path(cache_dir) / f"{org}__{name}.git"
 
 
+def _clone_tmp_path(dst: Path) -> Path:
+    """Temp sibling of ``dst`` for the atomic mirror clone.
+
+    The suffix combines pid and a uuid4 fragment: pid alone is not unique
+    across threads of one process, and ``run --max-parallel`` clones from
+    worker threads.
+    """
+    return dst.with_name(f"{dst.name}.tmp-{os.getpid()}-{uuid.uuid4().hex[:8]}")
+
+
 def ensure_mirror(repo: str, cache_dir: Path) -> Path:
     """Return the bare mirror of ``repo`` under ``cache_dir``, cloning on first use.
 
     A cache hit returns immediately with no subprocess or network activity, so
     22 instances of one repo cost one GitHub clone, not 22.
 
-    Clone-safety: the actual clone goes into a ``<dst>.tmp-<pid>`` sibling so a
-    kill-9 mid-clone never leaves a half-initialised directory that would be
-    mistaken for a valid cache entry.  On success the temp dir is atomically
-    renamed to ``dst``; if ``dst`` already exists (lost race or pre-existing)
-    the temp dir is discarded and the winner is returned.  Any stale
-    ``*.tmp-*`` siblings left by a previous process are removed (best effort)
-    before the clone starts.
+    Clone-safety: the actual clone goes into a thread-unique
+    ``<dst>.tmp-<pid>-<uuid>`` sibling so a kill-9 mid-clone never leaves a
+    half-initialised directory that would be mistaken for a valid cache entry.
+    On success the temp dir is atomically renamed to ``dst``; if ``dst``
+    already exists (lost race or pre-existing) the temp dir is discarded and
+    the winner is returned.  Any stale ``*.tmp-*`` siblings left by a previous
+    process are removed (best effort) before the clone starts.
     """
     dst = _mirror_path(repo, cache_dir)
     if dst.exists():
@@ -93,7 +104,7 @@ def ensure_mirror(repo: str, cache_dir: Path) -> Path:
         except Exception:  # noqa: BLE001
             pass
 
-    tmp = dst.with_name(dst.name + f".tmp-{os.getpid()}")
+    tmp = _clone_tmp_path(dst)
     try:
         _git("clone", "--mirror", _clone_url(repo), str(tmp))
     except Exception:

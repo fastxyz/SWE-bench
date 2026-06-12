@@ -175,6 +175,7 @@ def harvest_instance(
 def write_run_manifest(
     run_id: str,
     results_dir: Path = config.RESULTS_DIR,
+    extra: dict | None = None,
 ) -> Path:
     """Write a run-level manifest at ``results_dir/run_id/run_manifest.json``.
 
@@ -186,6 +187,8 @@ def write_run_manifest(
       setting_sources
     - ``dataset``, ``template_hashes``, ``fvk_bench_version``
     - ``git``: repo_sha, submodules (path → sha dict)
+    - any caller-supplied ``extra`` keys, merged into the manifest top level
+      (e.g. ``max_parallel`` from the run command)
 
     Returns the path to the written file.
     """
@@ -279,6 +282,7 @@ def write_run_manifest(
             "submodules": submodules,
         },
     }
+    manifest.update(extra or {})
 
     out_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     return out_path
