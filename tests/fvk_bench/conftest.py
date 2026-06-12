@@ -1,9 +1,10 @@
 """Shared fixtures for fvk_bench tests.
 
 Provides a tiny local git repository that stands in for a GitHub remote
-(``fixture_remote_repo``) and a matching :class:`Instance` pinned at the
-repo's first commit (``fixture_instance``). Later task suites (sessions,
-runner) reuse these to exercise workspace-shaped code without network access.
+(``fixture_remote_repo``), a matching :class:`Instance` pinned at the
+repo's first commit (``fixture_instance``), and a fake ``claude`` binary
+(``fake_claude_bin``) so runner-shaped code is exercised without network
+access or a real CLI.
 """
 
 import subprocess
@@ -12,6 +13,8 @@ from pathlib import Path
 import pytest
 
 from fvk_bench.instances import Instance
+
+FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 
 def _run_git(args: list[str], cwd: Path) -> str:
@@ -57,6 +60,24 @@ def fixture_remote_repo(tmp_path_factory) -> tuple[Path, str]:
     _run_git(["commit", "-q", "-m", "commit 2: subtract()"], cwd=repo)
 
     return repo, first_commit_sha
+
+
+@pytest.fixture(scope="session")
+def fake_claude_bin(tmp_path_factory) -> Path:
+    """Install fixtures/fake_claude.py as an executable ``claude`` binary.
+
+    Copies the fake into its own temp bin directory under the name the runner
+    expects, ensures a python3 shebang, and marks it executable. Returned as a
+    path; tests pass ``claude_bin=str(fake_claude_bin)`` to the runner.
+    """
+    text = (FIXTURES_DIR / "fake_claude.py").read_text(encoding="utf-8")
+    if not text.startswith("#!"):
+        text = "#!/usr/bin/env python3\n" + text
+    bin_dir = tmp_path_factory.mktemp("fake_claude_bin")
+    dst = bin_dir / "claude"
+    dst.write_text(text, encoding="utf-8")
+    dst.chmod(0o755)
+    return dst
 
 
 @pytest.fixture()
