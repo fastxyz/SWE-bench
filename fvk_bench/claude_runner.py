@@ -138,8 +138,13 @@ def run_arm_session(
     timeout: int = config.ARM_TIMEOUT_SECONDS,
     claude_bin: str = "claude",
     model: str = config.MODEL,
+    max_turns: int | None = None,
 ) -> ClaudeResult:
     """Run one arm session in workspace ``ws`` and capture everything.
+
+    ``max_turns`` overrides the pinned per-arm turn budget (used only by
+    short probe sessions such as the doctor canary — benchmark arms always
+    run with the pinned :data:`fvk_bench.config.MAX_TURNS` default).
 
     ``ws`` must already exist (scaffolded by the workspace step) — running an
     arm against a missing directory is a sequencing bug, not something to
@@ -175,6 +180,7 @@ def run_arm_session(
         resume_id=resume_id,
         claude_bin=claude_bin,
         model=model,
+        max_turns=max_turns,
     )
 
     raw_dir = ws / ".fvk_bench" / "raw"

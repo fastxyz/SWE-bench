@@ -136,6 +136,30 @@ def test_run_ok_captures_everything(tmp_path, fake_claude_bin, monkeypatch):
 
 
 # ---------------------------------------------------------------------------
+# 3a. max_turns passthrough: run_arm_session overrides the pinned turn budget
+# ---------------------------------------------------------------------------
+
+def test_run_arm_session_max_turns_passthrough(tmp_path, fake_claude_bin):
+    ws = tmp_path / "ws"
+    ws.mkdir()
+
+    result = claude_runner.run_arm_session(
+        ws, "baseline", PROMPT,
+        session_id=SID, claude_bin=str(fake_claude_bin), max_turns=2,
+    )
+
+    assert result.ok is True
+    capture = json.loads((ws / "fake_claude_capture.json").read_text(encoding="utf-8"))
+    argv = capture["argv"]
+    assert argv[argv.index("--max-turns") + 1] == "2"
+    # Without the override the pinned per-arm budget still applies (golden).
+    assert argv[1:] == claude_runner.build_argv(
+        PROMPT, "baseline",
+        session_id=SID, claude_bin=str(fake_claude_bin), max_turns=2,
+    )[1:]
+
+
+# ---------------------------------------------------------------------------
 # 3b. workspace guard: ws must be scaffolded before an arm session runs
 # ---------------------------------------------------------------------------
 
