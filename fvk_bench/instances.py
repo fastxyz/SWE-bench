@@ -8,6 +8,9 @@ This module provides three public functions:
   :class:`Instance` dataclasses, cross-checking against the submodule ids.
 - ``vendor_instances``: download fresh metadata from HuggingFace and write the
   vendored JSON file (requires network and the ``datasets`` package).
+
+Note: test NAMES are hidden benchmark data; only COUNTS are vendored, which is
+why FAIL_TO_PASS/PASS_TO_PASS lists are reduced to lengths.
 """
 
 import json
@@ -64,23 +67,38 @@ def load_instances(path: Path = config.INSTANCES_JSON) -> dict[str, "Instance"]:
         Mapping of ``instance_id`` → :class:`Instance`.
 
     Raises:
-        RuntimeError: if the set of ids in the file does not exactly match
-            the set returned by :func:`submodule_instance_ids`.
+        RuntimeError: if the JSON cannot be parsed, if a required field is
+            missing or has the wrong type, or if the set of ids in the file
+            does not exactly match the set returned by
+            :func:`submodule_instance_ids`.
     """
-    raw: list[dict] = json.loads(Path(path).read_text(encoding="utf-8"))
-    instances = {
-        r["instance_id"]: Instance(
-            instance_id=r["instance_id"],
-            repo=r["repo"],
-            base_commit=r["base_commit"],
-            version=r["version"],
-            problem_statement=r["problem_statement"],
-            hints_text=r["hints_text"],
-            fail_to_pass_count=int(r["fail_to_pass_count"]),
-            pass_to_pass_count=int(r["pass_to_pass_count"]),
-        )
-        for r in raw
-    }
+    path = Path(path)
+    try:
+        raw: list[dict] = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"Failed to parse JSON from {path}: {exc}") from exc
+    try:
+        instances = {
+            r["instance_id"]: Instance(
+                instance_id=r["instance_id"],
+                repo=r["repo"],
+                base_commit=r["base_commit"],
+                version=r["version"],
+                problem_statement=r["problem_statement"],
+                hints_text=r["hints_text"],
+                fail_to_pass_count=int(r["fail_to_pass_count"]),
+                pass_to_pass_count=int(r["pass_to_pass_count"]),
+            )
+            for r in raw
+        }
+    except KeyError as exc:
+        raise RuntimeError(
+            f"Missing required field {exc} in {path}"
+        ) from exc
+    except TypeError as exc:
+        raise RuntimeError(
+            f"Invalid field type in {path}: {exc}"
+        ) from exc
 
     submodule_ids = set(submodule_instance_ids())
     json_ids = set(instances.keys())
@@ -122,6 +140,7 @@ def vendor_instances(out_path: Path = config.INSTANCES_JSON) -> int:
     """
     import datasets  # noqa: PLC0415 — intentional late import; avoids hard dep at module level
 
+    out_path = Path(out_path)
     target_ids = set(submodule_instance_ids())
 
     ds = datasets.load_dataset(config.DATASET_NAME, split="test")
@@ -161,7 +180,6 @@ def vendor_instances(out_path: Path = config.INSTANCES_JSON) -> int:
 
     rows.sort(key=lambda r: r["instance_id"])
 
-    out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(
         json.dumps(rows, indent=2, ensure_ascii=False) + "\n",

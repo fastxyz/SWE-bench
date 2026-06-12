@@ -1,9 +1,11 @@
 """Tests for fvk_bench.instances — written before implementation (TDD)."""
 
+import dataclasses
 import json
 import re
 import sys
 import types
+from dataclasses import FrozenInstanceError
 from pathlib import Path
 
 import pytest
@@ -43,7 +45,7 @@ def test_load_instances_roundtrip(monkeypatch):
     assert inst2.pass_to_pass_count == 5
 
     # Must be frozen dataclasses
-    with pytest.raises((AttributeError, TypeError)):
+    with pytest.raises(FrozenInstanceError):
         inst1.instance_id = "mutated"  # type: ignore[misc]
 
     # All field types
@@ -59,7 +61,7 @@ def test_load_instances_id_mismatch_raises(monkeypatch):
     """load_instances raises RuntimeError when submodule ids don't match json ids."""
     import fvk_bench.instances as mod
 
-    # Return 2 fake ids that are different from the fixture's ids
+    # Return 45 fake ids that are different from the fixture's ids
     different_ids = [f"other__other-{i}" for i in range(1, 46)]  # 45 different ids
     monkeypatch.setattr(mod, "submodule_instance_ids", lambda: different_ids)
 
