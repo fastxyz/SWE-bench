@@ -10,6 +10,7 @@ and ``fvk_materials/`` are created later by the arms that use them.
 """
 
 import json
+import os
 import shutil
 import subprocess
 from datetime import datetime, timezone
@@ -71,12 +72,45 @@ def ensure_mirror(repo: str, cache_dir: Path) -> Path:
 
     A cache hit returns immediately with no subprocess or network activity, so
     22 instances of one repo cost one GitHub clone, not 22.
+
+    Clone-safety: the actual clone goes into a ``<dst>.tmp-<pid>`` sibling so a
+    kill-9 mid-clone never leaves a half-initialised directory that would be
+    mistaken for a valid cache entry.  On success the temp dir is atomically
+    renamed to ``dst``; if ``dst`` already exists (lost race or pre-existing)
+    the temp dir is discarded and the winner is returned.  Any stale
+    ``*.tmp-*`` siblings left by a previous process are removed (best effort)
+    before the clone starts.
     """
     dst = _mirror_path(repo, cache_dir)
     if dst.exists():
         return dst
     Path(cache_dir).mkdir(parents=True, exist_ok=True)
-    _git("clone", "--mirror", _clone_url(repo), str(dst))
+
+    # Best-effort: clean up stale temp dirs from previous killed processes.
+    for stale in Path(cache_dir).glob(f"{dst.name}.tmp-*"):
+        try:
+            shutil.rmtree(stale)
+        except Exception:  # noqa: BLE001
+            pass
+
+    tmp = dst.with_name(dst.name + f".tmp-{os.getpid()}")
+    try:
+        _git("clone", "--mirror", _clone_url(repo), str(tmp))
+    except Exception:
+        # Clean up partial clone so it can never be a cache hit.
+        try:
+            shutil.rmtree(tmp)
+        except Exception:  # noqa: BLE001
+            pass
+        raise
+    try:
+        os.rename(tmp, dst)
+    except OSError:
+        # dst appeared between our check and rename (lost race or pre-existing).
+        try:
+            shutil.rmtree(tmp)
+        except Exception:  # noqa: BLE001
+            pass
     return dst
 
 
@@ -102,11 +136,14 @@ def _clone_repo(mirror: Path, repo_dir: Path) -> None:
     """Clone the mirror into ``repo_dir``, replacing any partial previous clone."""
     if repo_dir.exists():
         shutil.rmtree(repo_dir)
-    _git("clone", "--no-hardlinks", f"file://{Path(mirror).resolve()}", str(repo_dir))
+    _git("clone", "--no-hardlinks", f"file://{mirror.resolve()}", str(repo_dir))
 
 
 def create_workspace(run_id: str, inst: Instance, ws_root: Path, mirror: Path) -> Path:
     """Create (or return) the workspace for ``inst`` under ``ws_root/run_id``.
+
+    ``mirror`` MUST be the bare mirror directory returned by :func:`ensure_mirror`
+    (not the cache directory that contains it).
 
     Idempotent: once the scaffolded marker exists the workspace is returned
     untouched — sessions may already have edited ``repo/``.
@@ -120,6 +157,9 @@ def create_workspace(run_id: str, inst: Instance, ws_root: Path, mirror: Path) -
     if marker.exists():
         return ws
 
+    # Create .fvk_bench explicitly before its children so it always exists as a
+    # plain directory (not implicitly via a deeper mkdir parents=True call).
+    (ws / ".fvk_bench").mkdir(parents=True, exist_ok=True)
     for rel in _WORKSPACE_DIRS:
         (ws / rel).mkdir(parents=True, exist_ok=True)
 
@@ -144,7 +184,7 @@ def create_workspace(run_id: str, inst: Instance, ws_root: Path, mirror: Path) -
     except RuntimeError:
         # Stale mirror? Refresh once, re-clone, retry; a second failure means
         # the commit genuinely doesn't exist upstream — propagate it.
-        refresh_mirror(inst.repo, Path(mirror).parent)
+        refresh_mirror(inst.repo, mirror.parent)
         _clone_repo(mirror, repo_dir)
         _git("checkout", "-q", "--detach", inst.base_commit, cwd=repo_dir)
 

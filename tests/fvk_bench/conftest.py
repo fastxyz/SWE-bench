@@ -25,6 +25,8 @@ def _run_git(args: list[str], cwd: Path) -> str:
     return proc.stdout
 
 
+# fixture_remote_repo is session-scoped because building the git repo is
+# expensive and the repo is never mutated — all tests read from it safely.
 @pytest.fixture(scope="session")
 def fixture_remote_repo(tmp_path_factory) -> tuple[Path, str]:
     """Build a tiny two-commit git repo standing in for a GitHub remote.
@@ -80,6 +82,8 @@ def fake_claude_bin(tmp_path_factory) -> Path:
     return dst
 
 
+# fixture_instance is function-scoped because tests use dataclasses.replace() to
+# create per-test variants; a shared instance would risk mutation bleeding across tests.
 @pytest.fixture()
 def fixture_instance(fixture_remote_repo) -> Instance:
     """An Instance for repo "demo/demo" pinned at the fixture repo's commit 1."""

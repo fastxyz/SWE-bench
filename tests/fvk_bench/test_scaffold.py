@@ -74,6 +74,29 @@ def test_ensure_mirror_creates_once(fixture_remote_repo, tmp_path, monkeypatch):
 
 
 # ---------------------------------------------------------------------------
+# 1b. ensure_mirror leaves no mirror dir or *.tmp-* leftovers on clone failure
+# ---------------------------------------------------------------------------
+
+def test_ensure_mirror_clone_failure_raises(tmp_path, monkeypatch):
+    """A failing clone must raise RuntimeError mentioning "clone" with no leftovers."""
+    cache = tmp_path / "cache"
+    monkeypatch.setattr(
+        scaffold, "_clone_url", lambda repo: "file:///nonexistent/nowhere.git"
+    )
+
+    with pytest.raises(RuntimeError, match="clone"):
+        scaffold.ensure_mirror("demo/demo", cache)
+
+    # No mirror directory must exist.
+    mirror_path = cache / "demo__demo.git"
+    assert not mirror_path.exists(), "partial mirror dir must not survive a failed clone"
+
+    # No *.tmp-* leftovers must remain.
+    tmp_leftovers = list(cache.glob("*.tmp-*"))
+    assert tmp_leftovers == [], f"stale tmp dirs must be cleaned up: {tmp_leftovers}"
+
+
+# ---------------------------------------------------------------------------
 # 2. create_workspace produces exactly the specified tree
 # ---------------------------------------------------------------------------
 
@@ -82,7 +105,7 @@ def test_create_workspace_tree_exact(fixture_instance, mirror, tmp_path):
 
     ws = scaffold.create_workspace("run-1", fixture_instance, ws_root, mirror)
 
-    assert ws == ws_root / "run-1" / "demo__demo-1"
+    assert ws == ws_root / "run-1" / fixture_instance.instance_id
 
     # Exact top level: nothing more, nothing less.
     assert {p.name for p in ws.iterdir()} == {"benchmark", "repo", "reports", ".fvk_bench"}
