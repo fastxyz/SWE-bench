@@ -1,0 +1,22 @@
+[
+  {
+    "instance_id": "demo__demo-1",
+    "repo": "demo/demo",
+    "base_commit": "abc123",
+    "version": "1.0",
+    "problem_statement": "Fix the bug in demo one.",
+    "hints_text": "Look at the constructor.",
+    "fail_to_pass_count": 2,
+    "pass_to_pass_count": 3
+  },
+  {
+    "instance_id": "demo__demo-2",
+    "repo": "demo/demo",
+    "base_commit": "def456",
+    "version": "1.1",
+    "problem_statement": "Fix the bug in demo two.",
+    "hints_text": "",
+    "fail_to_pass_count": 1,
+    "pass_to_pass_count": 5
+  }
+]
