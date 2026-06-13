@@ -1,0 +1,283 @@
+{
+  "run_id": "batch1-XC-MINI-PRO-AHP",
+  "instance_id": "django__django-13128",
+  "baseline_session_id": "794570b3-b991-4473-ab6d-738123c79ac5",
+  "core_hash_post_baseline": "e0a586c7fd195a2b88d71b7548caac9ef736cc016ef80222694eec6db924d590",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "794570b3-b991-4473-ab6d-738123c79ac5",
+      "attempts": 1,
+      "started_at": "2026-06-13T02:01:20.617049+00:00",
+      "ended_at": "2026-06-13T02:10:59.098754+00:00",
+      "num_turns": 22,
+      "duration_seconds": 578.4809894229984,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 9,
+          "Grep": 9,
+          "Edit": 1,
+          "Glob": 1,
+          "Write": 1
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 83
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "23542547-7b4d-4b4c-8386-d7d590dc63a4",
+      "attempts": 1,
+      "started_at": "2026-06-13T02:10:59.715238+00:00",
+      "ended_at": "2026-06-13T02:24:55.344082+00:00",
+      "num_turns": 23,
+      "duration_seconds": 835.6280933620001,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 17,
+          "Grep": 12,
+          "Edit": 1,
+          "Glob": 4,
+          "Write": 9
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 179
+      }
+    },
+    "control": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "d306cb0b-4f28-443f-8ca5-5cf6e98eda79",
+      "attempts": 1,
+      "started_at": "2026-06-13T02:24:55.617958+00:00",
+      "ended_at": "2026-06-13T02:31:57.154707+00:00",
+      "num_turns": 13,
+      "duration_seconds": 421.5360336979793,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 15,
+          "Grep": 13,
+          "Edit": 1,
+          "Glob": 1,
+          "Write": 3
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 127
+      }
+    }
+  },
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "285f34c0c41bb0ff1e784f2f0234b23ae0e382f96b0ba257b2bddae05a492271",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 576570,
+      "duration_api_ms": 577084,
+      "ttft_ms": 12085,
+      "ttft_stream_ms": 196436,
+      "time_to_request_ms": 193574,
+      "num_turns": 22,
+      "result": "The fix is complete and consistent with the existing `as_sql()` logic. Both deliverables are done.\n\n## Summary\n\nThe root cause was that `CombinedExpression` had no output-field inference of its own and fell back to `BaseExpression._resolve_output_field()`, which infers `DateTimeField` for `DateTimeField - DateTimeField` \u2014 semantically wrong, since the difference of two datetimes is a duration. SQL generation already knew this (`as_sql()` routes same-typed temporal subtraction to `TemporalSubtraction`, which yields a `DurationField`), but type inference was inconsistent with it, so combining the subtraction with anything else (e.g. `+ Value(timedelta(), DurationField())`) reported \"mixed types: DateTimeField, DurationField\" and demanded an `ExpressionWrapper`. I fixed it by adding a `_resolve_output_field()` override to `CombinedExpression` in `django/db/models/expressions.py` that, using the exact same guard as `as_sql()` (connector is `SUB` and both operands resolve to the same `DateField`/`DateTimeField`/`TimeField`), returns `DurationField()`; every other case delegates unchanged to the base implementation. This makes temporal subtraction self-describe its type so it composes with other expressions without an `ExpressionWrapper`, while leaving the proven SQL-generation and value-conversion paths (and the expression tree / resolution flow) untouched.",
+      "stop_reason": "end_turn",
+      "session_id": "794570b3-b991-4473-ab6d-738123c79ac5",
+      "total_cost_usd": 2.163329,
+      "usage": {
+        "input_tokens": 310,
+        "cache_creation_input_tokens": 58233,
+        "cache_read_input_tokens": 964063,
+        "output_tokens": 32706,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 58233,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 487,
+            "cache_read_input_tokens": 83940,
+            "cache_creation_input_tokens": 1152,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 1152
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 882,
+          "outputTokens": 16,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.000962,
+          "contextWindow": 200000,
+          "maxOutputTokens": 32000
+        },
+        "claude-opus-4-8": {
+          "inputTokens": 315,
+          "outputTokens": 46379,
+          "cacheReadInputTokens": 979759,
+          "cacheCreationInputTokens": 81830,
+          "webSearchRequests": 0,
+          "costUSD": 2.1623669999999997,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "aaacf337-5120-499c-8024-be827e37cc5c"
+    },
+    "fvk": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 833557,
+      "duration_api_ms": 832452,
+      "ttft_ms": 3213,
+      "ttft_stream_ms": 3212,
+      "time_to_request_ms": 20,
+      "num_turns": 23,
+      "result": "All deliverables are complete and the V1 fix remains intact at `expressions.py:445` (the `CombinedExpression._resolve_output_field` override returning `fields.DurationField()` at line 457). The five required `fvk/` artifacts plus the two supporting `.k` files and `reports/fvk_notes.md` are all in place.\n\n## Summary\n\nI applied the FVK methodology to audit my V1 fix and the conclusion is that **V1 stands unchanged, now formally justified**. I built a mini-X K semantics (`fvk/mini_combined.k`) abstracting each `Field` to its `get_internal_type()` string and modeling the method's nested-`if` control flow plus the unchanged base method as a black-box `baseVal`, then stated three reachability claims (`fvk/mini_combined-spec.k`): `FIX-TEMPORAL` (temporal subtraction \u2192 `DurationField`), `DEFER` (every other input \u2192 the unchanged base result, proving regression-freedom), and `CONSISTENCY` (the fix's dispatch predicate equals `as_sql`'s, so type inference and SQL generation can never disagree). All seven proof obligations discharge, including termination and the arity-2 unpack totality, which I cross-checked by confirming only `DurationExpression`/`TemporalSubtraction` subclass `CombinedExpression` and neither alters the two-source invariant. The audit surfaced **no correctness defect**: the root-cause finding (F1) is fixed, the corner cases (operand re-raising F3, `isinstance` subclass asymmetry F4, `None` sources F5) are all proven harmless or out-of-scope, and the only actionable item is an optional maintainability refactor (F6/G1 \u2014 DRY the temporal predicate duplicated between `_resolve_output_field` and `as_sql`), which I deliberately deferred because applying it would modify working, proof-certified `as_sql` code and widen the diff against the task's minimality directive; every keep/defer decision is traced to specific FINDINGS and PROOF_OBLIGATIONS entries in `reports/fvk_notes.md`, with all K artifacts honestly labeled constructed-not-machine-checked.",
+      "stop_reason": "end_turn",
+      "session_id": "23542547-7b4d-4b4c-8386-d7d590dc63a4",
+      "total_cost_usd": 3.5535145000000004,
+      "usage": {
+        "input_tokens": 33,
+        "cache_creation_input_tokens": 106538,
+        "cache_read_input_tokens": 2486574,
+        "output_tokens": 65768,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 106538,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 735,
+            "cache_read_input_tokens": 190724,
+            "cache_creation_input_tokens": 906,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 906
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 33,
+          "outputTokens": 65768,
+          "cacheReadInputTokens": 2486574,
+          "cacheCreationInputTokens": 106538,
+          "webSearchRequests": 0,
+          "costUSD": 3.5535145000000004,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "fd97577e-5f0b-40d4-b22a-748403582aea"
+    },
+    "control": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 419556,
+      "duration_api_ms": 419494,
+      "ttft_ms": 166696,
+      "ttft_stream_ms": 5429,
+      "time_to_request_ms": 16,
+      "num_turns": 13,
+      "result": "I conducted a systematic, skeptical re-review of the V1 fix and recorded 15 numbered findings in `review/FINDINGS.md`, then wrote `reports/control_notes.md` tracing the decision to those findings. **V1 stands unchanged.** The fix \u2014 adding `CombinedExpression._resolve_output_field()` that infers `DurationField` for same-type temporal subtraction \u2014 is confirmed correct: its activation predicate (`connector == SUB`, both operands the same `Date/DateTime/TimeField`) is byte-for-byte identical to the existing `as_sql()` dispatch to `TemporalSubtraction`, so type inference and emitted SQL can never diverge (F2), and the resulting SQL/converters are identical to the long-supported `ExpressionWrapper(..., output_field=DurationField())` form proven by existing tests (F12). I cleared the high-impact regression candidates by reading the surrounding code: filter/lookup behavior is unaffected because an expression rhs's `output_field` doesn't influence WHERE SQL (F3); `ExpressionWrapper` construction on an unresolved expression is byte-identical to the base because the same swallowed `AttributeError` occurs in both (F8); and `TemporalSubtraction`/`DurationExpression`/mixed-type/`None` cases are each shown harmless and equivalent to base behavior (F4\u2013F11). The implementation also matches the codebase's established `_resolve_output_field` idiom (F14), so no refactor or alternative (`resolve_expression`-based) approach was warranted; the only changes in this pass are the two new report/review documents.",
+      "stop_reason": "end_turn",
+      "session_id": "d306cb0b-4f28-443f-8ca5-5cf6e98eda79",
+      "total_cost_usd": 1.61125025,
+      "usage": {
+        "input_tokens": 17,
+        "cache_creation_input_tokens": 41947,
+        "cache_read_input_tokens": 958743,
+        "output_tokens": 34785,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 41947,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 685,
+            "cache_read_input_tokens": 124821,
+            "cache_creation_input_tokens": 2218,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 2218
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 17,
+          "outputTokens": 34785,
+          "cacheReadInputTokens": 958743,
+          "cacheCreationInputTokens": 41947,
+          "webSearchRequests": 0,
+          "costUSD": 1.61125025,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "1088d2f7-6011-49a0-b7c5-91ae251bd7b4"
+    }
+  }
+}

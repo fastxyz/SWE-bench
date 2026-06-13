@@ -1,0 +1,283 @@
+{
+  "run_id": "batch1-XC-MINI-PRO-AHP",
+  "instance_id": "django__django-13212",
+  "baseline_session_id": "5d80035f-d96e-4243-8283-2a6318761d44",
+  "core_hash_post_baseline": "28e0f7aebddd6e614c1779b3697ac49133a397fa1f49a0fade6639db371f6173",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "5d80035f-d96e-4243-8283-2a6318761d44",
+      "attempts": 1,
+      "started_at": "2026-06-13T02:11:08.795402+00:00",
+      "ended_at": "2026-06-13T02:18:37.310728+00:00",
+      "num_turns": 33,
+      "duration_seconds": 448.5147370779887,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 12,
+          "Glob": 3,
+          "Grep": 2,
+          "Edit": 14,
+          "Write": 1
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 120
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "55c0e7c2-e419-4f3f-92cc-9874aebc6408",
+      "attempts": 1,
+      "started_at": "2026-06-13T02:18:37.916054+00:00",
+      "ended_at": "2026-06-13T02:34:35.444546+00:00",
+      "num_turns": 32,
+      "duration_seconds": 957.5277836339956,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 22,
+          "Glob": 7,
+          "Grep": 5,
+          "Edit": 20,
+          "Write": 9
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 250
+      }
+    },
+    "control": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "18acbec7-c48b-446c-9b50-d8beece8b36d",
+      "attempts": 1,
+      "started_at": "2026-06-13T02:34:35.731238+00:00",
+      "ended_at": "2026-06-13T02:47:39.745468+00:00",
+      "num_turns": 25,
+      "duration_seconds": 784.0136459030036,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 20,
+          "Glob": 3,
+          "Grep": 10,
+          "Edit": 20,
+          "Write": 3
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 221
+      }
+    }
+  },
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "285f34c0c41bb0ff1e784f2f0234b23ae0e382f96b0ba257b2bddae05a492271",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 446554,
+      "duration_api_ms": 445361,
+      "ttft_ms": 5163,
+      "ttft_stream_ms": 5137,
+      "time_to_request_ms": 24,
+      "num_turns": 33,
+      "result": "The fix is complete and verified. \n\n## Summary\n\nThe issue asked that Django's built-in validators include the value being validated in the raised `ValidationError` so custom messages can use the `%(value)s` placeholder (as the docs already advertise for user-written validators). The root cause was that `ValidationError` only interpolates placeholders when it carries a truthy `params` dict (`message %= error.params` in `ValidationError.__iter__`), but the built-in validators\u2014except `BaseValidator`, which already passed `value`\u2014raised `ValidationError(self.message, code=...)` with no params, leaving the value inaccessible. I fixed this in `django/core/validators.py` by adding `params={'value': value}` to every previously param-less raise in `RegexValidator`, `URLValidator` (all five direct raises, with `super().__call__`/re-raises inheriting it), `EmailValidator`, `validate_ipv4_address`, `validate_ipv6_address`, `validate_ipv46_address`, and `ProhibitNullCharactersValidator`; subclasses such as the auth username validators inherit the change automatically. This is behavior-preserving for the default (placeholder-free) messages because `%`-formatting with a mapping argument tolerates unused keys, mirroring the long-standing `BaseValidator` mechanism. I left `DecimalValidator` and `FileExtensionValidator` untouched since they already raise with their own contextual params, added a short `versionchanged:: 3.2` note to `docs/ref/validators.txt`, and documented the root cause, changes, and rejected alternatives in `reports/baseline_notes.md`.",
+      "stop_reason": "end_turn",
+      "session_id": "5d80035f-d96e-4243-8283-2a6318761d44",
+      "total_cost_usd": 1.8914332499999997,
+      "usage": {
+        "input_tokens": 61,
+        "cache_creation_input_tokens": 61067,
+        "cache_read_input_tokens": 1265041,
+        "output_tokens": 35039,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 61067,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 755,
+            "cache_read_input_tokens": 63216,
+            "cache_creation_input_tokens": 1226,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 1226
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 884,
+          "outputTokens": 16,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.000964,
+          "contextWindow": 200000,
+          "maxOutputTokens": 32000
+        },
+        "claude-opus-4-8": {
+          "inputTokens": 61,
+          "outputTokens": 35039,
+          "cacheReadInputTokens": 1265041,
+          "cacheCreationInputTokens": 61067,
+          "webSearchRequests": 0,
+          "costUSD": 1.8904692499999998,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "aea42f94-b36b-49c2-944c-b43d1c7df0cf"
+    },
+    "fvk": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 955579,
+      "duration_api_ms": 954144,
+      "ttft_ms": 3083,
+      "ttft_stream_ms": 3081,
+      "time_to_request_ms": 16,
+      "num_turns": 32,
+      "result": "All rejection paths are uniform: every `raise` either carries `params={'value': value}` directly (or a params dict containing `value`), or re-raises an exception (`raise e` at 122/129, bare `raise` at 131) that already carries the provided value. The audit and revision are complete.\n\n## Summary\n\nApplying the FVK methodology to my V1 fix, I wrote a uniform specification \u2014 *every* rejecting built-in validator must expose the provided value as `params['value']` (for `%(value)s`), the accept path must be unchanged, and default-message rendering must be invariant \u2014 and captured it as a mini-Python K fragment plus three reachability claims (CONTRACT-REJECT, CONTRACT-ACCEPT, RENDER-DEFAULT; no loops, so no circularities). Formalizing against that clean spec surfaced that V1 left two proof obligations partially open: **PO1** (`DecimalValidator` and `FileExtensionValidator` never added `value`, so `%(value)s` raised `KeyError` there \u2014 Findings F1/F2) and **PO5** (`URLValidator`\u2019s IDN retry reported the punycode-normalized URL instead of the value the user provided \u2014 Finding F3). I therefore *revised* V1 with three small, provably-safe edits in `django/core/validators.py`: added `'value': value` to all four `DecimalValidator` raises and to `FileExtensionValidator`, and wrapped the IDN-retry `super().__call__(url)` to `raise e` (the original failure carrying the provided value). Each is purely additive on params, rendering-invariant for default messages (none contains a `%`, discharging PO3), and breaks no existing test (the suite asserts only *that* those validators raise, never their exact params); the `URLValidator` accept/IDN-success paths are untouched. Findings F4 (a custom message with a bare `%` now interpolates \u2014 consistent with the long-standing `BaseValidator` behavior and Django\u2019s `%%` convention) and F6 (`DecimalValidator`\u2019s NaN branch lacks a `code`) were surfaced and consciously left as-is/out-of-scope, and the full `str.__mod__` semantics is marked an explicit escalation boundary rather than faked as trusted. All five `fvk/` artifacts (plus the two `.k` files), the code edits, and `reports/fvk_notes.md` tracing every decision to specific findings/obligations are complete; the proofs are labeled constructed-but-not-machine-checked since no K toolchain is available here.",
+      "stop_reason": "end_turn",
+      "session_id": "55c0e7c2-e419-4f3f-92cc-9874aebc6408",
+      "total_cost_usd": 4.36483375,
+      "usage": {
+        "input_tokens": 55,
+        "cache_creation_input_tokens": 116623,
+        "cache_read_input_tokens": 3744480,
+        "output_tokens": 70537,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 116623,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 1159,
+            "cache_read_input_tokens": 178906,
+            "cache_creation_input_tokens": 2159,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 2159
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 55,
+          "outputTokens": 70537,
+          "cacheReadInputTokens": 3744480,
+          "cacheCreationInputTokens": 116623,
+          "webSearchRequests": 0,
+          "costUSD": 4.36483375,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "915a9170-0006-4029-ac11-87f70e7ef290"
+    },
+    "control": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 781925,
+      "duration_api_ms": 781767,
+      "ttft_ms": 59898,
+      "ttft_stream_ms": 4189,
+      "time_to_request_ms": 17,
+      "num_turns": 25,
+      "result": "The structure is sound: the new `try/except` (lines 124\u2013127) nests correctly within the `if value:` block, and the `else:` at line 128 still pairs with `if value:`.\n\n## Summary\n\nMy audit confirmed V1's core change was correct and regression-free, and surfaced two improvements that I applied. The central risk I scrutinized was the `run_validators` path (in both forms and model fields), which replaces a validator's message with the field's message-for-that-code while **keeping** the now-populated `params` and then `%`-formatting it; an exhaustive audit of every field message for the codes my validators raise (`invalid`, `null_characters_not_allowed`, and the `Decimal`/`File` codes) found none carrying a non-`value` placeholder or a bare `%`, and default placeholder-free messages render identically, so there is no regression (findings F1\u2013F5, F8, F9). I then made two refinements: **(F6)** extended `params={'value': value}` to `DecimalValidator` (all four raises) and `FileExtensionValidator`, since the issue targets built-in validators generally and V1's own docs note claimed full coverage \u2014 proven safe because no field overrides those codes and feeding an extra key to `ngettext_lazy` is already done by `MinLengthValidator`; and **(F7)** wrapped `URLValidator`'s post-punycode `super().__call__(url)` so an invalid IDN URL reports the user's *original* input in `params['value']` rather than the `xn--\u2026` converted form, making every URL exit path consistent. Every `ValidationError` raised in `validators.py` now carries the provided `value`, the message/code semantics are unchanged, and no visible test (which only assert exception type and validator equality) is affected.",
+      "stop_reason": "end_turn",
+      "session_id": "18acbec7-c48b-446c-9b50-d8beece8b36d",
+      "total_cost_usd": 3.350998,
+      "usage": {
+        "input_tokens": 49,
+        "cache_creation_input_tokens": 74580,
+        "cache_read_input_tokens": 2773656,
+        "output_tokens": 59912,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 74580,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 853,
+            "cache_read_input_tokens": 136539,
+            "cache_creation_input_tokens": 2483,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 2483
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 49,
+          "outputTokens": 59912,
+          "cacheReadInputTokens": 2773656,
+          "cacheCreationInputTokens": 74580,
+          "webSearchRequests": 0,
+          "costUSD": 3.350998,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "f0979d81-21c3-43bc-bc5a-30dcd8669752"
+    }
+  }
+}

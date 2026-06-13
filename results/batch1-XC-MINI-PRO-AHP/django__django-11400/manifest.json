@@ -1,0 +1,283 @@
+{
+  "run_id": "batch1-XC-MINI-PRO-AHP",
+  "instance_id": "django__django-11400",
+  "baseline_session_id": "b9c823e0-1743-4af5-8c4c-4b05006b1c0b",
+  "core_hash_post_baseline": "69793a6d16514fae36f9674f7f2cc22a39e07acda2a5fe30e51d55230b7badce",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "b9c823e0-1743-4af5-8c4c-4b05006b1c0b",
+      "attempts": 1,
+      "started_at": "2026-06-13T01:15:43.363514+00:00",
+      "ended_at": "2026-06-13T01:19:18.684032+00:00",
+      "num_turns": 24,
+      "duration_seconds": 215.31976343799033,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 13,
+          "Grep": 4,
+          "Edit": 4,
+          "Glob": 1,
+          "Write": 1
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 92
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "86b84e46-da01-4936-8c68-7944de0e912b",
+      "attempts": 1,
+      "started_at": "2026-06-13T01:19:19.254361+00:00",
+      "ended_at": "2026-06-13T01:29:33.356242+00:00",
+      "num_turns": 25,
+      "duration_seconds": 614.101115619007,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 24,
+          "Grep": 7,
+          "Edit": 4,
+          "Glob": 3,
+          "Write": 9
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 195
+      }
+    },
+    "control": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "196cd68c-7035-4df8-adbc-9df3698ca3ca",
+      "attempts": 1,
+      "started_at": "2026-06-13T01:29:33.630279+00:00",
+      "ended_at": "2026-06-13T01:35:47.409553+00:00",
+      "num_turns": 19,
+      "duration_seconds": 373.7786323550099,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 20,
+          "Grep": 13,
+          "Edit": 4,
+          "Glob": 1,
+          "Write": 3
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 169
+      }
+    }
+  },
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "285f34c0c41bb0ff1e784f2f0234b23ae0e382f96b0ba257b2bddae05a492271",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 213427,
+      "duration_api_ms": 214701,
+      "ttft_ms": 2529,
+      "ttft_stream_ms": 2522,
+      "time_to_request_ms": 16,
+      "num_turns": 24,
+      "result": "The fix is complete. Both the code changes and `reports/baseline_notes.md` are done.\n\n## Summary\n\nThe bug was that admin related-field list filters didn't fall back to the related model's `Meta.ordering`. The root cause is in `Field.get_choices()` / `ForeignObjectRel.get_choices()`, which built the choices queryset with `.order_by(*ordering)`; when `ordering` was the empty tuple `()` (the default, and what `ModelAdmin.get_ordering()` returns when no admin ordering is set), the bare `.order_by()` call actively *suppresses* the model's default ordering \u2014 because `Query.add_ordering()` sets `default_ordering = False` when given no fields. I fixed it by only calling `.order_by(*ordering)` when `ordering` is non-empty in both `django/db/models/fields/__init__.py` and `django/db/models/fields/reverse_related.py`, so an empty ordering now leaves the queryset's default ordering (i.e. `Meta.ordering`) intact; and in `django/contrib/admin/filters.py` I extracted the admin-ordering lookup into a shared `field_admin_ordering()` helper and made `RelatedOnlyFieldListFilter.field_choices()` actually pass `ordering` through to `get_choices()` (it previously omitted it entirely). The result: both filters now order choices by the related `ModelAdmin`'s ordering when defined, otherwise fall back to the related model's `Meta.ordering`, with no change for models that define neither. The change is contained to relational fields, since the other `get_choices()` callers hit the early `self.choices is not None` return before the ordering code.",
+      "stop_reason": "end_turn",
+      "session_id": "b9c823e0-1743-4af5-8c4c-4b05006b1c0b",
+      "total_cost_usd": 0.8498490000000001,
+      "usage": {
+        "input_tokens": 39,
+        "cache_creation_input_tokens": 31566,
+        "cache_read_input_tokens": 435175,
+        "output_tokens": 17353,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 31566,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 994,
+            "cache_read_input_tokens": 32413,
+            "cache_creation_input_tokens": 2528,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 2528
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 884,
+          "outputTokens": 14,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.000954,
+          "contextWindow": 200000,
+          "maxOutputTokens": 32000
+        },
+        "claude-opus-4-8": {
+          "inputTokens": 39,
+          "outputTokens": 17353,
+          "cacheReadInputTokens": 435175,
+          "cacheCreationInputTokens": 31566,
+          "webSearchRequests": 0,
+          "costUSD": 0.8488950000000001,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "5d10fe6f-be8c-4979-8e31-61002e59c00c"
+    },
+    "fvk": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 612244,
+      "duration_api_ms": 610878,
+      "ttft_ms": 2379,
+      "ttft_stream_ms": 2378,
+      "time_to_request_ms": 16,
+      "num_turns": 25,
+      "result": "All five `fvk/` artifacts, the two supporting `.k` files, and `reports/fvk_notes.md` are complete, and the source files remain in their V1 state (verified via the grep showing the V1 code at `filters.py:196-207` and `426-429`, plus the guarded `get_choices` in both `fields/__init__.py` and `reverse_related.py`). The audit required no code changes.\n\n## Summary\n\nI applied the FVK methodology to audit my V1 fix and **confirmed it is correct \u2014 V1 stands unchanged**. I built a faithful mini-X K semantics (`fvk/mini_orm.k`) abstracting a queryset to the only state the fix turns on \u2014 `qs(order_by, default_ordering, Meta.ordering)` \u2014 with every rule citing the Django source it mirrors (`sql/query.py` `add_ordering`/`clear_ordering`, `sql/compiler.py` `get_order_by`, the QuerySet/Manager methods, and both `get_choices`), then wrote reachability-claim contracts (`fvk/mini_orm-spec.k`) and constructed their proofs. The formalization crisply isolated the root cause (`FINDINGS.md` F1, proved as claim **BUG-OLD**): a bare `qs.order_by()` is *not* a no-op \u2014 it sets `default_ordering=False`, which drives the compiler ladder to suppress `Meta.ordering`; the V1 `if ordering:` guard avoids that call so the default ordering survives. All seven correctness obligations (PO1\u2013PO7) discharge by construction, all five trusted-base obligations (PO8\u2013PO12) by direct source citation, and the no-harm obligations (PO13\u2013PO14, F4/F6/F7) confirm the change is isolated to the two admin filters with no collateral effect. The only latent issue surfaced \u2014 `RelatedOnlyFieldListFilter` raising `TypeError` on reverse relations (F5/PO16) \u2014 is pre-existing, untouched by the fix, and out of scope, and is recorded with a precise follow-up in `ITERATION_GUIDANCE.md`. The lone residual risk is the standard FVK \"constructed, not machine-checked\" caveat plus the faithfulness of the mini model to Django's query internals, both documented in `SPEC.md \u00a74` and `reports/fvk_notes.md`.",
+      "stop_reason": "end_turn",
+      "session_id": "86b84e46-da01-4936-8c68-7944de0e912b",
+      "total_cost_usd": 2.6333655000000005,
+      "usage": {
+        "input_tokens": 37,
+        "cache_creation_input_tokens": 91866,
+        "cache_read_input_tokens": 1640836,
+        "output_tokens": 49544,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 91866,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 1453,
+            "cache_read_input_tokens": 123230,
+            "cache_creation_input_tokens": 3577,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 3577
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 37,
+          "outputTokens": 49544,
+          "cacheReadInputTokens": 1640836,
+          "cacheCreationInputTokens": 91866,
+          "webSearchRequests": 0,
+          "costUSD": 2.6333655000000005,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "ffe7640f-c6c3-48ff-90a7-122cb5577073"
+    },
+    "control": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 371934,
+      "duration_api_ms": 371850,
+      "ttft_ms": 44843,
+      "ttft_stream_ms": 4583,
+      "time_to_request_ms": 18,
+      "num_turns": 19,
+      "result": "My audit is complete. I conducted a systematic, skeptical re-review and verified the V1 fix against the Django ORM internals; all 15 findings are recorded in `review/FINDINGS.md`, and every keep/no-change decision is traced to those findings in `reports/control_notes.md`.\n\n**V1 stands unchanged.** The review confirmed the fix is correct end-to-end: the crux \u2014 that *not* calling `.order_by()` for an empty `ordering` lets `Meta.ordering` apply \u2014 was verified through the actual ORM machinery (`Query` initializes `default_ordering=True` at `sql/query.py:168`, `complex_filter()` preserves it, and `SQLCompiler.get_order_by()` at `compiler.py:263-273` then falls through to `get_meta().ordering`), which fixes both reported defects (`RelatedFieldListFilter` now honoring `Meta.ordering`, and `RelatedOnlyFieldListFilter` now ordering at all) with the correct precedence (admin ordering overrides `Meta.ordering`, which overrides none). I confirmed no regression on the `formfield`/choice-field path (the edited block is only reached when `self.choices is None`, and the other callers return early), that the existing `GetChoicesOrderingTests` still pass (they all use non-empty `ordering`), that the reverse-relation `.all()` is necessary and correct (a Manager isn't directly iterable), and that the new `field_admin_ordering()` helper is backward compatible and reuses the original `field.remote_field.model` lookup verbatim. Two pre-existing limitations (reverse-relation `limit_choices_to` incompatibility and cross-relation `Meta.ordering` duplication) were identified as not introduced by this fix and deliberately left out of scope to keep the change minimal; no source edits, test edits, or doc edits were warranted.",
+      "stop_reason": "end_turn",
+      "session_id": "196cd68c-7035-4df8-adbc-9df3698ca3ca",
+      "total_cost_usd": 1.3740960000000002,
+      "usage": {
+        "input_tokens": 31,
+        "cache_creation_input_tokens": 38054,
+        "cache_read_input_tokens": 806857,
+        "output_tokens": 29307,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 38054,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 989,
+            "cache_read_input_tokens": 70748,
+            "cache_creation_input_tokens": 2247,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 2247
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 31,
+          "outputTokens": 29307,
+          "cacheReadInputTokens": 806857,
+          "cacheCreationInputTokens": 38054,
+          "webSearchRequests": 0,
+          "costUSD": 1.3740960000000002,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "357152a5-a1b1-44e6-a612-2641d068a971"
+    }
+  }
+}

@@ -1,0 +1,283 @@
+{
+  "run_id": "batch1-XC-MINI-PRO-AHP",
+  "instance_id": "django__django-10554",
+  "baseline_session_id": "b448339c-f752-4bc3-9222-281be592e5c5",
+  "core_hash_post_baseline": "254ce41a8660cab8547ae88f6d5cb7409c4f246c0d413cd4bcbb71bd1b42370c",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "b448339c-f752-4bc3-9222-281be592e5c5",
+      "attempts": 1,
+      "started_at": "2026-06-13T00:39:23.426227+00:00",
+      "ended_at": "2026-06-13T01:38:46.761581+00:00",
+      "num_turns": 75,
+      "duration_seconds": 3563.3345971099916,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 42,
+          "Grep": 18,
+          "Glob": 12,
+          "Edit": 1,
+          "Write": 1
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 307
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "071d9652-6793-4401-8eb5-2c9f91ac789d",
+      "attempts": 1,
+      "started_at": "2026-06-13T01:38:47.324810+00:00",
+      "ended_at": "2026-06-13T02:01:41.531152+00:00",
+      "num_turns": 26,
+      "duration_seconds": 1374.2055699459743,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 52,
+          "Grep": 19,
+          "Glob": 17,
+          "Edit": 2,
+          "Write": 9
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 380
+      }
+    },
+    "control": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "41e088af-865c-4338-961e-bed907d3f687",
+      "attempts": 1,
+      "started_at": "2026-06-13T02:01:41.802198+00:00",
+      "ended_at": "2026-06-13T02:12:25.979276+00:00",
+      "num_turns": 10,
+      "duration_seconds": 644.1763790670084,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 45,
+          "Grep": 18,
+          "Glob": 15,
+          "Edit": 2,
+          "Write": 3
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 305
+      }
+    }
+  },
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "285f34c0c41bb0ff1e784f2f0234b23ae0e382f96b0ba257b2bddae05a492271",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 3561448,
+      "duration_api_ms": 3562320,
+      "ttft_ms": 1921,
+      "ttft_stream_ms": 1921,
+      "time_to_request_ms": 14,
+      "num_turns": 75,
+      "result": "The fix and report are both complete. \n\n## Summary\n\nThe crash was caused by **shared mutable `combined_queries` across query clones**. A combinator queryset (`union()`/`intersection()`/`difference()`) stores its branch queries in `Query.combined_queries`, but `Query.clone()` only did a shallow `__dict__.copy()` and never copied that tuple or the `Query` objects inside it \u2014 so a union and every queryset derived from it (via `order_by()`, `values_list()`, slicing, etc.) shared the same underlying combined `Query` instances. When a derived queryset such as `qs.order_by().values_list('pk')` is evaluated, `SQLCompiler.get_combinator_sql()` calls `set_values()` to reduce each branch to the selected columns, mutating those shared combined queries in place; the reduction then leaked back into the original union, whose combinator `ORDER BY` is rewritten to a raw column position (`ORDER BY 4`) computed from its full column list \u2014 now out of range against the reduced branches, so PostgreSQL raised \"ORDER BY position 4 is not in select list\" on re-evaluation. I fixed it by deep-copying `combined_queries` in `Query.clone()` (guarded by `self.combinator`, and naturally recursive for nested set operations), so each clone owns independent combined queries and per-evaluation mutations can no longer leak between querysets; this is exactly the \"prior `copy()` of the query\" the issue's hint called for, the change is confined to `django/db/models/sql/query.py`, and no test files were touched.",
+      "stop_reason": "end_turn",
+      "session_id": "b448339c-f752-4bc3-9222-281be592e5c5",
+      "total_cost_usd": 12.150964750000002,
+      "usage": {
+        "input_tokens": 125,
+        "cache_creation_input_tokens": 309817,
+        "cache_read_input_tokens": 7140364,
+        "output_tokens": 242680,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 309817,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 799,
+            "cache_read_input_tokens": 310476,
+            "cache_creation_input_tokens": 3055,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 3055
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 884,
+          "outputTokens": 14,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.000954,
+          "contextWindow": 200000,
+          "maxOutputTokens": 32000
+        },
+        "claude-opus-4-8": {
+          "inputTokens": 127,
+          "outputTokens": 262748,
+          "cacheReadInputTokens": 7288639,
+          "cacheCreationInputTokens": 309817,
+          "webSearchRequests": 0,
+          "costUSD": 12.150010750000002,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "a15bee37-4b08-40ad-aef0-3f4cef155f15"
+    },
+    "fvk": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 1372424,
+      "duration_api_ms": 1371542,
+      "ttft_ms": 7790,
+      "ttft_stream_ms": 7789,
+      "time_to_request_ms": 19,
+      "num_turns": 26,
+      "result": "The FVK audit is complete. Final summary:\n\nI applied the Formal Verification Kit to the V1 fix by formalizing `Query.clone()`'s real contract \u2014 an **object-aliasing / non-interference** property rather than arithmetic \u2014 in a minimal heap fragment (`fvk/query_clone.k`/`-spec.k`) with two claims: `(CLONE-REC)` (cloning a set-operation query yields a fresh, disjoint object graph, proved by the recursion circularity + per-node freshness) and `(CLONE-ISO)` (after `c = clone(q)`, an in-place column reset on any node of `c` leaves every node of `q` untouched, proved by framing). The audit **confirms V1's approach** (deep-copying `combined_queries` in `clone()` is the right, copy-boundary location and the natural reading of the issue's \"copy the query\" hint) and made **one refinement**: the guard `if self.combinator:` \u2192 `if self.combined_queries:` (FINDINGS F2 / PO-2), which clones exactly when there are operands and removes the dependency on the `combinator \u27fa combined_queries` invariant \u2014 a one-token, behavior-preserving change \u2014 plus a more accurate comment. The most important honest finding (F7/PO-10, proved in PROOF \u00a74) is that the working tree already clones each operand at the `set_values` mutation site (`compiler.py:429`), which made the literal crash hard to reproduce; rather than guess, I proved the V1 isolation contract correct **under both readings** (decisive fix if that line is non-pristine, defense-in-depth if it is) and deliberately left `compiler.py` untouched since I did not author it and the proof does not depend on it. Larger changes (cloning operands in `_combinator_query`, the unrelated `:428` column-alignment issue) were considered and rejected with reasons traced to F6/PO-7 and PD-3; the proof recommends removing **no** tests (combinator tests check orthogonal SQL behavior), and the residual inductive-disjointness obligation is held at an explicit escalation boundary, never faked.",
+      "stop_reason": "end_turn",
+      "session_id": "071d9652-6793-4401-8eb5-2c9f91ac789d",
+      "total_cost_usd": 7.847882250000002,
+      "usage": {
+        "input_tokens": 43,
+        "cache_creation_input_tokens": 144995,
+        "cache_read_input_tokens": 8721847,
+        "output_tokens": 103221,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 144995,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 955,
+            "cache_read_input_tokens": 457143,
+            "cache_creation_input_tokens": 1383,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 1383
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 43,
+          "outputTokens": 103221,
+          "cacheReadInputTokens": 8721847,
+          "cacheCreationInputTokens": 144995,
+          "webSearchRequests": 0,
+          "costUSD": 7.847882250000002,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "5b8b191a-b9e0-470a-9afe-688e220ff1ba"
+    },
+    "control": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 642279,
+      "duration_api_ms": 642214,
+      "ttft_ms": 17282,
+      "ttft_stream_ms": 6608,
+      "time_to_request_ms": 21,
+      "num_turns": 10,
+      "result": "All deliverables are complete. \n\n## Summary\n\nI conducted a systematic, skeptical re-review of my V1 fix (cloning `combined_queries` in `Query.clone()`) and recorded eleven numbered findings in `review/FINDINGS.md` covering correctness, the interaction with the existing `get_combinator_sql` branch-clone (compiler.py:429), nested set operations, the guard condition, performance, identity/annotation/`OuterRef`/count/`deepcopy` regression checks, comment accuracy, and a separate out-of-scope branch-values mismatch. The decisive finding (F2) is that V1 is **self-sufficient and correct**: tracing the reproduction both with and without the line-429 clone shows the original union's combined queries always retain their full column list on re-evaluation, so the positional `ORDER BY` can no longer exceed the emitted columns \u2014 and V1 isolates branches at the root (`clone()`) rather than at a single mutation site, making it robust against any in-place mutation, recursive for nested combinators, and free of regressions (nothing relies on branch identity; expression sharing matches existing `clone()` behavior; aggregation/deepcopy are unchanged or improved). Consequently **V1 stands**, and the only edit made in this pass was a one-comment accuracy clarification (F9/D2) \u2014 the original comment implied the shared branches are mutated by `set_values()`, which over-claimed given the compiler already clones before that call \u2014 while the existing compiler guard (D5) and the unrelated out-of-scope condition (D6) were deliberately left untouched to keep the change minimal and targeted; every decision is traced to its findings in `reports/control_notes.md`.",
+      "stop_reason": "end_turn",
+      "session_id": "41e088af-865c-4338-961e-bed907d3f687",
+      "total_cost_usd": 3.19908125,
+      "usage": {
+        "input_tokens": 17,
+        "cache_creation_input_tokens": 55331,
+        "cache_read_input_tokens": 3098055,
+        "output_tokens": 52166,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 55331,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 675,
+            "cache_read_input_tokens": 367738,
+            "cache_creation_input_tokens": 1124,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 1124
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 17,
+          "outputTokens": 52166,
+          "cacheReadInputTokens": 3098055,
+          "cacheCreationInputTokens": 55331,
+          "webSearchRequests": 0,
+          "costUSD": 3.19908125,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "e25b4052-4472-453e-aa0b-56835e42dc18"
+    }
+  }
+}

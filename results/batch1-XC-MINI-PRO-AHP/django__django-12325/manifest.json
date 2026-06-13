@@ -1,0 +1,283 @@
+{
+  "run_id": "batch1-XC-MINI-PRO-AHP",
+  "instance_id": "django__django-12325",
+  "baseline_session_id": "de132c3b-3c45-4c04-a1a8-cfeee8279d24",
+  "core_hash_post_baseline": "25c2cb23afec059cd17908cf90f8e93032e418c6d5a91f1084aba26af90a4e3c",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "de132c3b-3c45-4c04-a1a8-cfeee8279d24",
+      "attempts": 1,
+      "started_at": "2026-06-13T01:35:57.633508+00:00",
+      "ended_at": "2026-06-13T01:42:17.774758+00:00",
+      "num_turns": 19,
+      "duration_seconds": 380.1404812450055,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 9,
+          "Grep": 6,
+          "Edit": 1,
+          "Glob": 1,
+          "Write": 1
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 81
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "edf8e7f9-c037-40ba-b018-337676e57b06",
+      "attempts": 1,
+      "started_at": "2026-06-13T01:42:18.356735+00:00",
+      "ended_at": "2026-06-13T01:53:03.497555+00:00",
+      "num_turns": 25,
+      "duration_seconds": 645.1400817180111,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 22,
+          "Grep": 7,
+          "Edit": 1,
+          "Glob": 3,
+          "Write": 9
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 188
+      }
+    },
+    "control": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "a4bf4c2b-8aec-464c-90d3-b7ca6d3c99b4",
+      "attempts": 1,
+      "started_at": "2026-06-13T01:53:03.763057+00:00",
+      "ended_at": "2026-06-13T02:01:10.576319+00:00",
+      "num_turns": 10,
+      "duration_seconds": 486.81256065898924,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 13,
+          "Grep": 9,
+          "Edit": 1,
+          "Glob": 1,
+          "Write": 3
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 121
+      }
+    }
+  },
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "285f34c0c41bb0ff1e784f2f0234b23ae0e382f96b0ba257b2bddae05a492271",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 378203,
+      "duration_api_ms": 379433,
+      "ttft_ms": 3227,
+      "ttft_stream_ms": 3214,
+      "time_to_request_ms": 17,
+      "num_turns": 19,
+      "result": "The fix is complete and verified.\n\n## Summary\n\nThe bug was in `ModelBase.__new__` (`django/db/models/base.py`), where the `parent_links` dict that maps each MTI parent model to its parent-link `OneToOneField` was built with an unconditional dict overwrite. When a child model declared both an explicit `parent_link=True` field and another regular `OneToOneField` pointing to the same parent, whichever was declared **last** won \u2014 so declaring `document_ptr` (the real parent link) before `origin` caused `origin` to silently replace it, leading `Options._prepare()` to raise `ImproperlyConfigured: Add parent_link=True to \u2026`. I changed the collection loop to a guarded assignment that always prefers a field flagged `parent_link=True` and never lets a plain `OneToOneField` shadow an already-recorded parent link, while keeping the previous \"last field wins\" fallback when no parent link exists \u2014 making field declaration order irrelevant. This preserves the documented requirement (enforced by `test_missing_parent_link`) that a lone non-parent-link `OneToOneField` still raises the helpful error, which is why I deliberately did not filter the loop to only `parent_link=True` fields; I also rejected the ticket's `sorted`+`if key not in parent_links` suggestion because, combined with the outer `reversed()` loop, it inverts cross-base precedence and mis-selects in the abstract-mixin edge case. Full rationale is documented in `reports/baseline_notes.md`.",
+      "stop_reason": "end_turn",
+      "session_id": "de132c3b-3c45-4c04-a1a8-cfeee8279d24",
+      "total_cost_usd": 1.3038197500000002,
+      "usage": {
+        "input_tokens": 31,
+        "cache_creation_input_tokens": 48017,
+        "cache_read_input_tokens": 455981,
+        "output_tokens": 30984,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 48017,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 502,
+            "cache_read_input_tokens": 50441,
+            "cache_creation_input_tokens": 951,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 951
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 883,
+          "outputTokens": 17,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.000968,
+          "contextWindow": 200000,
+          "maxOutputTokens": 32000
+        },
+        "claude-opus-4-8": {
+          "inputTokens": 31,
+          "outputTokens": 30984,
+          "cacheReadInputTokens": 455981,
+          "cacheCreationInputTokens": 48017,
+          "webSearchRequests": 0,
+          "costUSD": 1.30285175,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "d1040768-923e-4864-b5c2-4a36656b8a21"
+    },
+    "fvk": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 643277,
+      "duration_api_ms": 642196,
+      "ttft_ms": 2321,
+      "ttft_stream_ms": 2320,
+      "time_to_request_ms": 17,
+      "num_turns": 25,
+      "result": "All seven `fvk/` artifacts plus `reports/fvk_notes.md` are in place, and the V1 fix is intact and unchanged. The five required markdown artifacts (`SPEC.md`, `FINDINGS.md`, `PROOF_OBLIGATIONS.md`, `PROOF.md`, `ITERATION_GUIDANCE.md`) are complete, backed by the two supporting `.k` files (fragment semantics + claims).\n\n## Summary\n\nApplying the FVK methodology to my V1 fix, I built a mini-X K semantics of the parent-link collection loop (abstracting each surviving `OneToOneField` to `field(K, PL, ID)` and the V1 guard to `skip`/`updateSel`), stated two reachability claims \u2014 `(FOLD)` (the loop equals a functional fold) and `(SELECT-PL)` (selection correctness per parent key) \u2014 and constructed an inductive proof whose invariant is the **biconditional** `chosen.parent_link \u27fa some candidate is a parent_link`, which is exactly the order-independence the issue demanded. The audit closed every correctness obligation: the new attribute reads are crash-free (F-1/PO-1\u20133), the key-set of `parent_links` is provably unchanged from the original so `test_missing_parent_link` is preserved (F-3/F-4/PO-12\u201313), and tracing the consumer chain showed both reported symptoms \u2014 the `ImproperlyConfigured` error and the runtime \"`document_ptr_id` not populated\" \u2014 share the single root cause my fix corrects (F-8). The only residual is the *machine* check of list-inductive VCs, which I honestly marked `[ESCALATION BOUNDARY]` and hand-proved in full rather than faking as `[trusted]` \u2014 a tooling-tier gap, not a defect. Two edge cases (multiple parent-link fields, and which field a missing-link error names) were found to be pre-existing and out of scope, logged as optional separate follow-ups. Because no finding maps to a defect, **V1 stands unchanged**, with every \"no change\" decision traced to specific FINDINGS and PROOF_OBLIGATIONS entries in `reports/fvk_notes.md`.",
+      "stop_reason": "end_turn",
+      "session_id": "edf8e7f9-c037-40ba-b018-337676e57b06",
+      "total_cost_usd": 2.6925049999999997,
+      "usage": {
+        "input_tokens": 33,
+        "cache_creation_input_tokens": 91866,
+        "cache_read_input_tokens": 1765905,
+        "output_tokens": 49409,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 91866,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 743,
+            "cache_read_input_tokens": 142330,
+            "cache_creation_input_tokens": 928,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 928
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 33,
+          "outputTokens": 49409,
+          "cacheReadInputTokens": 1765905,
+          "cacheCreationInputTokens": 91866,
+          "webSearchRequests": 0,
+          "costUSD": 2.6925049999999997,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "0dbf3929-18d3-4c5b-8cd8-329170f89aa9"
+    },
+    "control": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 484911,
+      "duration_api_ms": 484846,
+      "ttft_ms": 79039,
+      "ttft_stream_ms": 2428,
+      "time_to_request_ms": 17,
+      "num_turns": 10,
+      "result": "The V1 fix is intact and all deliverables are complete (`review/FINDINGS.md`, `reports/control_notes.md`, and the confirmed source).\n\n**Summary:** My audit confirmed V1 stands unchanged. Re-tracing the data flow established that `parent_links` feeds only the *concrete* branch of the mro loop (`base.py:251`) and thence `_meta.parents`, which is exactly the issue's scenario (a child directly inheriting a concrete parent), so the guarded assignment \u2014 \"an explicit `parent_link=True` field is never shadowed by a plain `OneToOneField`\" \u2014 fixes both reported symptoms (the order-dependent `ImproperlyConfigured` and the runtime \"`document_ptr_id` not populated\") for either field ordering (F1, F2). The review verified no regressions: non-parent-link fields are still recorded so `test_missing_parent_link` keeps raising (F3, the reason the fix is deliberately *not* a `parent_link`-only filter); abstract-inherited parent links flow through the separate `base_parents` path that never consults `parent_links`, so `test_abstract_parent_link` and the `ParkingLot` model are unaffected (F4, F5); multi-parent MTI is order-independent (F6); the attribute accesses are null-safe (F9); and no parallel selection path exists (F10). I rejected switching to the ticket's `sorted(...) + not in` PR (equivalent for real cases but with a needless cross-base precedence flip, F8/F13) and rejected the speculative \"pk implies parent_link\" / related-name-keying enhancements as out-of-scope and contract-breaking (F12). Every decision is traced to numbered findings in `review/FINDINGS.md` via `reports/control_notes.md`; no source edits were warranted.",
+      "stop_reason": "end_turn",
+      "session_id": "a4bf4c2b-8aec-464c-90d3-b7ca6d3c99b4",
+      "total_cost_usd": 1.52779525,
+      "usage": {
+        "input_tokens": 15,
+        "cache_creation_input_tokens": 43651,
+        "cache_read_input_tokens": 568353,
+        "output_tokens": 38829,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 43651,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 603,
+            "cache_read_input_tokens": 94198,
+            "cache_creation_input_tokens": 845,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 845
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 15,
+          "outputTokens": 38829,
+          "cacheReadInputTokens": 568353,
+          "cacheCreationInputTokens": 43651,
+          "webSearchRequests": 0,
+          "costUSD": 1.52779525,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "0ab70af8-66b7-4ad8-9598-18a9499061eb"
+    }
+  }
+}

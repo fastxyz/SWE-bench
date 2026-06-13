@@ -1,0 +1,283 @@
+{
+  "run_id": "batch1-XC-MINI-PRO-AHP",
+  "instance_id": "django__django-12708",
+  "baseline_session_id": "655b9a57-31e0-483c-8a83-f11f44ed2160",
+  "core_hash_post_baseline": "8b473538a472482b6d99594eaa354a060ab0d8e2fc88df24aa70e282d8f1743f",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "655b9a57-31e0-483c-8a83-f11f44ed2160",
+      "attempts": 1,
+      "started_at": "2026-06-13T01:51:02.227063+00:00",
+      "ended_at": "2026-06-13T01:56:41.361465+00:00",
+      "num_turns": 24,
+      "duration_seconds": 339.1336093090067,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 12,
+          "Grep": 7,
+          "Edit": 1,
+          "Glob": 2,
+          "Write": 1
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 94
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "0cd69941-d924-492e-87d3-66218be47960",
+      "attempts": 1,
+      "started_at": "2026-06-13T01:56:41.894143+00:00",
+      "ended_at": "2026-06-13T02:06:05.107286+00:00",
+      "num_turns": 21,
+      "duration_seconds": 563.2124272079964,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 21,
+          "Grep": 7,
+          "Edit": 1,
+          "Glob": 5,
+          "Write": 9
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 186
+      }
+    },
+    "control": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "fa3cf588-86bc-4134-86c9-ab3d2b976fed",
+      "attempts": 1,
+      "started_at": "2026-06-13T02:06:05.375718+00:00",
+      "ended_at": "2026-06-13T02:10:58.672132+00:00",
+      "num_turns": 13,
+      "duration_seconds": 293.2956662499928,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 18,
+          "Grep": 9,
+          "Edit": 2,
+          "Glob": 3,
+          "Write": 3
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 145
+      }
+    }
+  },
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "285f34c0c41bb0ff1e784f2f0234b23ae0e382f96b0ba257b2bddae05a492271",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 337189,
+      "duration_api_ms": 337688,
+      "ttft_ms": 1800,
+      "ttft_stream_ms": 1796,
+      "time_to_request_ms": 12,
+      "num_turns": 24,
+      "result": "The fix is complete and there are no other call sites left using the ambiguous `{'index': True}` filter.\n\n## Summary\n\nThe crash occurred when deleting an `index_together` from a model that also had a `unique_together` on the same fields. `alter_index_together()` in `django/db/backends/base/schema.py` resolved which constraint to drop using the filter `{'index': True}`, but on MySQL and SQLite a `unique_together` constraint is backed by an index and is reported by the introspection layer as *both* `unique=True` and `index=True`. The filter therefore matched two constraints (the `_uniq` and the `_idx`), tripping the `len(constraint_names) != 1` guard in `_delete_composed_index()` and raising `ValueError: Found wrong number (2) of constraints`. Since an `index_together` always creates a non-unique index, I made the deletion filter unambiguous by changing it to `{'index': True, 'unique': False}`, which selects only the `_idx` index and excludes the co-located unique constraint; the MySQL override forwards its `*args` straight to the base method, so the fix applies there too, and the symmetric `unique_together` deletion path already worked and was left unchanged.",
+      "stop_reason": "end_turn",
+      "session_id": "655b9a57-31e0-483c-8a83-f11f44ed2160",
+      "total_cost_usd": 0.9132257500000001,
+      "usage": {
+        "input_tokens": 45,
+        "cache_creation_input_tokens": 33177,
+        "cache_read_input_tokens": 444201,
+        "output_tokens": 19304,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 33177,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 487,
+            "cache_read_input_tokens": 35863,
+            "cache_creation_input_tokens": 689,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 689
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 884,
+          "outputTokens": 12,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.0009440000000000001,
+          "contextWindow": 200000,
+          "maxOutputTokens": 32000
+        },
+        "claude-opus-4-8": {
+          "inputTokens": 45,
+          "outputTokens": 19304,
+          "cacheReadInputTokens": 444201,
+          "cacheCreationInputTokens": 33177,
+          "webSearchRequests": 0,
+          "costUSD": 0.91228175,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "4bff0d91-6856-40be-9d5b-aa3eef814eae"
+    },
+    "fvk": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 561380,
+      "duration_api_ms": 560810,
+      "ttft_ms": 2217,
+      "ttft_stream_ms": 2216,
+      "time_to_request_ms": 17,
+      "num_turns": 21,
+      "result": "All artifacts are in place and the source remains at the V1 state (verified unchanged). The audit is complete.\n\n## Summary\n\nApplying the FVK methodology, I formalized the constraint-resolution path (`_constraint_names` \u2192 `_delete_composed_index` \u2192 the two `alter_*_together` callers) as a single **set-cardinality contract**: the filter must resolve to *exactly one* constraint, and the correct one. I built a mini-K fragment (`fvk/schema_index.k` + `-spec.k`, constructed not machine-checked) and discharged eight proof obligations. The audit **confirms V1 unchanged**: deleting an `index_together` with `{'index': True, 'unique': False}` resolves to exactly the non-unique `_idx` index uniformly across MySQL, SQLite, and PostgreSQL (OB1/OB2, since a unique constraint's `unique=True` fails the `unique=False` test regardless of whether the backend also reports it as an index); the fix is **monotone** so it cannot introduce a new over-match (OB5); the symmetric `alter_unique_together` path is *provably* already exactly-one and is therefore correctly left untouched (OB3/OB4, F4), the key insight being the asymmetry that a unique constraint can masquerade as an index but never the reverse (F1); and V1 additionally closes a latent silent wrong-deletion under DB drift (OB8/F7). Three items were explicitly scoped out with justification \u2014 the pre-existing PK-column collision (F5), the autodetector-level \"index re-creation on declaration move\" that is issue point 2 (F6), and the multi-index-on-identical-columns edge (F8) \u2014 none of which is reachable from the reported scenario or affected by V1. No source edit was warranted; `reports/fvk_notes.md` traces each decision to its findings and obligations.",
+      "stop_reason": "end_turn",
+      "session_id": "0cd69941-d924-492e-87d3-66218be47960",
+      "total_cost_usd": 2.354967,
+      "usage": {
+        "input_tokens": 37,
+        "cache_creation_input_tokens": 82210,
+        "cache_read_input_tokens": 1585639,
+        "output_tokens": 41926,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 82210,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 1220,
+            "cache_read_input_tokens": 118345,
+            "cache_creation_input_tokens": 417,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 417
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 37,
+          "outputTokens": 41926,
+          "cacheReadInputTokens": 1585639,
+          "cacheCreationInputTokens": 82210,
+          "webSearchRequests": 0,
+          "costUSD": 2.354967,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "a90ec571-bb9b-48f3-bfc4-ee69dd2c7c1a"
+    },
+    "control": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 291468,
+      "duration_api_ms": 291387,
+      "ttft_ms": 2928,
+      "ttft_stream_ms": 2372,
+      "time_to_request_ms": 17,
+      "num_turns": 13,
+      "result": "The fix is confirmed in place at line 396, consistent with the sibling `alter_unique_together` call at line 380. All deliverables are complete: `review/FINDINGS.md` (12 numbered findings), the source edit, and `reports/control_notes.md` (decisions traced to findings).\n\n## Summary\n\nMy review confirmed that V1's behavioral change is correct and stands: filtering the `index_together` deletion with `{'index': True, 'unique': False}` instead of `{'index': True}` is the right fix, because on MySQL, SQLite, and Oracle a `unique_together` constraint is introspected with `index=True` (it's index-backed), which made the old filter match two constraints and crash, whereas an `index_together` index is always created via plain `CREATE INDEX` and thus reliably `unique=False` on every backend, so the new predicate excludes only the unique constraint and never the intended target (F1, F2, F4, F5). I verified the change is a behavioral no-op on PostgreSQL (which was never affected, since its unique constraints report `index=False`), that the deliberate asymmetry with `alter_unique_together` must be preserved (mirroring `index=True` onto the unique side would break PostgreSQL \u2014 F3), and that edge cases (FK index recreation on MySQL, `Meta.indexes`/`constraints`, both-removed-together, Oracle's int/bool values, the strict `len != 1` guard) all remain correct (F6\u2013F10). The only edit made this pass was cosmetic \u2014 collapsing V1's six-line call back to a single 111-character line for a minimal, symmetric diff under the project's 119-char limit (F11) \u2014 and I deliberately left the issue's speculative secondary \"point 2\" (autodetector index-relocation) out of scope (F12).",
+      "stop_reason": "end_turn",
+      "session_id": "fa3cf588-86bc-4134-86c9-ab3d2b976fed",
+      "total_cost_usd": 1.04698225,
+      "usage": {
+        "input_tokens": 25,
+        "cache_creation_input_tokens": 28227,
+        "cache_read_input_tokens": 642527,
+        "output_tokens": 21967,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 28227,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 923,
+            "cache_read_input_tokens": 64236,
+            "cache_creation_input_tokens": 543,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 543
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 25,
+          "outputTokens": 21967,
+          "cacheReadInputTokens": 642527,
+          "cacheCreationInputTokens": 28227,
+          "webSearchRequests": 0,
+          "costUSD": 1.04698225,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "89fc9a27-d30e-4823-be77-2c46c6e5cad2"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+diff --git a/django/db/models/base.py b/django/db/models/base.py
+index 8ea6c05ef9..2ff5fc87af 100644
+--- a/django/db/models/base.py
++++ b/django/db/models/base.py
+@@ -204,7 +204,19 @@ class ModelBase(type):
+             for field in base._meta.local_fields:
+                 if isinstance(field, OneToOneField):
+                     related = resolve_relation(new_class, field.remote_field.model)
+-                    parent_links[make_model_tuple(related)] = field
++                    related_key = make_model_tuple(related)
++                    # When several OneToOneFields point to the same parent, the
++                    # one explicitly flagged with parent_link=True must be used
++                    # as the parent link regardless of field declaration order.
++                    # Don't let a plain OneToOneField shadow an explicit parent
++                    # link; otherwise keep the last field seen (legacy
++                    # behavior, e.g. for missing parent link detection).
++                    existing = parent_links.get(related_key)
++                    if (existing is not None and
++                            existing.remote_field.parent_link and
++                            not field.remote_field.parent_link):
++                        continue
++                    parent_links[related_key] = field
+ 
+         # Track fields inherited from base models.
+         inherited_attributes = set()
