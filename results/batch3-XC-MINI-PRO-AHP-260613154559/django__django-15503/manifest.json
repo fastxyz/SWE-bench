@@ -1,0 +1,283 @@
+{
+  "run_id": "batch3-XC-MINI-PRO-AHP-260613154559",
+  "instance_id": "django__django-15503",
+  "baseline_session_id": "2c2d679e-3e81-4d62-b4ec-213ebf7af0d0",
+  "core_hash_post_baseline": "791c103ab15a1265010437c36d2fb4a97eb906d0ff0fad54622249725d4297b3",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "2c2d679e-3e81-4d62-b4ec-213ebf7af0d0",
+      "attempts": 1,
+      "started_at": "2026-06-13T07:48:45.243422+00:00",
+      "ended_at": "2026-06-13T08:09:35.486251+00:00",
+      "num_turns": 34,
+      "duration_seconds": 1250.2421067250252,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 14,
+          "Glob": 3,
+          "Grep": 11,
+          "Edit": 4,
+          "Write": 1
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 127
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "5f6e3429-cf3d-4d10-bcd4-26d2f30f9e3f",
+      "attempts": 1,
+      "started_at": "2026-06-13T08:09:36.057188+00:00",
+      "ended_at": "2026-06-13T08:21:49.438617+00:00",
+      "num_turns": 24,
+      "duration_seconds": 733.3807010840101,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 24,
+          "Glob": 7,
+          "Grep": 11,
+          "Edit": 5,
+          "Write": 9
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 228
+      }
+    },
+    "control": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "2b6be4b6-a08b-41db-93e3-a752fcc25901",
+      "attempts": 1,
+      "started_at": "2026-06-13T08:21:49.730291+00:00",
+      "ended_at": "2026-06-13T08:29:13.467808+00:00",
+      "num_turns": 10,
+      "duration_seconds": 443.7368320169917,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 18,
+          "Glob": 3,
+          "Grep": 13,
+          "Edit": 5,
+          "Write": 3
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 159
+      }
+    }
+  },
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "285f34c0c41bb0ff1e784f2f0234b23ae0e382f96b0ba257b2bddae05a492271",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 1248276,
+      "duration_api_ms": 1250420,
+      "ttft_ms": 2112,
+      "ttft_stream_ms": 2077,
+      "time_to_request_ms": 15,
+      "num_turns": 34,
+      "result": "All changes are in place and consistent. The fix is complete.\n\n## Summary\n\nThe `has_key`/`has_keys`/`has_any_keys` JSONField lookups failed on numeric keys (e.g. `data__has_key='1111'`) on SQLite, MySQL, and Oracle because `HasKeyLookup.as_sql()` built the lookup path with `compile_json_path()`, which compiles any integer-like component as an **array index** (`$[1111]`) instead of an **object key** (`$.\"1111\"`); PostgreSQL was unaffected since it uses the `?`/`?&`/`?|` operators with the key as a string. The fix, isolated to `django/db/models/fields/json.py`, adds a `compile_json_path_final_key()` method (object-key access via `json.dumps`) and changes `as_sql()` to compile only the *navigation* segments with `compile_json_path()` while always compiling the *final* key (the key whose existence is tested) as an object key \u2014 so numeric `has_key` now matches, while array navigation like `value__1__has_key=\"b\"` and `value__d__1__has_key=\"f\"` still correctly uses array indices. To avoid regressing the internal reuses of `HasKey` that legitimately need array-index semantics for numeric extraction keys (`KeyTransformIsNull` for SQLite/Oracle and `KeyTransformExact`'s null branch on Oracle, e.g. the widely-used `value__d__0__isnull`), a `HasKeyOrArrayIndex(HasKey)` subclass restores the original behavior for the final key and those three call sites now use it, producing byte-for-byte the same SQL as before. The fix is documented in `reports/baseline_notes.md`.",
+      "stop_reason": "end_turn",
+      "session_id": "2c2d679e-3e81-4d62-b4ec-213ebf7af0d0",
+      "total_cost_usd": 4.515137500000001,
+      "usage": {
+        "input_tokens": 53,
+        "cache_creation_input_tokens": 131358,
+        "cache_read_input_tokens": 2007690,
+        "output_tokens": 107563,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 131358,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 570,
+            "cache_read_input_tokens": 133835,
+            "cache_creation_input_tokens": 898,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 898
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 885,
+          "outputTokens": 16,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.000965,
+          "contextWindow": 200000,
+          "maxOutputTokens": 32000
+        },
+        "claude-opus-4-8": {
+          "inputTokens": 53,
+          "outputTokens": 107563,
+          "cacheReadInputTokens": 2007690,
+          "cacheCreationInputTokens": 131358,
+          "webSearchRequests": 0,
+          "costUSD": 4.5141725,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "fe8fd758-dd65-4c64-bd7f-23096b3cd10e"
+    },
+    "fvk": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 731381,
+      "duration_api_ms": 730281,
+      "ttft_ms": 3801,
+      "ttft_stream_ms": 3777,
+      "time_to_request_ms": 16,
+      "num_turns": 24,
+      "result": "The audit is complete and all artifacts are coherent. The `HasKeyOrArrayIndex` override confirms the V2 change is correctly confined to the explicit has_key family.\n\n## Summary\n\nApplying the FVK methodology, I built a mini-Python K fragment (`fvk/json_path.k`) and five reachability claims (`fvk/json_path-spec.k`) for the JSON-path string builders my V1 fix touched, then produced the five required `fvk/` artifacts plus `reports/fvk_notes.md`. The audit **confirmed the bulk of V1 as provably correct**: contract C2/SEG-VS-OBJECT shows the fix changes numeric keys *only*; C3/HOMO + C4/PRESERVE prove `HasKeyOrArrayIndex.as_sql` emits byte-identical SQL to the original `HasKey.as_sql` (zero regression for the rewired `isnull`/`exact` callers and for `value__d__0__isnull`, `value__1__has_key`, etc.); F-nonempty proves the `*nav, final = \u2026` unpack can never raise; and F-navfinal confirms the navigation-vs-final-key granularity is the only scoping that keeps `test_has_key_deep`/`test_has_key_list` passing \u2014 so all of that stands unchanged. Writing contract C1/FINALKEY surfaced **one real adjacent gap (Finding F-int / open obligation O1-pre)**: `compile_json_path_final_key` silently assumed a string key, so a numeric key passed as an `int`/`float` (`has_key=1111`) produced an unquoted/malformed path (`$.1111`, `$.4.2`) \u2014 the same bug class as the issue. I closed it with a single zero-risk change \u2014 coercing `json.dumps(str(key_transform))`, mirroring the existing `HasKeys.get_prep_lookup` `str()` \u2014 which is byte-identical for all string keys (so the reported issue's test and every existing test are unaffected) and is confined to the has_key family because `HasKeyOrArrayIndex` overrides that method. The proof is labeled *constructed, not machine-checked*, with `kompile`/`kprove` commands emitted and all navigation/isnull/escape/cross-backend tests explicitly kept.",
+      "stop_reason": "end_turn",
+      "session_id": "5f6e3429-cf3d-4d10-bcd4-26d2f30f9e3f",
+      "total_cost_usd": 3.8670057499999997,
+      "usage": {
+        "input_tokens": 41,
+        "cache_creation_input_tokens": 92677,
+        "cache_read_input_tokens": 3973189,
+        "output_tokens": 52039,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 92677,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 1092,
+            "cache_read_input_tokens": 225959,
+            "cache_creation_input_tokens": 1451,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 1451
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 41,
+          "outputTokens": 52039,
+          "cacheReadInputTokens": 3973189,
+          "cacheCreationInputTokens": 92677,
+          "webSearchRequests": 0,
+          "costUSD": 3.8670057499999997,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "c7322a57-2ce2-4b53-a3fa-3b68632ba76d"
+    },
+    "control": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 441137,
+      "duration_api_ms": 441046,
+      "ttft_ms": 4967,
+      "ttft_stream_ms": 4473,
+      "time_to_request_ms": 17,
+      "num_turns": 10,
+      "result": "The review is complete. All artifacts are in place: `review/FINDINGS.md`, the (comment-only) code edit, and `reports/control_notes.md`.\n\n## Summary\n\nI conducted a systematic, skeptical re-review of the V1 fix and recorded 13 numbered findings in `review/FINDINGS.md`. The review **confirms V1 is correct and regression-free**: the reported bug is fixed across SQLite/MySQL/Oracle (F1); for every non-numeric key the generated SQL is byte-identical to the original because `compile_json_path_final_key` reproduces `compile_json_path`'s non-integer branch exactly (F2); array-index *navigation* (`value__1__has_key`, `value__d__1__has_key`) is preserved (F3); and the internal `HasKey` reuses for `__isnull`/exact-null are provably unchanged via `HasKeyOrArrayIndex`, since `compile_json_path(nav)+compile_json_path([final]) == compile_json_path(nav+[final])`, so the heavily-used `value__d__0__isnull` base querysets still work (F4\u2013F5). I verified boundary cases (empty-unpack safety F9, Oracle `%`-escaping F10), interactions (PostgreSQL untouched F11), and the API surface (helper not registered, no external dependents F12). The only behavioral edge case found \u2014 passing a raw non-string to `has_key` (F8) \u2014 was consciously left as-is (out of scope, unsupported by the old code too, and every realistic path coerces keys to `str`). The sole V2 code change is a documentation-only three-line comment on the subtle `HasKeyOrArrayIndex` helper (F13), matching the file's convention of documenting non-obvious helpers; no generated SQL changed. Every decision is traced to findings in `reports/control_notes.md`.",
+      "stop_reason": "end_turn",
+      "session_id": "2b6be4b6-a08b-41db-93e3-a752fcc25901",
+      "total_cost_usd": 1.8603560000000001,
+      "usage": {
+        "input_tokens": 17,
+        "cache_creation_input_tokens": 42536,
+        "cache_read_input_tokens": 1417442,
+        "output_tokens": 35428,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 42536,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 616,
+            "cache_read_input_tokens": 176879,
+            "cache_creation_input_tokens": 390,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 390
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 17,
+          "outputTokens": 35428,
+          "cacheReadInputTokens": 1417442,
+          "cacheCreationInputTokens": 42536,
+          "webSearchRequests": 0,
+          "costUSD": 1.8603560000000001,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "8a8c2a2d-9056-4413-bc8d-4fef84a71bd9"
+    }
+  }
+}

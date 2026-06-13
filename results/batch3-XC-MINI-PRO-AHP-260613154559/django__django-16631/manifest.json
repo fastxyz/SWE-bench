@@ -1,0 +1,281 @@
+{
+  "run_id": "batch3-XC-MINI-PRO-AHP-260613154559",
+  "instance_id": "django__django-16631",
+  "baseline_session_id": "f7adb069-6a2f-4013-b118-94babff150bb",
+  "core_hash_post_baseline": "a5e3a88c74a4e74279741627f3e2541f9013eb3b0a2eaba73dea3d5e5749e250",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "f7adb069-6a2f-4013-b118-94babff150bb",
+      "attempts": 1,
+      "started_at": "2026-06-13T09:07:47.377254+00:00",
+      "ended_at": "2026-06-13T09:10:46.473931+00:00",
+      "num_turns": 19,
+      "duration_seconds": 179.09590675498475,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 10,
+          "Grep": 4,
+          "Edit": 3,
+          "Write": 1
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 73
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "d1950e72-01ee-4a6e-9f74-00a76592d31a",
+      "attempts": 1,
+      "started_at": "2026-06-13T09:10:47.059576+00:00",
+      "ended_at": "2026-06-13T09:24:06.709309+00:00",
+      "num_turns": 23,
+      "duration_seconds": 799.6490123620024,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 19,
+          "Grep": 5,
+          "Edit": 3,
+          "Write": 9,
+          "Glob": 4
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 176
+      }
+    },
+    "control": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "f006c17a-86ee-452d-9a06-2c04eb054d15",
+      "attempts": 1,
+      "started_at": "2026-06-13T09:24:06.992083+00:00",
+      "ended_at": "2026-06-13T09:28:39.762861+00:00",
+      "num_turns": 10,
+      "duration_seconds": 272.7700714019884,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 16,
+          "Grep": 5,
+          "Edit": 3,
+          "Write": 3
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 109
+      }
+    }
+  },
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "285f34c0c41bb0ff1e784f2f0234b23ae0e382f96b0ba257b2bddae05a492271",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 176570,
+      "duration_api_ms": 178045,
+      "ttft_ms": 2803,
+      "ttft_stream_ms": 2802,
+      "time_to_request_ms": 14,
+      "num_turns": 19,
+      "result": "The fix is complete and verified. Both source files are consistent, and the report is written.\n\n## Summary\n\nThe root cause was that `AbstractBaseUser.get_session_auth_hash()` computes its HMAC via `salted_hmac()` without passing a `secret`, so it always uses the current `settings.SECRET_KEY`; when `auth.get_user()` (the `AuthenticationMiddleware` path) verified a session's `_auth_user_hash` against it, a rotated key meant the stored hash \u2014 keyed with the old secret \u2014 never matched, and `SECRET_KEY_FALLBACKS` was never consulted, flushing every session. I refactored `base_user.py` to add a private `_get_session_auth_hash(secret=None)` helper (with `get_session_auth_hash()` delegating to it unchanged) plus a `get_session_auth_fallback_hash()` generator that yields the hash under each `SECRET_KEY_FALLBACKS` entry, mirroring the existing `PasswordResetTokenGenerator` fallback pattern; and I updated `get_user()` in `auth/__init__.py` so that on a current-secret mismatch it checks the fallback hashes and, when one matches, treats the session as valid and *upgrades* it (`cycle_key()` + rewrite `_auth_user_hash` with the current-secret hash) so sessions aren't re-invalidated once the fallback keys are later removed \u2014 otherwise preserving the original flush-and-logout behavior. The change is minimal, leaves the fresh-login path untouched, and is safe when `SECRET_KEY_FALLBACKS` is empty.",
+      "stop_reason": "end_turn",
+      "session_id": "f7adb069-6a2f-4013-b118-94babff150bb",
+      "total_cost_usd": 0.59159025,
+      "usage": {
+        "input_tokens": 25,
+        "cache_creation_input_tokens": 25193,
+        "cache_read_input_tokens": 191964,
+        "output_tokens": 13483,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 25193,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 869,
+            "cache_read_input_tokens": 26028,
+            "cache_creation_input_tokens": 2540,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 2540
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 882,
+          "outputTokens": 14,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.0009519999999999999,
+          "contextWindow": 200000,
+          "maxOutputTokens": 32000
+        },
+        "claude-opus-4-8": {
+          "inputTokens": 25,
+          "outputTokens": 13483,
+          "cacheReadInputTokens": 191964,
+          "cacheCreationInputTokens": 25193,
+          "webSearchRequests": 0,
+          "costUSD": 0.59063825,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "f506f8b8-fc0a-437c-931e-60294515423a"
+    },
+    "fvk": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 796593,
+      "duration_api_ms": 796022,
+      "ttft_ms": 3137,
+      "ttft_stream_ms": 3137,
+      "time_to_request_ms": 17,
+      "num_turns": 23,
+      "result": "All five required `fvk/` artifacts, the two supporting `.k` files, and `reports/fvk_notes.md` are complete; the V1 source fix stands unchanged.\n\n**Summary:** I applied the FVK methodology to my V1 fix by building a mini-X K semantics (`fvk/mini_auth.k`) of exactly the fragment the fix touches and three reachability claims (`fvk/mini_auth-spec.k`): `(HASH-EQ)` for the `base_user.py` refactor, `(SCAN-LOOP)` for the `any(...)`-over-fallbacks search loop, and `(GETUSER)` for the `get_user` verification contract. The audit produced a clean, exhaustive three-case spec (`KEEP`/`UPGRADE`/`FLUSH`) with no spec-difficulty signal and discharged proof obligations PO1\u2013PO10 \u2014 most importantly PO1 (the refactor's `secret=None` path is byte-identical to the pre-fix digest, so no existing session is invalidated \u2014 the keystone non-regression), PO2 (the user is kept iff the stored hash matches the current key or any fallback), PO4 (no `UnboundLocalError`, because the load-bearing `session_hash and \u2026` conjunct order dominates the `session_auth_hash` read), PO5/PO6 (empty fallbacks and empty hash both collapse to the original flush behavior), and PO9 (the `cycle_key()` + hash-rewrite upgrade makes rotation converge in one request, addressing the public hint's re-invalidation concern). The audit surfaced three non-blocking items \u2014 an accepted `AttributeError` risk for non-`AbstractBaseUser` duck-typed users (F4, method ships on the required base class), accepted non-constant-time-in-count iteration (F6, matches `PasswordResetTokenGenerator`), and the deliberately out-of-scope `login()` path (F7) \u2014 none of which warrant a code change, so **V1 is confirmed correct and stands unchanged**, with `reports/fvk_notes.md` tracing every decision to the corresponding `FINDINGS`/`PROOF_OBLIGATIONS` entries.",
+      "stop_reason": "end_turn",
+      "session_id": "d1950e72-01ee-4a6e-9f74-00a76592d31a",
+      "total_cost_usd": 2.8400942500000004,
+      "usage": {
+        "input_tokens": 33,
+        "cache_creation_input_tokens": 100489,
+        "cache_read_input_tokens": 1447296,
+        "output_tokens": 59529,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 100489,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 966,
+            "cache_read_input_tokens": 127399,
+            "cache_creation_input_tokens": 1658,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 1658
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 33,
+          "outputTokens": 59529,
+          "cacheReadInputTokens": 1447296,
+          "cacheCreationInputTokens": 100489,
+          "webSearchRequests": 0,
+          "costUSD": 2.8400942500000004,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "d00c78a6-4123-4d7e-901d-ac762792d359"
+    },
+    "control": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 269685,
+      "duration_api_ms": 269630,
+      "ttft_ms": 12466,
+      "ttft_stream_ms": 3086,
+      "time_to_request_ms": 16,
+      "num_turns": 10,
+      "result": "The audit is complete. All deliverables exist: `review/FINDINGS.md` (13 numbered findings), `reports/control_notes.md` (decisions traced to findings), and the V1 code edits in `base_user.py` and `auth/__init__.py`.\n\nV1 stands unchanged. My skeptical re-review confirmed the fix is correct and complete: `get_user()` now verifies the session against each `SECRET_KEY_FALLBACKS` entry via the new `AbstractBaseUser.get_session_auth_fallback_hash()` generator and, on a match, upgrades the session in place (`cycle_key()` + rewrite `_auth_user_hash` to the current-secret hash) \u2014 directly resolving the reported logout-on-rotation bug (F1) and the hint's secondary \"sessions die again when fallbacks are removed\" concern (F2). I verified there is no regression on the default or no-match paths (the new code reduces exactly to the original behavior when `SECRET_KEY_FALLBACKS` is empty or nothing matches), no `UnboundLocalError`, correct `cycle_key()` semantics and ordering against the session backend, per-request idempotency, and consistency with the `PasswordResetTokenGenerator`/`update_session_auth_hash` precedents (F3\u2013F6, F9\u2013F10). I deliberately retained V1's two key design choices \u2014 keeping `get_session_auth_hash()`'s zero-arg public signature and routing through a private `_get_session_auth_hash(secret=None)` (the backwards-compatible alternative; adding a `secret` param would `TypeError` on legacy overrides, F7), and not touching the security-sensitive `login()` flush path since it's outside the reported bug and self-corrects anyway (F8) \u2014 and recorded the accepted, pre-existing limitations (custom-hash subclasses F7, the inherent `cycle_key` race F13) rather than adding speculative complexity. No code changes were needed.",
+      "stop_reason": "end_turn",
+      "session_id": "f006c17a-86ee-452d-9a06-2c04eb054d15",
+      "total_cost_usd": 0.8180497500000002,
+      "usage": {
+        "input_tokens": 13,
+        "cache_creation_input_tokens": 25497,
+        "cache_read_input_tokens": 267957,
+        "output_tokens": 20986,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 25497,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 841,
+            "cache_read_input_tokens": 52302,
+            "cache_creation_input_tokens": 1763,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 1763
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 13,
+          "outputTokens": 20986,
+          "cacheReadInputTokens": 267957,
+          "cacheCreationInputTokens": 25497,
+          "webSearchRequests": 0,
+          "costUSD": 0.8180497500000002,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "2e6c4026-ee8e-421a-bcf9-b06f761254e5"
+    }
+  }
+}

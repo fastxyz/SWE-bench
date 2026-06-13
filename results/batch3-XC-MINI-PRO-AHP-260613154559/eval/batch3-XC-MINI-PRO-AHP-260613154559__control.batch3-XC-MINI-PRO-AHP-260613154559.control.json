@@ -1,0 +1,48 @@
+{
+    "total_instances": 9,
+    "submitted_instances": 9,
+    "completed_instances": 9,
+    "resolved_instances": 7,
+    "unresolved_instances": 2,
+    "empty_patch_instances": 0,
+    "error_instances": 0,
+    "completed_ids": [
+        "astropy__astropy-14369",
+        "django__django-15503",
+        "django__django-15629",
+        "django__django-15957",
+        "django__django-16263",
+        "django__django-16560",
+        "django__django-16631",
+        "pylint-dev__pylint-4551",
+        "pylint-dev__pylint-8898"
+    ],
+    "incomplete_ids": [],
+    "empty_patch_ids": [],
+    "submitted_ids": [
+        "astropy__astropy-14369",
+        "django__django-15503",
+        "django__django-15629",
+        "django__django-15957",
+        "django__django-16263",
+        "django__django-16560",
+        "django__django-16631",
+        "pylint-dev__pylint-4551",
+        "pylint-dev__pylint-8898"
+    ],
+    "resolved_ids": [
+        "django__django-15503",
+        "django__django-15629",
+        "django__django-15957",
+        "django__django-16560",
+        "django__django-16631",
+        "pylint-dev__pylint-4551",
+        "pylint-dev__pylint-8898"
+    ],
+    "unresolved_ids": [
+        "astropy__astropy-14369",
+        "django__django-16263"
+    ],
+    "error_ids": [],
+    "schema_version": 2
+}
