@@ -12,9 +12,14 @@ the whole prompt into your local Claude Code session.**
 
 **You need:** an Ubuntu **x86_64** machine · [Claude Code](https://claude.com/claude-code)
 installed and logged in with a subscription · Docker with ~120 GB free disk · Python ≥ 3.10
-· git · this repo cloned locally, on `main`. Budget roughly a working day for a sequential
-batch, or a few hours at `{max-parallel}` = 3. Everything else is in
+· git · this repo cloned locally, on `main`. Everything else is in
 [START.md](START.md) — your Claude session will read it.
+
+**What to expect:** these runs take a **long time** — roughly a working day for a
+sequential batch, a few hours at `{max-parallel}` = 3. While the benchmark runs, your
+Claude session may look stale or idle; **it is not stuck** — it is waiting for background
+sessions and tests to finish. Send `status?` at any time and it will reply with a progress
+report.
 
 ---
 
@@ -39,6 +44,10 @@ Carry out, in order:
    comparability across machines.
 4. `evaluate`, then `report`.
 5. Commit ONLY the new results/<run-id>/ directory plus results/INDEX.md to main and push.
+
+This will take hours. While work is running in the background, stay on it and do not give
+up; whenever I send `status?`, reply with a concise progress report: per-instance arm
+statuses, what is currently running, and elapsed time.
 
 When done, report: the scores.md aggregates (per-arm resolved counts, flips), any arms
 that failed or needed retries, and total wall-clock time.
