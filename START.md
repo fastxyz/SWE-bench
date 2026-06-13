@@ -130,6 +130,36 @@ network. `--max-parallel 3` brings this to a few hours, machine and rate limits 
 **Interrupted?** Rerun the exact same `run` command — completed arms are skipped. Failed arms
 rerun only when you add `--retry-failed` (every attempt is recorded in the instance manifest).
 
+**Letting a Claude session drive a batch.** If you'd rather hand the whole flow to your own
+Claude Code session, paste the prompt below, filling in `{batch}` (one of `batch1`…`batch5`)
+and `{max-parallel}` (1–9; 1 = sequential, the canonical comparable mode):
+
+```text
+I have the fastxyz/SWE-bench repo cloned locally on main, with Claude Code installed and
+logged in. Run one benchmark batch end to end.
+
+Read START.md at the repo root and follow it exactly. Parameters for this run:
+- batch: {batch}
+- max parallel instances: {max-parallel}
+- run id: {batch}-$(hostname)
+
+Carry out, in order:
+1. Setup + sanity: `git submodule update --init`, create .venv and `pip install -e .`,
+   then `python -m fvk_bench doctor --canary`. Stop and show me the output if any hard
+   check fails or the canary is not clean.
+2. `validate-gold` for this batch — all 9 must resolve before continuing.
+3. `run` the batch with the parameters above. This takes hours: run it in the background
+   and monitor until every arm of every instance is completed. If an arm fails with a
+   transient error (e.g. API overload), rerun the same command with `--retry-failed`.
+   Never edit anything under fvk_bench/ (prompts, config) — that would break
+   comparability across machines.
+4. `evaluate`, then `report`.
+5. Commit ONLY the new results/<run-id>/ directory plus results/INDEX.md to main and push.
+
+When done, report: the scores.md aggregates (per-arm resolved counts, flips), any arms
+that failed or needed retries, and total wall-clock time.
+```
+
 ## 7. Run more, or all 45
 
 Replace `--instances sympy__sympy-12489` with more IDs (`--instances ID ID ...`), with
