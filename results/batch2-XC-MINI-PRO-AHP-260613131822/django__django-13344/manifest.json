@@ -1,0 +1,283 @@
+{
+  "run_id": "batch2-XC-MINI-PRO-AHP-260613131822",
+  "instance_id": "django__django-13344",
+  "baseline_session_id": "07976e45-bcc3-432c-8f4c-d0757bf817f1",
+  "core_hash_post_baseline": "c9192edfba04a24b1bd7c8526dc1d7a50958d1ffde2b6ed7df26b86f2a9db306",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "07976e45-bcc3-432c-8f4c-d0757bf817f1",
+      "attempts": 1,
+      "started_at": "2026-06-13T05:23:31.326578+00:00",
+      "ended_at": "2026-06-13T05:27:41.429563+00:00",
+      "num_turns": 23,
+      "duration_seconds": 250.09829990100116,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 12,
+          "Grep": 3,
+          "Edit": 4,
+          "Glob": 2,
+          "Write": 1
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 87
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "eb3813ca-b1ce-4d5f-bc84-dcc41a806901",
+      "attempts": 1,
+      "started_at": "2026-06-13T05:27:42.009677+00:00",
+      "ended_at": "2026-06-13T05:38:58.571235+00:00",
+      "num_turns": 26,
+      "duration_seconds": 676.5609453259967,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 22,
+          "Grep": 6,
+          "Edit": 4,
+          "Glob": 6,
+          "Write": 9
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 188
+      }
+    },
+    "control": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "8f4269f7-35db-4f71-bf8a-e77220498e40",
+      "attempts": 1,
+      "started_at": "2026-06-13T05:38:58.853305+00:00",
+      "ended_at": "2026-06-13T05:43:28.153675+00:00",
+      "num_turns": 11,
+      "duration_seconds": 269.2997000210162,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 15,
+          "Grep": 8,
+          "Edit": 4,
+          "Glob": 2,
+          "Write": 3
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 128
+      }
+    }
+  },
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "285f34c0c41bb0ff1e784f2f0234b23ae0e382f96b0ba257b2bddae05a492271",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 247838,
+      "duration_api_ms": 249369,
+      "ttft_ms": 1847,
+      "ttft_stream_ms": 1847,
+      "time_to_request_ms": 12,
+      "num_turns": 23,
+      "result": "The fix is complete and verified. All four affected `__init__` methods now call `self._async_check()`, and the baseline notes are written. This is a self-contained benchmark fix already recorded in the code and report, so there's nothing non-obvious to persist to memory.\n\n## Summary\n\nThe bug was that under ASGI, the first middleware in a chain of two or more received an un-awaited `coroutine` in its `process_response()` instead of an `HttpResponse`. The root cause: `SecurityMiddleware`, `UpdateCacheMiddleware`, `FetchFromCacheMiddleware`, and `CacheMiddleware` each override `__init__` and assign `self.get_response` directly but never call `self._async_check()` (the method `MiddlewareMixin.__init__` normally runs). That call is what sets the `_is_coroutine` marker so `asyncio.iscoroutinefunction(instance)` returns `True` for an async-driven middleware; without it, `convert_exception_to_response` wraps the instance in a *synchronous* handler, so the preceding middleware stays on its sync path, calls the next one without awaiting, and hands the resulting coroutine straight to its own `process_response`. The fix adds `self._async_check()` immediately after `self.get_response = get_response` in all four `__init__` methods (in `django/middleware/security.py` and `django/middleware/cache.py`), mirroring the already-correct `SessionMiddleware`; `SessionMiddleware` and `RedirectFallbackMiddleware` were left untouched since they already handle the async check.",
+      "stop_reason": "end_turn",
+      "session_id": "07976e45-bcc3-432c-8f4c-d0757bf817f1",
+      "total_cost_usd": 0.9765530000000001,
+      "usage": {
+        "input_tokens": 31,
+        "cache_creation_input_tokens": 42018,
+        "cache_read_input_tokens": 454341,
+        "output_tokens": 19426,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 42018,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 899,
+            "cache_read_input_tokens": 42963,
+            "cache_creation_input_tokens": 2430,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 2430
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 885,
+          "outputTokens": 16,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.000965,
+          "contextWindow": 200000,
+          "maxOutputTokens": 32000
+        },
+        "claude-opus-4-8": {
+          "inputTokens": 31,
+          "outputTokens": 19426,
+          "cacheReadInputTokens": 454341,
+          "cacheCreationInputTokens": 42018,
+          "webSearchRequests": 0,
+          "costUSD": 0.975588,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "ccb1d6b4-7d15-4868-a9ea-5e3b42edc1a7"
+    },
+    "fvk": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 673706,
+      "duration_api_ms": 672997,
+      "ttft_ms": 2653,
+      "ttft_stream_ms": 2127,
+      "time_to_request_ms": 17,
+      "num_turns": 26,
+      "result": "All artifacts are complete. The FVK audit confirmed V1 without requiring code changes.\n\n**Summary:** The FVK audit confirms V1 stands unchanged. I adapted the methodology to this flag-bookkeeping (non-arithmetic) bug by abstracting every callable's async-ness to a single Bool (`flag(x) = asyncio.iscoroutinefunction(x)`), building a Boolean mini-semantics (`fvk/middleware-async.k`/`-spec.k`) with the real coroutine/asgiref internals isolated as a named escalation boundary (S1\u2013S5). The specification crystallized as the contract **`(INIT)`**: every `MiddlewareMixin` adapter must satisfy `iscoroutinefunction(m) == \"m actually runs async\"`, whose silently-dropped precondition is \"call `_async_check()` after assigning `get_response`\" \u2014 precisely what `SecurityMiddleware`, `UpdateCacheMiddleware`, `FetchFromCacheMiddleware`, and `CacheMiddleware` omitted (FINDINGS F1\u2013F4). The constructed proof discharges `(INIT)` for the fixed constructors (PO-2), the chain-loop circularity `(STEP)`/`(CHAIN-INV)` that keeps the previous middleware awaiting correctly (PO-5), and an end-to-end two-world trace (PO-6) that reproduces the issue's `<class 'coroutine'>` pre-fix and yields an `HttpResponse` post-fix; a refutation claim localizes the bug to the async-handler case. An exhaustive enumeration (PO-7/F5) proves V1's fix set is exactly the violating constructors \u2014 `SessionMiddleware` and `RedirectFallbackMiddleware` already satisfied the contract and all other subclasses inherit the correct base `__init__` \u2014 and monotonicity (PO-8/F6) confirms no WSGI/sync, `get_response=None`, or `cache_page`-decorator regression. I deliberately kept the change minimal (rejecting a `super().__init__()` refactor and deferring the implicit-invariant hardening F8/G2 and the unrelated async-view decorator gap F7/G3 to `ITERATION_GUIDANCE.md`), so the four one-line `self._async_check()` additions remain exactly as in V1, now backed by a stated spec and discharged proof obligations.",
+      "stop_reason": "end_turn",
+      "session_id": "eb3813ca-b1ce-4d5f-bc84-dcc41a806901",
+      "total_cost_usd": 2.8264785000000003,
+      "usage": {
+        "input_tokens": 35,
+        "cache_creation_input_tokens": 96634,
+        "cache_read_input_tokens": 1843682,
+        "output_tokens": 52020,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 96634,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 1259,
+            "cache_read_input_tokens": 141527,
+            "cache_creation_input_tokens": 500,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 500
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 35,
+          "outputTokens": 52020,
+          "cacheReadInputTokens": 1843682,
+          "cacheCreationInputTokens": 96634,
+          "webSearchRequests": 0,
+          "costUSD": 2.8264785000000003,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "7d8aa4a9-58f6-428d-bf8b-d551044f71cd"
+    },
+    "control": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 265911,
+      "duration_api_ms": 265859,
+      "ttft_ms": 6315,
+      "ttft_stream_ms": 3242,
+      "time_to_request_ms": 17,
+      "num_turns": 11,
+      "result": "I have completed a systematic review of the V1 fix. The review (`review/FINDINGS.md`, findings F1\u2013F9) confirmed V1 is correct and required no changes; `reports/control_notes.md` traces that decision to the findings.\n\n**Summary:** A skeptical re-review of the V1 fix \u2014 which added `self._async_check()` to the `__init__` of `SecurityMiddleware`, `UpdateCacheMiddleware`, `FetchFromCacheMiddleware`, and `CacheMiddleware` \u2014 confirmed it correct, complete, and regression-free, so **V1 stands unchanged with no V2 code edits**. I verified end-to-end that restoring the `_is_coroutine` marker makes `convert_exception_to_response` wrap these instances as async, so the preceding middleware awaits the result and receives an `HttpResponse` rather than a coroutine (F1); that an exhaustive search found exactly these four broken middlewares while `SessionMiddleware` and `RedirectFallbackMiddleware` were already correct (F2); that the marker is inert in the `cache_page`/`decorator_from_middleware` path, the deprecated `get_response=None` path, and pure-WSGI mode (F3, F5); that `convert_exception_to_response` is the sole consumer of the instance marker so there are no side effects on `process_view`/`process_exception` adaptation (F8); and that the `super().__init__()` alternative was rightly rejected because it would double-fire the deprecation warning and mis-route `CacheMiddleware` via MRO (F6).",
+      "stop_reason": "end_turn",
+      "session_id": "8f4269f7-35db-4f71-bf8a-e77220498e40",
+      "total_cost_usd": 0.9694209999999999,
+      "usage": {
+        "input_tokens": 15,
+        "cache_creation_input_tokens": 29558,
+        "cache_read_input_tokens": 450467,
+        "output_tokens": 22375,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 29558,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 736,
+            "cache_read_input_tokens": 73328,
+            "cache_creation_input_tokens": 1623,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 1623
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 15,
+          "outputTokens": 22375,
+          "cacheReadInputTokens": 450467,
+          "cacheCreationInputTokens": 29558,
+          "webSearchRequests": 0,
+          "costUSD": 0.9694209999999999,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "f094cdaf-2746-4b0f-8bb0-846a60d09cd0"
+    }
+  }
+}

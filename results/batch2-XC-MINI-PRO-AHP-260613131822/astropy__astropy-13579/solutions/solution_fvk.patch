@@ -1,0 +1,30 @@
+diff --git a/astropy/wcs/wcsapi/wrappers/sliced_wcs.py b/astropy/wcs/wcsapi/wrappers/sliced_wcs.py
+index d7605b078c..213cc5a5d5 100644
+--- a/astropy/wcs/wcsapi/wrappers/sliced_wcs.py
++++ b/astropy/wcs/wcsapi/wrappers/sliced_wcs.py
+@@ -243,6 +243,16 @@ class SlicedLowLevelWCS(BaseWCSWrapper):
+         return world_arrays
+ 
+     def world_to_pixel_values(self, *world_arrays):
++        # Coordinates that have been sliced out are not provided by the caller,
++        # but the underlying WCS still needs a value for every world axis: a
++        # non-trivial PCij matrix can couple a dropped world axis to a retained
++        # pixel axis, so the value used for the dropped axis affects the returned
++        # pixel coordinates. Use the world coordinate at the slice (obtained by
++        # sending the kept pixels through the forward transform, which pins the
++        # dropped pixels to their slice index) instead of an arbitrary constant,
++        # which would corrupt the inverse and is also in the wrong (SI) units.
++        sliced_out_world_coords = self._pixel_to_world_values_all(*[0]*len(self._pixel_keep))
++
+         world_arrays = tuple(map(np.asanyarray, world_arrays))
+         world_arrays_new = []
+         iworld_curr = -1
+@@ -251,7 +261,7 @@ class SlicedLowLevelWCS(BaseWCSWrapper):
+                 iworld_curr += 1
+                 world_arrays_new.append(world_arrays[iworld_curr])
+             else:
+-                world_arrays_new.append(1.)
++                world_arrays_new.append(sliced_out_world_coords[iworld])
+ 
+         world_arrays_new = np.broadcast_arrays(*world_arrays_new)
+         pixel_arrays = list(self._wcs.world_to_pixel_values(*world_arrays_new))

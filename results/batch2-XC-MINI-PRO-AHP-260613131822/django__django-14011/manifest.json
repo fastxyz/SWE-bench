@@ -1,0 +1,283 @@
+{
+  "run_id": "batch2-XC-MINI-PRO-AHP-260613131822",
+  "instance_id": "django__django-14011",
+  "baseline_session_id": "43dc1e74-7845-4f66-857c-7f8122e34b03",
+  "core_hash_post_baseline": "5823d38e39ec752074f4b262b6025e515b6367c6e901abde6e1a1eacd356801f",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "43dc1e74-7845-4f66-857c-7f8122e34b03",
+      "attempts": 1,
+      "started_at": "2026-06-13T06:00:07.889255+00:00",
+      "ended_at": "2026-06-13T06:05:04.865754+00:00",
+      "num_turns": 24,
+      "duration_seconds": 296.9758179340279,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 15,
+          "Grep": 2,
+          "Edit": 4,
+          "Glob": 1,
+          "Write": 1
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 99
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "5e9c4fea-3c05-49b8-a103-e689b5207fd7",
+      "attempts": 1,
+      "started_at": "2026-06-13T06:05:05.487784+00:00",
+      "ended_at": "2026-06-13T06:18:22.988835+00:00",
+      "num_turns": 20,
+      "duration_seconds": 797.5003980120237,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 23,
+          "Grep": 2,
+          "Edit": 4,
+          "Glob": 4,
+          "Write": 9
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 187
+      }
+    },
+    "control": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "62754ed5-d071-44a5-993c-2da09bcc4c4b",
+      "attempts": 1,
+      "started_at": "2026-06-13T06:18:23.268566+00:00",
+      "ended_at": "2026-06-13T06:25:07.949190+00:00",
+      "num_turns": 8,
+      "duration_seconds": 404.6799110439897,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 18,
+          "Grep": 4,
+          "Edit": 4,
+          "Glob": 1,
+          "Write": 3
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 124
+      }
+    }
+  },
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "285f34c0c41bb0ff1e784f2f0234b23ae0e382f96b0ba257b2bddae05a492271",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 295073,
+      "duration_api_ms": 300630,
+      "ttft_ms": 2322,
+      "ttft_stream_ms": 2321,
+      "time_to_request_ms": 15,
+      "num_turns": 24,
+      "result": "The fix and report are both complete. Final verification confirms all changes are intact and consistent.\n\n## Summary\n\nThe intermittent `OperationalError: database \"...\" is being accessed by other users` at test teardown was caused by `ThreadedWSGIServer` (used by `LiveServerTestCase` via `LiveServerThread`) spawning a fresh thread per request through `socketserver.ThreadingMixIn` and never closing the database connections those worker threads opened, so connections lingered into `destroy_test_db()` \u2014 a reappearance of #22414. The same worker threads also lacked the in-memory SQLite thread-sharing that `LiveServerThread.run()` performs only in its own thread. I fixed both in `django/core/servers/basehttp.py` by giving `ThreadedWSGIServer` a `connections_override` constructor argument, overriding `process_request_thread()` to copy those overrides into each worker thread's thread-local connections (restoring SQLite sharing), and overriding `close_request()` to call `connections.close_all()` (via a mockable `_close_connections()` seam) so every worker closes its connections when the request finishes; closing is safe because in-memory SQLite's `close()` is a no-op and the shared connection already has thread-sharing enabled. In `django/test/testcases.py`, `LiveServerThread.run()` now passes `connections_override` to `_create_server()`, and `_create_server()` accepts and forwards it to the server class. The change is scoped to the live-test server and does not affect `runserver`, which builds its own threaded server class.",
+      "stop_reason": "end_turn",
+      "session_id": "43dc1e74-7845-4f66-857c-7f8122e34b03",
+      "total_cost_usd": 1.11631125,
+      "usage": {
+        "input_tokens": 43,
+        "cache_creation_input_tokens": 40747,
+        "cache_read_input_tokens": 558819,
+        "output_tokens": 23242,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 40747,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 879,
+            "cache_read_input_tokens": 43432,
+            "cache_creation_input_tokens": 690,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 690
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 43,
+          "outputTokens": 23242,
+          "cacheReadInputTokens": 558819,
+          "cacheCreationInputTokens": 40747,
+          "webSearchRequests": 0,
+          "costUSD": 1.11534325,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        },
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 888,
+          "outputTokens": 16,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.000968,
+          "contextWindow": 200000,
+          "maxOutputTokens": 32000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "87543b04-058f-4ee7-ac22-fa859e5d8f06"
+    },
+    "fvk": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 795035,
+      "duration_api_ms": 794645,
+      "ttft_ms": 4459,
+      "ttft_stream_ms": 4446,
+      "time_to_request_ms": 16,
+      "num_turns": 20,
+      "result": "All artifacts are complete and the code under `repo/` is confirmed unchanged. \n\n**V1 stands \u2014 confirmed, not revised.** Applying the FVK methodology, I reduced the fix's correctness to a clean **per-worker-thread sequential contract** (mini-X semantics in `fvk/mini-server.k`, claims `(CLOSEALL)` + `(PRT)` in `fvk/mini-server-spec.k`) and constructed a proof discharging proof obligations PO1\u2013PO7: cleanup runs in the right thread on every path (PO1), no thread-local connection leaks past a request (PO2, the #22414 root cause), the shared in-memory connection is preserved because its `close()` is a no-op and it is thread-shared (PO3), the request sees the shared connection by program order (PO4, the #29062 fix), the no-override case degrades gracefully (PO5), end-to-end teardown leaves no open connection so `destroy_test_db()` no longer races (PO6), and the new `from django.db import connections` import is acyclic with `runserver` unaffected (PO7). Writing the spec surfaced findings F1\u2013F8: F1\u2013F3/F7 are positive confirmations, while the three genuine downsides \u2014 the `_create_server` signature change breaking private-method overrides (F4), the rare-path ordering in `close_request` (F6), and the now-redundant override copy in `LiveServerThread.run()` (F8) \u2014 were each weighed against an alternative and consciously **accepted/kept**, because the alternatives diverge from the issue's prescribed constructor-parameter design (risking the hidden tests) or are pure refactors with regression risk and zero correctness benefit; the only open obligation, concurrent use of one shared in-memory connection (PO8/F5), is inherent to the intended sharing design rather than introduced by the fix and is recorded as an explicit escalation boundary, never faked as trusted. Every decision is traced to its FINDINGS/PROOF_OBLIGATIONS entry in `reports/fvk_notes.md`.",
+      "stop_reason": "end_turn",
+      "session_id": "5e9c4fea-3c05-49b8-a103-e689b5207fd7",
+      "total_cost_usd": 2.9563965000000003,
+      "usage": {
+        "input_tokens": 31,
+        "cache_creation_input_tokens": 101076,
+        "cache_read_input_tokens": 1617483,
+        "output_tokens": 60631,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 101076,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 950,
+            "cache_read_input_tokens": 144753,
+            "cache_creation_input_tokens": 445,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 445
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 31,
+          "outputTokens": 60631,
+          "cacheReadInputTokens": 1617483,
+          "cacheCreationInputTokens": 101076,
+          "webSearchRequests": 0,
+          "costUSD": 2.9563965000000003,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "8f4ad769-9327-450d-9057-b73a8aeb60a6"
+    },
+    "control": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 402741,
+      "duration_api_ms": 402682,
+      "ttft_ms": 245500,
+      "ttft_stream_ms": 2324,
+      "time_to_request_ms": 19,
+      "num_turns": 8,
+      "result": "The review is complete. All artifacts are in place: `review/FINDINGS.md` (14 numbered findings), the unchanged V1 source, and `reports/control_notes.md` (decisions traced to findings).\n\nAfter a systematic, skeptical re-audit, **V1 stands unchanged \u2014 no functional defects were found**. I verified the core fix is at the correct layer: the existing `request_finished`\u2192`close_old_connections` signal is insufficient because it honors `CONN_MAX_AGE` (leaving persistent connections stranded in soon-dead worker threads) and depends on the signal firing, whereas V1's `ThreadedWSGIServer.close_request()`\u2192`connections.close_all()` closes the worker thread's connections unconditionally and even on the request error path (Findings 1, 5); the `process_request_thread` override correctly re-establishes in-memory SQLite thread-sharing before any DB access, and closing the shared in-memory connection afterward is a verified no-op that neither destroys the database nor trips `validate_thread_sharing` (Findings 2\u20134). I also confirmed there is no circular import, the change is correctly scoped to the live-test server (runserver builds its own threaded class), it's backward-compatible for direct instantiation, and the MRO `super()` calls resolve correctly (Findings 6\u20138, 14). The only debatable points resolved to deliberate, justified decisions to keep V1: the `_create_server` constructor-injection signature (private method; `server_class` is the supported hook), the `_close_connections` mock seam, and leaving `daemon_threads`/the redundant `run()` override alone \u2014 the one residual race (Finding 11) is pre-existing, abnormal-case-only, confined to a logged daemon thread, and not worsened by the fix.",
+      "stop_reason": "end_turn",
+      "session_id": "62754ed5-d071-44a5-993c-2da09bcc4c4b",
+      "total_cost_usd": 1.2127302500000003,
+      "usage": {
+        "input_tokens": 11,
+        "cache_creation_input_tokens": 34503,
+        "cache_read_input_tokens": 371263,
+        "output_tokens": 32456,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 34503,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 955,
+            "cache_read_input_tokens": 76548,
+            "cache_creation_input_tokens": 2077,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 2077
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 11,
+          "outputTokens": 32456,
+          "cacheReadInputTokens": 371263,
+          "cacheCreationInputTokens": 34503,
+          "webSearchRequests": 0,
+          "costUSD": 1.2127302500000003,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "2829839a-4723-486b-bc73-3d21992e4097"
+    }
+  }
+}

@@ -1,0 +1,281 @@
+{
+  "run_id": "batch2-XC-MINI-PRO-AHP-260613131822",
+  "instance_id": "django__django-15128",
+  "baseline_session_id": "880e9c03-ba33-4901-b073-dd46e44aeefa",
+  "core_hash_post_baseline": "7a6f187ab7458f3326dd0aba650c64690d90b002b2fe1d808cabcc08eb87e660",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "880e9c03-ba33-4901-b073-dd46e44aeefa",
+      "attempts": 1,
+      "started_at": "2026-06-13T06:13:44.710178+00:00",
+      "ended_at": "2026-06-13T06:49:40.016888+00:00",
+      "num_turns": 47,
+      "duration_seconds": 2155.3058605170227,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 26,
+          "Grep": 13,
+          "Edit": 6,
+          "Write": 1
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 191
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "40bca32e-ad3d-4b45-892b-c93a9da633e9",
+      "attempts": 1,
+      "started_at": "2026-06-13T06:49:40.651692+00:00",
+      "ended_at": "2026-06-13T07:05:34.059324+00:00",
+      "num_turns": 21,
+      "duration_seconds": 953.4068498999986,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 35,
+          "Grep": 13,
+          "Edit": 6,
+          "Write": 9,
+          "Glob": 3
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 272
+      }
+    },
+    "control": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "129f700f-23fb-4fc5-b8cc-2168794c7384",
+      "attempts": 1,
+      "started_at": "2026-06-13T07:05:34.344316+00:00",
+      "ended_at": "2026-06-13T07:18:31.793594+00:00",
+      "num_turns": 12,
+      "duration_seconds": 777.4486163310066,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 32,
+          "Grep": 14,
+          "Edit": 8,
+          "Write": 3
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 217
+      }
+    }
+  },
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "285f34c0c41bb0ff1e784f2f0234b23ae0e382f96b0ba257b2bddae05a492271",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 2153361,
+      "duration_api_ms": 2153465,
+      "ttft_ms": 2109,
+      "ttft_stream_ms": 2108,
+      "time_to_request_ms": 15,
+      "num_turns": 47,
+      "result": "The fix is complete. Only `repo/django/db/models/sql/query.py` (non-test source) was modified, and `reports/baseline_notes.md` was created.\n\n## Summary\n\n`Query.combine()` (used by `QuerySet.__or__`/`__and__`) raised `AssertionError` in `Query.change_aliases` because both querysets default to the same `alias_prefix` (`'T'`): as `combine` relabels the rhs joins into the lhs, `self.join()` mints new aliases from that shared prefix (e.g. `T5`, `T6`) which collide with rhs aliases not yet relabelled, yielding a `change_map` like `{T4: T5, T5: T6}` whose keys and values intersect. That map is then propagated into the `__in=<queryset>` subqueries in the `where` clause, and `change_aliases` (whose sequential `alias_map` renaming requires a one-to-one mapping) asserts disjointness and fails. The fix, in `django/db/models/sql/query.py`, makes `combine` bump the rhs aliases to a distinct prefix before building the `change_map` whenever the two queries share a prefix \u2014 so keys (rhs's new prefix) and values (lhs's prefix / table names) are disjoint by construction, while the final combined-query aliases stay identical to the intended output. This reuses `Query.bump_prefix`, which gains an `exclude` parameter so the shared base-table alias (the merge starting point) is preserved; the bump is applied to a `rhs.clone()` (with its `table_map` lists explicitly copied, since `clone()` only shallow-copies them and `change_aliases` mutates them in place) so the original rhs is never modified, honoring `combine`'s contract. I also documented the previously-unexplained assertion in `change_aliases`, as the reporter requested.",
+      "stop_reason": "end_turn",
+      "session_id": "880e9c03-ba33-4901-b073-dd46e44aeefa",
+      "total_cost_usd": 7.792739750000003,
+      "usage": {
+        "input_tokens": 85,
+        "cache_creation_input_tokens": 203797,
+        "cache_read_input_tokens": 4331439,
+        "output_tokens": 174076,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 203797,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 804,
+            "cache_read_input_tokens": 205662,
+            "cache_creation_input_tokens": 1510,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 1510
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 884,
+          "outputTokens": 16,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.000964,
+          "contextWindow": 200000,
+          "maxOutputTokens": 32000
+        },
+        "claude-opus-4-8": {
+          "inputTokens": 85,
+          "outputTokens": 174076,
+          "cacheReadInputTokens": 4331439,
+          "cacheCreationInputTokens": 203797,
+          "webSearchRequests": 0,
+          "costUSD": 7.791775750000002,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "3a9b64e4-4536-40d0-97b6-4c124a6b4a8f"
+    },
+    "fvk": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 951371,
+      "duration_api_ms": 950686,
+      "ttft_ms": 5130,
+      "ttft_stream_ms": 5126,
+      "time_to_request_ms": 19,
+      "num_turns": 21,
+      "result": "All artifacts are complete and the V1 source fix remains intact (the three edits to `combine`, `bump_prefix`, and `change_aliases` are unchanged). The FVK pass made no code changes \u2014 V1 is confirmed correct.\n\n## Summary\n\nThe FVK audit **confirms V1 stands unchanged**. I built a mini-X K semantics of `combine`'s `change_map`-construction loop (`fvk/combine-aliasing.k`) and stated the contract as a reachability claim plus a loop circularity (`fvk/combine-aliasing-spec.k`): the loop must end with `set(change_map).isdisjoint(change_map.values())` \u2014 exactly the precondition `change_aliases` asserts. The constructed proof reduces this to a loop invariant (*keys are `pref(Pr,_)`, values are `pref(Ps,_)`/`name(_)`, `Pr \u2260 Ps`*) closed by a purely structural lemma (different prefix or different constructor \u21d2 no key equals any value), with the three preconditions traced back to the real code (PO-PREFIX, PO-KEYS, PO-VALS). Writing the spec forced out and resolved the fix's two design-critical subtleties \u2014 both already correctly handled by V1: the **base-table exclusion** (`exclude={rhs.base_table}`, without which the shared merge starting point breaks, F3/PO-KEYS) and the **`table_map` list copy** (without which bumping the clone would corrupt the caller's `rhs` through lists that `clone()` shares by reference, F6/PO-NOMUT) \u2014 and it proved the lurking name-vs-name collision impossible because the bump leaves rhs with no table-name keys (F4). I also discharged equivalence (PO-EQUIV: the bump renames only intermediate keys, so the combined query is identical to the pre-fix intended one) and backward-compatibility of the new `exclude` parameter (F7/PO-BACKCOMPAT). The only candidate edits the audit surfaced \u2014 a perf guard on the clone (F9) and hardening `change_aliases` to rebuild `table_map` lists globally (IG3) \u2014 are non-correctness/out-of-minimal-scope and were deliberately **declined**, with the reasoning recorded in `reports/fvk_notes.md`; the Map-fold induction is honestly flagged as an `[ESCALATION BOUNDARY]` rather than faked as trusted, and all results are labeled constructed-not-machine-checked.",
+      "stop_reason": "end_turn",
+      "session_id": "40bca32e-ad3d-4b45-892b-c93a9da633e9",
+      "total_cost_usd": 5.241994000000001,
+      "usage": {
+        "input_tokens": 39,
+        "cache_creation_input_tokens": 115256,
+        "cache_read_input_tokens": 5312098,
+        "output_tokens": 74616,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 115256,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 1664,
+            "cache_read_input_tokens": 321716,
+            "cache_creation_input_tokens": 712,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 712
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 39,
+          "outputTokens": 74616,
+          "cacheReadInputTokens": 5312098,
+          "cacheCreationInputTokens": 115256,
+          "webSearchRequests": 0,
+          "costUSD": 5.241994000000001,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "d6f16621-115d-490f-afb1-2ec92d1ce0dd"
+    },
+    "control": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 775378,
+      "duration_api_ms": 775304,
+      "ttft_ms": 12595,
+      "ttft_stream_ms": 5882,
+      "time_to_request_ms": 17,
+      "num_turns": 12,
+      "result": "All changes are coherent and complete. The review is done.\n\n## Summary\n\nMy systematic review (15 numbered findings in `review/FINDINGS.md`) confirmed the V1 fix is **correct**: bumping the rhs query's `alias_prefix` to a distinct letter before building the `change_map` guarantees the map's keys and values are disjoint, so the `change_aliases` assertion holds wherever the map propagates \u2014 including into the queryset subqueries in the `where` clause that triggered the original `AssertionError`. I verified the core correctness (F1), output-equivalence for inputs that already worked (F3), preservation of the \"rhs is not modified\" contract via the clone plus the necessary `table_map` list copy (F4/F5, since `clone()` only shallow-copies `table_map` and `change_aliases` mutates its lists in place), the necessity of excluding the base table (F6), prefix-selection soundness (F7), AND-connector coverage (F8), and clean interaction with join promotion/refcounts/existing `bump_prefix` callers (F10/F14). I also noted (F2) that the literal minimal repro is base-only and does not crash on this version \u2014 the crash needs the lhs to contribute a non-shared join \u2014 which shapes a regression test but needs no code change. I applied only two transparent improvements: a `len(rhs.alias_map) > 1` guard so the rhs is no longer cloned on the very common base-only `|`/`&` where there is nothing to relabel (C1/F9), and a clearer `exclude` docstring (C2/F11); both leave query results and generated SQL unchanged. All other aspects of V1 stand as justified in `reports/control_notes.md`.",
+      "stop_reason": "end_turn",
+      "session_id": "129f700f-23fb-4fc5-b8cc-2168794c7384",
+      "total_cost_usd": 3.39597475,
+      "usage": {
+        "input_tokens": 21,
+        "cache_creation_input_tokens": 69623,
+        "cache_read_input_tokens": 2739002,
+        "output_tokens": 63649,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 69623,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 775,
+            "cache_read_input_tokens": 275889,
+            "cache_creation_input_tokens": 906,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 906
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 21,
+          "outputTokens": 63649,
+          "cacheReadInputTokens": 2739002,
+          "cacheCreationInputTokens": 69623,
+          "webSearchRequests": 0,
+          "costUSD": 3.39597475,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "b4560cc4-0409-4245-96e9-1657d49f740c"
+    }
+  }
+}

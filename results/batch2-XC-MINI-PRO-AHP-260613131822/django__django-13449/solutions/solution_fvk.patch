@@ -1,0 +1,35 @@
+diff --git a/django/db/models/expressions.py b/django/db/models/expressions.py
+index 90d90119d0..53b4476beb 100644
+--- a/django/db/models/expressions.py
++++ b/django/db/models/expressions.py
+@@ -1332,6 +1332,30 @@ class Window(Expression):
+             'window': ''.join(window_sql).strip()
+         }, params
+ 
++    def as_sqlite(self, compiler, connection):
++        # On SQLite a window expression whose output is a DecimalField must be
++        # wrapped in CAST(... AS NUMERIC), and that cast has to enclose the
++        # whole "<function> OVER (...)" clause. The windowed function itself
++        # must never be cast on its own, because such a CAST() would close
++        # right after the function and leave the OVER clause outside it,
++        # producing invalid SQL. So always render the windowed function as a
++        # FloatField (suppressing the per-function cast that SQLiteNumericMixin
++        # would otherwise add), then add a single cast around the whole
++        # expression when the Window's own output field is a DecimalField.
++        copy = self.copy()
++        source_expressions = copy.get_source_expressions()
++        source_expression = source_expressions[0].copy()
++        source_expression.output_field = fields.FloatField()
++        source_expressions[0] = source_expression
++        copy.set_source_expressions(source_expressions)
++        sql, params = copy.as_sql(compiler, connection)
++        try:
++            if self.output_field.get_internal_type() == 'DecimalField':
++                sql = 'CAST(%s AS NUMERIC)' % sql
++        except FieldError:
++            pass
++        return sql, params
++
+     def __str__(self):
+         return '{} OVER ({}{}{})'.format(
+             str(self.source_expression),
