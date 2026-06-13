@@ -30,7 +30,9 @@ logged in. Run one benchmark batch end to end.
 Read START.md at the repo root and follow it exactly. Parameters for this run:
 - batch: batch{batch}
 - max parallel instances: {max-parallel}
-- run id: batch{batch}-$(hostname)
+- run id: batch{batch}-$(hostname)-$(date +%y%m%d%H%M%S)
+  (compute the run id once at the start and reuse the exact same string for every
+  command below — the timestamp keeps it unique so concurrent runs never collide)
 
 Carry out, in order:
 1. Setup + sanity: `git submodule update --init`, create .venv and `pip install -e .`,
