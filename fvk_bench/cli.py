@@ -133,8 +133,6 @@ def _cmd_list(args) -> int:
             extras = []
             if iid in batch_of:
                 extras.append(f"[{batch_of[iid]}]")
-            if iid in batches.HARD_INSTANCES:
-                extras.append("[H]")
             if args.run_id:
                 extras.append(annotations[iid])
             if extras:

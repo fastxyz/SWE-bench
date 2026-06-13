@@ -2,9 +2,7 @@
 
 The division (2026-06-13) is a contract: exactly five batches of nine,
 pairwise disjoint, whose union is the 45 submodule-derived instance ids
-(invariants are test-enforced). Membership is the contract; the ``[H]``
-hard-instance labels in :data:`HARD_INSTANCES` are documentation/reporting
-only and carry no scheduling semantics.
+(invariants are test-enforced). Membership is the contract.
 """
 
 BATCHES: dict[str, tuple[str, ...]] = {
@@ -24,12 +22,6 @@ BATCHES: dict[str, tuple[str, ...]] = {
                "sympy__sympy-13852", "sympy__sympy-13878", "sympy__sympy-14248",
                "sympy__sympy-16597", "sympy__sympy-17630", "sympy__sympy-18199"),
 }
-
-#: The six instances the owner labeled hard (``[H]``). Documentation only.
-HARD_INSTANCES = frozenset({
-    "astropy__astropy-13398", "astropy__astropy-13579", "astropy__astropy-14369",
-    "pydata__xarray-3993", "pydata__xarray-6992", "scikit-learn__scikit-learn-25102",
-})
 
 
 def batch_instances(name: str) -> tuple[str, ...]:

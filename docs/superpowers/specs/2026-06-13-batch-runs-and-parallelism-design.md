@@ -15,16 +15,18 @@
 
 ## Batch division (owner-specified, verbatim mapping to instance IDs)
 
-`[H]` marks the instances the owner labeled hard. Membership is the contract; the marker is
-documentation only.
+> **Amended 2026-06-13:** the original division carried `[H]` markers on six instances; the
+> owner clarified these were leftovers from elsewhere and irrelevant here. All `[H]` markers,
+> the derived `HARD_INSTANCES` set, and the `list` `[H]` annotation are removed. Membership
+> and batch names (batch1–batch5) are unchanged and remain the contract.
 
 | batch | instances |
 |---|---|
-| batch1 | astropy__astropy-13398 [H], django__django-10554, -11138, -11400, -11885, -12325, -12708, -13128, -13212 |
-| batch2 | astropy__astropy-13579 [H], django__django-13344, -13449, -13837, -14007, -14011, -14631, -15128, -15268 |
-| batch3 | astropy__astropy-14369 [H], django__django-15503, -15629, -15957, -16263, -16560, -16631, pylint-dev__pylint-4551, pylint-dev__pylint-8898 |
-| batch4 | pydata__xarray-3993 [H], pytest-dev__pytest-10356, -5787, -6197, sphinx-doc__sphinx-11510, -7590, -8548, -9229, -9461 |
-| batch5 | pydata__xarray-6992 [H], scikit-learn__scikit-learn-25102 [H], sympy__sympy-12489, -13852, -13878, -14248, -16597, -17630, -18199 |
+| batch1 | astropy__astropy-13398, django__django-10554, -11138, -11400, -11885, -12325, -12708, -13128, -13212 |
+| batch2 | astropy__astropy-13579, django__django-13344, -13449, -13837, -14007, -14011, -14631, -15128, -15268 |
+| batch3 | astropy__astropy-14369, django__django-15503, -15629, -15957, -16263, -16560, -16631, pylint-dev__pylint-4551, pylint-dev__pylint-8898 |
+| batch4 | pydata__xarray-3993, pytest-dev__pytest-10356, -5787, -6197, sphinx-doc__sphinx-11510, -7590, -8548, -9229, -9461 |
+| batch5 | pydata__xarray-6992, scikit-learn__scikit-learn-25102, sympy__sympy-12489, -13852, -13878, -14248, -16597, -17630, -18199 |
 
 Invariants (test-enforced): exactly 5 batches × 9 instances, pairwise disjoint, union equals
 the 45 submodule-derived IDs.
@@ -34,7 +36,6 @@ the 45 submodule-derived IDs.
 ### `fvk_bench/batches.py` (new)
 - `BATCHES: dict[str, tuple[str, ...]]` — `"batch1"…"batch5"` → full instance IDs in the
   owner's listed order.
-- `HARD_INSTANCES: frozenset[str]` — the six `[H]` IDs (documentation/reporting use).
 - `batch_instances(name) -> tuple[str, ...]` — KeyError with the valid names on miss.
 
 ### CLI changes (`fvk_bench/cli.py`)
@@ -69,7 +70,7 @@ wall-clock convenience; runs intended for comparison should use the same setting
 `--max-parallel` is recorded in `run_manifest.json`.
 
 ### START.md additions
-- The batch table above (with `[H]` markers).
+- The batch table above.
 - A "Run a batch" section: `validate-gold --batch batchN` → `run --batch batchN
   [--max-parallel 3]` → `evaluate` → `report` → `git add results/ && git commit && git push`,
   with suggested run-id convention `batchN-<hostname>` and duration expectations.

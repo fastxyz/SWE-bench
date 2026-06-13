@@ -15,12 +15,6 @@ def test_five_batches_of_nine_disjoint_covering_all_45():
     assert set(all_ids) == set(instances.submodule_instance_ids())
 
 
-def test_hard_instances_subset():
-    assert batches.HARD_INSTANCES <= set(
-        iid for ids in batches.BATCHES.values() for iid in ids)
-    assert len(batches.HARD_INSTANCES) == 6
-
-
 def test_batch_instances_accessor():
     assert batches.batch_instances("batch5")[0] == "pydata__xarray-6992"
     try:

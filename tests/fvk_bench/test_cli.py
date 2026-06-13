@@ -488,15 +488,15 @@ def test_list_annotates_run_statuses(monkeypatch, tmp_path, capsys):
 
 
 def test_list_annotates_batches(capsys):
-    """The full listing (real submodule ids) tags batch membership and [H]."""
+    """The full listing (real submodule ids) tags batch membership."""
     rc = cli.main(["list"])
 
     assert rc == 0
     out = capsys.readouterr().out
-    hard_line = next(l for l in out.splitlines() if "astropy__astropy-13398" in l)
-    assert "[batch1]" in hard_line and "[H]" in hard_line
-    easy_line = next(l for l in out.splitlines() if "django__django-10554" in l)
-    assert "[batch1]" in easy_line and "[H]" not in easy_line
+    line = next(l for l in out.splitlines() if "astropy__astropy-13398" in l)
+    assert "[batch1]" in line
+    line = next(l for l in out.splitlines() if "django__django-10554" in l)
+    assert "[batch1]" in line
     for name in batches.BATCHES:
         assert f"[{name}]" in out
 

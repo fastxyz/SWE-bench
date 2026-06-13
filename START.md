@@ -61,7 +61,7 @@ pinned tools and contain no skills, MCP servers, or agent listings. Optional
 subscription can access `claude-opus-4-8` before you commit to a long run. Use
 `--no-eval-checks` on a session-only machine to relax the Docker requirement to a warning.
 
-## 5. Run one problem
+## 5. Run one problem — or any selection
 
 The happy path, on a new machine, in order:
 
@@ -85,19 +85,33 @@ The happy path, on a new machine, in order:
 - `report` writes `scores.json`/`scores.md` for the run and refreshes `results/INDEX.md` —
   seconds.
 
+Replace `--instances sympy__sympy-12489` with more IDs (`--instances ID ID ...`), with
+`--batch batchN` to pick a fixed batch (see §6), or with `--all` (both `run` and
+`validate-gold` accept any of these). Browse the instance list with:
+
+```bash
+.venv/bin/python -m fvk_bench list                  # the 45 IDs, grouped by repo, with batch
+.venv/bin/python -m fvk_bench list --run-id myrun   # annotated with per-arm statuses
+```
+
+Reusing a `--run-id` resumes an interrupted run: completed arms are skipped, so the same
+three commands process a single problem or the full 45 incrementally. There are no silent
+automatic retries — a retry is a different sample — so failed arms stay failed until you
+pass `--retry-failed` to `run`, and every attempt is recorded in the instance manifest.
+`evaluate` takes no instance selection; it scores whatever the run contains.
+
 ## 6. Run a batch
 
 The 45 instances are divided into five fixed 9-problem batches, each sized to finish in one
-session. `[H]` marks instances the benchmark owner labeled hard; membership is the contract,
-the marker is documentation only.
+session; membership is the contract.
 
 | batch  | instances |
 |--------|-----------|
-| batch1 | astropy__astropy-13398 [H], django__django-10554, -11138, -11400, -11885, -12325, -12708, -13128, -13212 |
-| batch2 | astropy__astropy-13579 [H], django__django-13344, -13449, -13837, -14007, -14011, -14631, -15128, -15268 |
-| batch3 | astropy__astropy-14369 [H], django__django-15503, -15629, -15957, -16263, -16560, -16631, pylint-dev__pylint-4551, pylint-dev__pylint-8898 |
-| batch4 | pydata__xarray-3993 [H], pytest-dev__pytest-10356, -5787, -6197, sphinx-doc__sphinx-11510, -7590, -8548, -9229, -9461 |
-| batch5 | pydata__xarray-6992 [H], scikit-learn__scikit-learn-25102 [H], sympy__sympy-12489, -13852, -13878, -14248, -16597, -17630, -18199 |
+| batch1 | astropy__astropy-13398, django__django-10554, -11138, -11400, -11885, -12325, -12708, -13128, -13212 |
+| batch2 | astropy__astropy-13579, django__django-13344, -13449, -13837, -14007, -14011, -14631, -15128, -15268 |
+| batch3 | astropy__astropy-14369, django__django-15503, -15629, -15957, -16263, -16560, -16631, pylint-dev__pylint-4551, pylint-dev__pylint-8898 |
+| batch4 | pydata__xarray-3993, pytest-dev__pytest-10356, -5787, -6197, sphinx-doc__sphinx-11510, -7590, -8548, -9229, -9461 |
+| batch5 | pydata__xarray-6992, scikit-learn__scikit-learn-25102, sympy__sympy-12489, -13852, -13878, -14248, -16597, -17630, -18199 |
 
 `python -m fvk_bench list` shows each instance's batch membership; add `--batch batch1` to
 filter to one batch.
@@ -160,24 +174,7 @@ When done, report: the scores.md aggregates (per-arm resolved counts, flips), an
 that failed or needed retries, and total wall-clock time.
 ```
 
-## 7. Run more, or all 45
-
-Replace `--instances sympy__sympy-12489` with more IDs (`--instances ID ID ...`), with
-`--batch batchN` to pick a fixed batch (see §6), or with `--all` (both `run` and
-`validate-gold` accept any of these). Browse the instance list with:
-
-```bash
-.venv/bin/python -m fvk_bench list                  # the 45 IDs, grouped by repo, with batch
-.venv/bin/python -m fvk_bench list --run-id myrun   # annotated with per-arm statuses
-```
-
-Reusing a `--run-id` resumes an interrupted run: completed arms are skipped, so the same
-three commands process a single problem or the full 45 incrementally. There are no silent
-automatic retries — a retry is a different sample — so failed arms stay failed until you
-pass `--retry-failed` to `run`, and every attempt is recorded in the instance manifest.
-`evaluate` takes no instance selection; it scores whatever the run contains.
-
-## 8. What gets recorded
+## 7. What gets recorded
 
 Durable artifacts are harvested into `results/<run_id>/` (committed to the repo):
 
@@ -202,7 +199,7 @@ default `~/.swe-fvk-runs/`, overridable via `FVK_BENCH_WORKSPACE` or `--workspac
 so no machine-local `CLAUDE.md`/`.claude/` can leak into sessions. Workspaces are
 disposable once a run is harvested; everything of record is under `results/`.
 
-## 9. Fairness and limitations
+## 8. Fairness and limitations
 
 Standardized across machines: the pinned model id `claude-opus-4-8` (not the drifting
 `opus` alias), effort `max`, 200 turns per arm, exactly 5 tools
@@ -226,7 +223,7 @@ tree hash + `git status`) detects out-of-bounds writes inside the workspace, and
 transcript is harvested and audited — but absolute-path writes elsewhere on the host are
 outside detection scope.
 
-## 10. Contributing results from another machine
+## 9. Contributing results from another machine
 
 Commit only your `results/<run_id>/` directory — machine identity, claude version, flags,
 and prompt hashes are all in `run_manifest.json`, so nothing else needs to change. Never
