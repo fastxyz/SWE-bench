@@ -204,4 +204,4 @@ and prompt hashes are all in `run_manifest.json`, so nothing else needs to chang
 edit prompts or `fvk_bench/config.py` between runs you intend to compare: prompt template
 hashes and a config snapshot are recorded in every manifest, and a mismatch makes runs
 incomparable. Run `report` before committing so `scores.*` and `results/INDEX.md` are
-fresh. Do not push from automation; open a normal PR with the new run directory.
+fresh.
