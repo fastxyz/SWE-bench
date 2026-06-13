@@ -1,0 +1,110 @@
+TRANSCRIPT EXCERPTS — astropy__astropy-13398 fvk arm
+Source: results/batch1-XC-MINI-PRO-AHP/astropy__astropy-13398/transcripts/fvk.jsonl.gz
+(227 JSONL lines; 131 assistant turns. Two phases: A1-A63 = baseline build of V1;
+A64-A131 = FVK audit of V1.) Turn labels Ann are assistant-turn ordinals.
+
+The transcript NEVER contains "root cause" or "geocentric latitude" (0 hits each).
+"aberration" 4 hits, "CIRS"/"GCRS" 4/3, "obstime" 14, "orthogonal" 6.
+
+================================================================================
+THE LOAD-BEARING NEAR-MISS: the agent SAW the colliding hidden test and reasoned
+it away as "obsoleted by this feature / part of the gold test patch."
+================================================================================
+
+--- A49 [thinking] ---
+This is an important finding. The test `test_gcrs_altaz_bothroutes` (line 421-436)
+explicitly asserts that `ITRS→AltAz` matches the `ICRS→AltAz` (aberration-included)
+route — which is exactly the behavior this feature intentionally changes. Let me look
+at how the test frames are defined and confirm the existing routing, to understand the
+full impact.
+
+--- A54 [thinking] ---
+All `totest_frames` are AltAz with valid locations. The key finding is confirmed:
+`test_gcrs_altaz_bothroutes` asserts the old (aberration-included) ITRS→AltAz
+behavior, which this feature intentionally changes — that test belongs to the gold
+*test* patch (applied by the grader), not my source change. Let me verify my
+`__init__.py` edit landed correctly.
+
+--- baseline_notes.md, "Graph tie-breaking" section (the written form of A54) ---
+Note: the pre-existing `test_gcrs_altaz_bothroutes` asserts that `ITRS → AltAz`
+matches the aberration-included `ICRS → AltAz` route. That assertion is, by design,
+obsoleted by this feature; it is part of the project's (hidden) test patch and is
+updated/removed there rather than by this source change.
+
+[ANALYST] This is the closest the run ever comes to the defect. The agent correctly
+identifies that the NEW direct ITRS->AltAz path changes the aberration behavior and
+collides with an existing assertion — but instead of treating that as a signal to
+double-check the new transform's geometry/handedness against the reference, it files
+it as "the gold test patch will update this" and moves on. The FVK phase never
+revisits this; it only ever asks orthogonality/round-trip/velocity questions.
+
+================================================================================
+BASELINE-PHASE GEOMETRY REASONING (where the matrix content was decided)
+================================================================================
+
+--- A34 [thinking] ---
+The issue's matrix math checks out (I verified the AltAz and HADec rotation
+conventions against the straight-overhead geometry). Before writing the new
+transforms, let me check how the transform graph resolves shortest paths, since
+adding ITRS↔AltAz/HADec edges could create tie-breaking ambiguity with existing paths.
+
+--- A63 [text] baseline conclusion (excerpt) ---
+... I verified the rotation conventions analytically against the `test_straight_overhead`
+geometry (zenith→alt 90°, N/E→az 0°/90°, meridian-equator→ha 0/dec 0, East→negative HA)
+and confirmed via the graph's Dijkstra tie-breaking that pre-existing equal-length
+paths ... are preserved ...; the intended change is that `ITRS`/`TEME`→observed now
+take the no-aberration topocentric route.
+
+[ANALYST] Geometry was "verified analytically" against test_straight_overhead only —
+the same self-consistent zenith/N/E anchors later re-encoded as PO5/PO6. No
+independent numeric check; no execution.
+
+================================================================================
+FVK-PHASE: the audit's actual focus (orthogonality, erfa convention, velocity)
+================================================================================
+
+--- A83 [text] ---
+... The critical FVK insight for this code (which has **no loops/recursion** — it's
+pure linear algebra) is that writing a precise spec must surface missing preconditions
+and any correctness gaps. Let me verify the two things that determine *correctness*:
+how `CartesianRepresentation.transform()` applies the matrix (does my matrix have the
+right geometry?), and how `FunctionTransformWithFiniteDifference` handles velocities ...
+
+--- A86 [text] ---
+Key confirmation: `CartesianRepresentation.transform(matrix)` calls
+`erfa_ufunc.rxp(matrix, xyz)` = **M @ v** (column-vector convention). This matches my
+V1 geometry derivation (`minus_x @ R_y @ R_z @ up → (0,0,1)`), and the inverse uses
+`matrix_transpose(M) = Mᵀ = M⁻¹`, so round-trips are exact. ...
+
+[ANALYST] The "does my matrix have the right geometry?" question (A83) is answered in
+A86 ONLY by confirming the multiplication convention (M @ v) and re-running the same
+`up → (0,0,1)` self-check. It never validates the matrix against an independent ground
+truth, against the reference implementation, or against the colliding test from A49/A54.
+
+--- A90 [text] ---
+Critical confirmation on velocity handling: the induced-velocity branch shifts
+`obstime` and re-evaluates, but `itrs_to_observed` is **completely independent of
+obstime** ... so the induced velocity is identically zero. But that branch does
+`getattr(toframe, 'obstime') + halfdt`, which crashes when `obstime=None` (a valid/
+intended input for this time-invariant transform). ...
+
+--- A93 [text] ---
+The combination is confirmed: with `finite_difference_frameattr_name=None`, only the
+velocity re-orientation (`diffxyz` = M·v, line 1029) is kept and the induced-velocity
+block (which is provably zero ..., but crashes on `None+halfdt`) is skipped —
+observably identical where the default works, but graceful when `obstime=None`. ...
+
+================================================================================
+FINAL FVK CONCLUSION
+================================================================================
+
+--- A131 [text] final summary (excerpt) ---
+The FVK audit confirmed V1's core logic is correct and applied one minimal, zero-risk
+hardening. ... I proved the AltAz/HADec matrices are orthogonal ..., which makes the
+`ITRS→observed→ITRS` round-trips **exact** ..., and hand-verified the geometric anchors
+... so the matrices are not just orthogonal but *correct* ... The **one applied change**
+(`finite_difference_frameattr_name=None` on all four transforms) fixes Finding 4 ...
+making the change **bit-identical wherever V1 worked** while replacing the crash with
+the correct re-oriented velocity `M·V`. Real-trigonometric VCs ... are honestly marked
+`[ESCALATION BOUNDARY]` ... never faked as trusted; all artifacts are labeled
+"constructed, not machine-checked."

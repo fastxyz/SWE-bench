@@ -1,0 +1,92 @@
+KEY FVK ARTIFACT EXCERPTS — pytest-dev__pytest-10356
+Source dir: results/batch4-XC-MINI-PRO-AHP-260613182909/pytest-dev__pytest-10356/
+
+Artifact inventory: fvk/{SPEC.md, FINDINGS.md, PROOF_OBLIGATIONS.md, PROOF.md,
+ITERATION_GUIDANCE.md} all present. NO standalone .k files (the mini-Python K
+fragments are embedded inside SPEC.md sections 4-5). reports/fvk_notes.md present.
+solutions/: solution_baseline.patch, solution_fvk.patch, solution_control.patch
+(all identical). transcripts/fvk.jsonl.gz present (180 records).
+
+===========================================================================
+THE LOAD-BEARING EXCERPT (tell #8: names the correct fix, then argues against it)
+===========================================================================
+
+--- fvk/FINDINGS.md, F2 (lines ~24-34) ---
+## F2 — [CONFIRM] Mark order is *forced*, not free
+
+- **question raised by the spec:** in what order should multi-base marks appear?
+- **finding:** the order is **not a free choice**. To keep the long-standing
+  single-inheritance order (`B(A)` => `[a, b]`, base-before-derived ...), the walk
+  **must** be `reversed(__mro__)`. A forward walk would yield `[b, a]` and break
+  existing single-inheritance tests.
+- **consequence for `C(A, B)`:** the result is `[b, a, c]` (base-first ...). Any
+  hidden test asserting an *exact* multi-inheritance order should expect this
+  base-first layout, the only one compatible with single inheritance.
+- **V1:** uses `reversed(obj.__mro__)`. (check) Confirmed correct.
+- Trace to: PO3 **[forcing]**.
+
+  >>> This is the precise INVERSION of reality. The hidden test test_mark_mro
+  >>> asserts [c, a, b] (forward MRO), not [b, a, c]. FVK predicted the wrong
+  >>> order, in writing, and "confirmed" the buggy `reversed`.
+
+--- fvk/PROOF_OBLIGATIONS.md, PO3 "Forcing argument" (lines ~78-83) ---
+**Forcing argument.** A *forward* MRO walk gives `own(B) ++ own(A) = [b, a]`,
+reversing the long-standing order and breaking existing single-inheritance tests.
+Therefore the backward-compatibility obligation **forces** `reversed(__mro__)`.
+... The audit thus *confirms* V1's `reversed` is the unique
+compatibility-preserving choice, not an arbitrary one.
+
+  >>> The argument is logically wrong: the ORACLE uses forward obj.__mro__ and
+  >>> ALL single-inheritance PASS_TO_PASS tests still pass (e.g.
+  >>> test_mark_decorator_baseclasses_merged). The agent conflated MRO traversal
+  >>> order with output-list order.
+
+--- fvk/PROOF.md (lines ~108-109) ---
+*PO3 order*: `reversed(mro)` is base-first; single-inheritance trace matches
+baseline `[a, b]` ... The multiple-inheritance order for `C(A,B)` is `[b, a, c]`
+— the **unique** base-first order compatible with single inheritance.
+
+--- fvk/SPEC.md section 1.1 (the contract HARD-CODES the buggy order) ---
+        else:
+            mark_lists = [
+                x.__dict__.get("pytestmark", []) for x in reversed(obj.__mro__)
+            ]
+   ... and the intended-contract prose enshrines "base-first" concatenation.
+
+--- reports/fvk_notes.md, Decision 1 (lines ~25-33) ---
+## Decision 1 — Keep `reversed(obj.__mro__)` (do not change the traversal)
+- **Traces to:** PO3 [forcing], FINDINGS F1, F2.
+... A *forward* MRO walk would yield `[b, a]` and break compatibility. So the
+traversal direction is **forced**, and V1 picked the only compatible one. ...
+**No change.**
+
+--- fvk/ITERATION_GUIDANCE.md, Verdict (lines ~5-12) ---
+## Verdict: **V1 stands, unchanged.**
+... 1. **`reversed(obj.__mro__)`** is forced by PO3 (backward-compatible ordering).
+A forward walk breaks single-inheritance order. -> keep.
+
+===========================================================================
+CORRECT LOCALIZATION (the region IS the central subject — not missing)
+===========================================================================
+
+--- fvk/FINDINGS.md, F1 (lines ~12-22) [the headline bug, correctly diagnosed] ---
+## F1 — [FIXED] Multiple-inheritance marks were dropped  *(the reported bug)*
+- **input:** `@foo class Foo`, `@bar class Bar`, `class TestDings(Foo, Bar)`.
+- **observed (baseline):** `get_unpacked_marks(TestDings) = [foo]` — `bar` is
+  silently lost, because `getattr(TestDings, "pytestmark")` returns only the first
+  `pytestmark` found along attribute lookup (`Foo`'s).
+- **expected:** both `foo` and `bar`.
+- **V1:** walks the whole MRO -> ... = [bar, foo]. (check)
+
+===========================================================================
+TRANSCRIPT: the agent looked at the RIGHT code
+===========================================================================
+- Grep 'pytestmark', Grep 'get_unpacked_marks' over repo/src
+- Read src/_pytest/mark/structures.py (multiple times)  <-- the oracle file
+- Read src/_pytest/python.py at the get_unpacked_marks call sites (own_markers.extend)
+- Read src/_pytest/nodes.py (own_markers / iter_markers)
+- Assistant text: "PO3 forces `reversed(obj.__mro__)` because it is the unique
+  traversal preserving pytest's long-standing base-class-first single-inheritance
+  order (a forward walk would reverse [a,b]->[b,a] and break existing tests"
+- The agent NEVER referenced test_mark_mro or the [c,a,b] order (the hidden test
+  was not available to it); it reasoned from the issue + its own compat assumption.

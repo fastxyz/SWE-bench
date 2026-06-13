@@ -1,0 +1,45 @@
+# baseline_vs_fvk_patch.txt
+# `diff solution_baseline.patch solution_fvk.patch` for astropy__astropy-13398
+# (batch1-XC-MINI-PRO-AHP). LEFT (<) = baseline (V1); RIGHT (>) = fvk final output.
+#
+# RESULT: the ONLY substantive change is that fvk added
+#   `finite_difference_frameattr_name=None`
+# to all FOUR `@frame_transform_graph.transform(...)` decorators, plus a 6-line
+# explanatory comment block. The transform BODIES (itrs_to_observed_mat,
+# itrs_to_observed, observed_to_itrs) and the __init__.py import are BYTE-IDENTICAL.
+# (The `index <sha>..<sha>` and `@@ -0,0 +1,NN @@` hunk-header lines differ only
+# because the new file's content/length changed.)
+# => fvk did NOT touch the geometry/matrix logic at all; it CONFIRMED V1's core and
+#    added one velocity-robustness decorator kwarg.
+# ---------------------------------------------------------------------------
+
+15c15
+< index 0000000000..a20ccac265
+---
+> index 0000000000..075b154e15
+18c18
+< @@ -0,0 +1,71 @@
+---
+> @@ -0,0 +1,81 @@
+65,66c65,74
+< +@frame_transform_graph.transform(FunctionTransformWithFiniteDifference, ITRS, AltAz)
+< +@frame_transform_graph.transform(FunctionTransformWithFiniteDifference, ITRS, HADec)
+---
+> +# These transforms are intentionally time invariant: the output depends only on
+> +# the ITRS position(s) and the observer location, never on ``obstime``.  We
+> +# therefore pass ``finite_difference_frameattr_name=None`` so the velocity is the
+> +# pure re-orientation of any input differential (no frame-induced component, which
+> +# is identically zero here).  This also avoids a ``None + dt`` error for moving
+> +# objects transformed to an observed frame left at its default ``obstime=None``.
+> +@frame_transform_graph.transform(FunctionTransformWithFiniteDifference, ITRS, AltAz,
+> +                                 finite_difference_frameattr_name=None)
+> +@frame_transform_graph.transform(FunctionTransformWithFiniteDifference, ITRS, HADec,
+> +                                 finite_difference_frameattr_name=None)
+80,81c88,91
+< +@frame_transform_graph.transform(FunctionTransformWithFiniteDifference, AltAz, ITRS)
+< +@frame_transform_graph.transform(FunctionTransformWithFiniteDifference, HADec, ITRS)
+---
+> +@frame_transform_graph.transform(FunctionTransformWithFiniteDifference, AltAz, ITRS,
+> +                                 finite_difference_frameattr_name=None)
+> +@frame_transform_graph.transform(FunctionTransformWithFiniteDifference, HADec, ITRS,
+> +                                 finite_difference_frameattr_name=None)

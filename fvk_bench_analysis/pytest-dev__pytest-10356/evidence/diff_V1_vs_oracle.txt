@@ -1,0 +1,29 @@
+=== The decisive one-token difference: V1 (baseline==fvk) vs ORACLE ===
+
+In src/_pytest/mark/structures.py, get_unpacked_marks(), the MRO branch:
+
+  ORACLE (gold):
+      mark_lists = [x.__dict__.get("pytestmark", []) for x in obj.__mro__]
+                                                                ^^^^^^^^^^^  forward MRO -> [c, a, b]
+
+  V1   (baseline == fvk, byte-identical):
+      mark_lists = [
+          x.__dict__.get("pytestmark", []) for x in reversed(obj.__mro__)
+                                                     ^^^^^^^^^^^^^^^^^^^^^  reversed   -> [b, a, c]
+      ]
+
+Everything else is identical between V1 and oracle:
+  - new keyword-only `consider_mro: bool = True`
+  - return type List[Mark]; `return list(normalize_mark_list(mark_list))`
+  - `isinstance(obj, type)` branching; per-class `__dict__.get("pytestmark", [])`
+  - non-class `else` branch uses getattr (unchanged old behavior)
+  - store_mark(obj, mark): `obj.pytestmark = [*get_unpacked_marks(obj, consider_mro=False), mark]`
+
+=== diff solution_baseline.patch solution_fvk.patch ===
+(empty -- the fvk arm made ZERO edits; it only wrote the formal artifacts)
+md5 of all three arms' patches identical per forensics.
+
+So: V1 correctly fixed the "marks silently dropped under multiple inheritance"
+bug (the headline issue), but introduced a NEW ordering defect (`reversed`).
+That ordering defect is the sole cause of the remaining FAIL_TO_PASS failure,
+and the fvk audit CONFIRMED `reversed` as correct rather than catching it.

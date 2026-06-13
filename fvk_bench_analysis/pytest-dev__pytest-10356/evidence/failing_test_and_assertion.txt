@@ -1,0 +1,46 @@
+=== FAIL_TO_PASS test (the only one): testing/test_mark.py::test_mark_mro ===
+Source (from goldcheck eval.sh test patch; identical across arms):
+
+def test_mark_mro() -> None:
+    xfail = pytest.mark.xfail
+
+    @xfail("a")
+    class A:
+        pass
+
+    @xfail("b")
+    class B:
+        pass
+
+    @xfail("c")
+    class C(A, B):
+        pass
+
+    from _pytest.mark.structures import get_unpacked_marks
+
+    all_marks = get_unpacked_marks(C)
+
+    assert all_marks == [xfail("c").mark, xfail("a").mark, xfail("b").mark]
+                          #  ^ EXPECTED ORDER = [c, a, b]  (FORWARD MRO: C, then A, then B)
+
+=== fvk arm FAILURE (logs/.../batch4...__fvk/.../test_output.txt:398-405) ===
+        all_marks = get_unpacked_marks(C)
+
+>       assert all_marks == [xfail("c").mark, xfail("a").mark, xfail("b").mark]
+E       AssertionError: assert [Mark(name='x...), kwargs={})] == [Mark(name='x...), kwargs={})]
+E         At index 0 diff: Mark(name='xfail', args=('b',), kwargs={}) != Mark(name='xfail', args=('c',), kwargs={})
+E         Use -v to get more diff
+testing/test_mark.py:1133: AssertionError
+
+Summary: "1 failed, 88 passed, 1 xfailed"
+
+=== Authoritative result (results/.../eval/fvk.report.json) ===
+  "resolved": false
+  FAIL_TO_PASS.failure = ["testing/test_mark.py::test_mark_mro"]
+  FAIL_TO_PASS.success = []
+  PASS_TO_PASS.success = 79 tests (all pass); PASS_TO_PASS.failure = []
+
+=== The delta ===
+fvk/baseline patch produced order [b, a, c] (base-first, via reversed(obj.__mro__)).
+Oracle/test requires            [c, a, b] (derived-first, via forward obj.__mro__).
+The ONLY difference between V1 and the oracle is the word `reversed`.
