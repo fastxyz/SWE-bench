@@ -1,0 +1,46 @@
+diff --git a/changelog/6197.bugfix.rst b/changelog/6197.bugfix.rst
+new file mode 100644
+index 000000000..8d309f82c
+--- /dev/null
++++ b/changelog/6197.bugfix.rst
+@@ -0,0 +1,3 @@
++Fixed regression where ``pytest`` would unconditionally import every ``__init__.py`` file under the
++rootdir during collection, even for packages that contain no tests. Such packages are no longer
++imported unless they actually contribute something to collect.
+diff --git a/src/_pytest/python.py b/src/_pytest/python.py
+index 306e5f217..4352c86c0 100644
+--- a/src/_pytest/python.py
++++ b/src/_pytest/python.py
+@@ -639,12 +639,17 @@ class Package(Module):
+         return path in self.session._initialpaths
+ 
+     def collect(self):
+-        self._mount_obj_if_needed()
++        # The package object (its ``__init__.py``) is only imported lazily,
++        # once we know the package actually contributes something to collect.
++        # Importing it eagerly here would import *any* ``__init__.py`` found
++        # under the rootdir, even for packages that hold no tests, which is an
++        # unwanted (and sometimes fatal) side effect -- see #6197 and #6196.
+         this_path = self.fspath.dirpath()
+         init_module = this_path.join("__init__.py")
+         if init_module.check(file=1) and path_matches_patterns(
+             init_module, self.config.getini("python_files")
+         ):
++            self._mount_obj_if_needed()
+             yield Module(init_module, self)
+         pkg_prefixes = set()
+         for path in this_path.visit(rec=self._recurse, bf=True, sort=True):
+@@ -662,7 +667,12 @@ class Package(Module):
+                 continue
+ 
+             if is_file:
+-                yield from self._collectfile(path)
++                for x in self._collectfile(path):
++                    # A collectible file was found below this package, so the
++                    # package is part of the collection tree: make sure its
++                    # ``__init__.py`` is imported and its markers are picked up.
++                    self._mount_obj_if_needed()
++                    yield x
+             elif not path.isdir():
+                 # Broken symlink or invalid/missing file.
+                 continue

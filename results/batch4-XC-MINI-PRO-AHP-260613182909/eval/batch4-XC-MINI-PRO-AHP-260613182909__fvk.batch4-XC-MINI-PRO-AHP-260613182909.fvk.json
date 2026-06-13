@@ -1,0 +1,45 @@
+{
+    "total_instances": 8,
+    "submitted_instances": 8,
+    "completed_instances": 8,
+    "resolved_instances": 6,
+    "unresolved_instances": 2,
+    "empty_patch_instances": 0,
+    "error_instances": 0,
+    "completed_ids": [
+        "pydata__xarray-3993",
+        "pytest-dev__pytest-10356",
+        "pytest-dev__pytest-5787",
+        "pytest-dev__pytest-6197",
+        "sphinx-doc__sphinx-7590",
+        "sphinx-doc__sphinx-8548",
+        "sphinx-doc__sphinx-9229",
+        "sphinx-doc__sphinx-9461"
+    ],
+    "incomplete_ids": [],
+    "empty_patch_ids": [],
+    "submitted_ids": [
+        "pydata__xarray-3993",
+        "pytest-dev__pytest-10356",
+        "pytest-dev__pytest-5787",
+        "pytest-dev__pytest-6197",
+        "sphinx-doc__sphinx-7590",
+        "sphinx-doc__sphinx-8548",
+        "sphinx-doc__sphinx-9229",
+        "sphinx-doc__sphinx-9461"
+    ],
+    "resolved_ids": [
+        "pydata__xarray-3993",
+        "pytest-dev__pytest-5787",
+        "pytest-dev__pytest-6197",
+        "sphinx-doc__sphinx-7590",
+        "sphinx-doc__sphinx-8548",
+        "sphinx-doc__sphinx-9461"
+    ],
+    "unresolved_ids": [
+        "pytest-dev__pytest-10356",
+        "sphinx-doc__sphinx-9229"
+    ],
+    "error_ids": [],
+    "schema_version": 2
+}

@@ -1,0 +1,73 @@
+diff --git a/sphinx/ext/autodoc/__init__.py b/sphinx/ext/autodoc/__init__.py
+index ddfd2b365..aa0f49266 100644
+--- a/sphinx/ext/autodoc/__init__.py
++++ b/sphinx/ext/autodoc/__init__.py
+@@ -2359,6 +2359,11 @@ class AttributeDocumenter(GenericAliasMixin, NewTypeMixin, SlotsMixin,  # type:
+                 pass
+ 
+     def get_doc(self, encoding: str = None, ignore: int = None) -> List[List[str]]:
++        # Check the attribute has a docstring-comment
++        comment = self.get_attribute_comment(self.parent)
++        if comment:
++            return [comment]
++
+         if self.object is INSTANCEATTR:
+             return []
+ 
+diff --git a/sphinx/ext/autodoc/importer.py b/sphinx/ext/autodoc/importer.py
+index d6e73d36a..f4e1569a6 100644
+--- a/sphinx/ext/autodoc/importer.py
++++ b/sphinx/ext/autodoc/importer.py
+@@ -14,7 +14,7 @@ import warnings
+ from typing import Any, Callable, Dict, List, Mapping, NamedTuple, Optional, Tuple
+ 
+ from sphinx.deprecation import RemovedInSphinx40Warning, deprecated_alias
+-from sphinx.pycode import ModuleAnalyzer
++from sphinx.pycode import ModuleAnalyzer, PycodeError
+ from sphinx.util import logging
+ from sphinx.util.inspect import (getannotations, getmro, getslots, isclass, isenumclass,
+                                  safe_getattr)
+@@ -307,13 +307,37 @@ def get_class_members(subject: Any, objpath: List[str], attrgetter: Callable,
+         except AttributeError:
+             pass
+ 
+-    if analyzer:
+-        # append instance attributes (cf. self.attr1) if analyzer knows
+-        namespace = '.'.join(objpath)
+-        for (ns, name), docstring in analyzer.attr_docs.items():
+-            if namespace == ns and name not in members:
+-                members[name] = ClassAttribute(subject, name, INSTANCEATTR,
++    # append or complete instance attributes (cf. self.attr1) if known to the
++    # source code analyzer.  This walks the whole MRO so that comment-based
++    # docstrings (``#:`` and ``"""..."""``) defined on a base class are also
++    # found for inherited attributes.
++    #
++    # Note: the ``objpath`` and ``analyzer`` arguments are retained for backward
++    # compatibility but are no longer used here; the analyzer for each class in
++    # the MRO is resolved from its own ``__module__``.
++    for cls in getmro(subject):
++        try:
++            modname = safe_getattr(cls, '__module__')
++            qualname = safe_getattr(cls, '__qualname__')
++            cls_analyzer = ModuleAnalyzer.for_module(modname)
++            cls_analyzer.analyze()
++        except (AttributeError, PycodeError):
++            continue
++
++        if not qualname:
++            continue
++
++        for (ns, name), docstring in cls_analyzer.attr_docs.items():
++            if ns != qualname:
++                continue
++            if name not in members:
++                # an instance variable that is only known to the source code
++                members[name] = ClassAttribute(cls, name, INSTANCEATTR,
+                                                '\n'.join(docstring))
++            elif members[name].docstring is None:
++                # attach the comment-based docstring to an attribute that was
++                # already discovered (e.g. an inherited class attribute)
++                members[name].docstring = '\n'.join(docstring)
+ 
+     return members
+ 

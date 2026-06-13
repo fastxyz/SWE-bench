@@ -1,0 +1,97 @@
+diff --git a/CHANGES b/CHANGES
+index ce1185c76..2db66db70 100644
+--- a/CHANGES
++++ b/CHANGES
+@@ -72,6 +72,9 @@ Bugs fixed
+   Patch by Bénédikt Tran.
+ * #10930: Highlight all search terms on the search results page.
+   Patch by Dmitry Shachnev.
++* #11510: ``source-read`` events are now emitted for files included via the
++  ``include`` directive, so that their content can be transformed too.
++  Patch by Halldór Fannar.
+ 
+ Testing
+ -------
+diff --git a/doc/extdev/appapi.rst b/doc/extdev/appapi.rst
+index 78e88b063..8d102bcf1 100644
+--- a/doc/extdev/appapi.rst
++++ b/doc/extdev/appapi.rst
+@@ -258,8 +258,15 @@ Here is a more detailed list of these events.
+    LaTeX, you can use a regular expression to replace ``$...$`` by
+    ``:math:`...```.
+ 
++   The event is also emitted for the contents of files that are pulled in via
++   the ``include`` directive, with *docname* set to the name of the included
++   document (or ``None`` when it is not a document of the project).
++
+    .. versionadded:: 0.5
+ 
++   .. versionchanged:: 7.2
++      The event is emitted for included files.
++
+ .. event:: object-description-transform (app, domain, objtype, contentnode)
+ 
+    Emitted when an object description directive has run.  The *domain* and
+diff --git a/sphinx/directives/other.py b/sphinx/directives/other.py
+index 19f7c0a8d..f2524dd22 100644
+--- a/sphinx/directives/other.py
++++ b/sphinx/directives/other.py
+@@ -8,6 +8,7 @@ from docutils.parsers.rst import directives
+ from docutils.parsers.rst.directives.admonitions import BaseAdmonition
+ from docutils.parsers.rst.directives.misc import Class
+ from docutils.parsers.rst.directives.misc import Include as BaseInclude
++from docutils.statemachine import StateMachine
+ 
+ from sphinx import addnodes
+ from sphinx.domains.changeset import VersionChange  # noqa: F401  # for compatibility
+@@ -369,6 +370,50 @@ class Include(BaseInclude, SphinxDirective):
+     """
+ 
+     def run(self) -> list[Node]:
++
++        # To properly emit "source-read" events from included RST text,
++        # we must patch the ``StateMachine.insert_input()`` method.
++        # In the future, docutils will hopefully offer a way for Sphinx
++        # to provide the RST parser to use
++        # when parsing RST text that comes in via the include directive.
++        def _insert_input(include_lines: list[str], source: str) -> None:
++            # First, we need to combine the lines back into text so that
++            # we can send it with the source-read event.
++            # In docutils 0.18 and later, included content may carry two
++            # extra lines at the end that act as end-of-file markers
++            # (an empty line followed by a ``.. end of ...`` comment).
++            # When they are present they must be kept out of the source-read
++            # event and re-attached afterwards.  When they are absent (e.g. with
++            # other docutils versions) the whole content has to be sent through
++            # the event, otherwise the last two lines would be silently dropped
++            # and never offered to ``source-read`` handlers for transformation.
++            if (len(include_lines) >= 2
++                    and include_lines[-2] == ''
++                    and include_lines[-1].startswith('.. end of ')):
++                content_lines, markers = include_lines[:-2], include_lines[-2:]
++            else:
++                content_lines, markers = include_lines, []
++            text = "\n".join(content_lines)
++
++            # The docname to pass into the source-read event
++            docname = self.env.path2doc(source)
++            # Emit the "source-read" event
++            arg = [text]
++            self.env.events.emit('source-read', docname, arg)
++            text = arg[0]
++
++            # Split back into lines and reattach any marker lines
++            include_lines = text.splitlines() + markers
++
++            # Call the parent implementation.
++            # Note that this snippet does not support docutils <= 0.17.x
++            StateMachine.insert_input(self.state_machine, include_lines, source)
++
++        # Only enable this patch if there are listeners for 'source-read' events.
++        if self.env.events.listeners.get('source-read'):
++            # See https://github.com/sphinx-doc/sphinx/issues/11510
++            self.state_machine.insert_input = _insert_input
++
+         if self.arguments[0].startswith('<') and \
+            self.arguments[0].endswith('>'):
+             # docutils "standard" includes, do not do path processing

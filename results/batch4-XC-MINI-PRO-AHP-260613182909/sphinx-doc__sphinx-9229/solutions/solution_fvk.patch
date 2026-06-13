@@ -1,0 +1,42 @@
+diff --git a/CHANGES b/CHANGES
+index da8580fe6..f4305e4d3 100644
+--- a/CHANGES
++++ b/CHANGES
+@@ -48,6 +48,8 @@ Bugs fixed
+ * #8597: autodoc: a docsting having metadata only should be treated as
+   undocumented
+ * #9185: autodoc: typehints for overloaded functions and methods are inaccurate
++* #9229: autodoc: A documentation comment for a class alias (ex. ``Alias = Foo``)
++  is not shown; only the ``alias of ...`` text was rendered
+ 
+ Testing
+ --------
+diff --git a/sphinx/ext/autodoc/__init__.py b/sphinx/ext/autodoc/__init__.py
+index 1f4c98284..90a22525e 100644
+--- a/sphinx/ext/autodoc/__init__.py
++++ b/sphinx/ext/autodoc/__init__.py
+@@ -1673,10 +1673,23 @@ class ClassDocumenter(DocstringSignatureMixin, ModuleLevelDocumenter):  # type:
+         else:
+             return False, [m for m in members.values() if m.class_ == self.object]
+ 
++    def get_variable_comment(self) -> Optional[List[str]]:
++        try:
++            key = ('.'.join(self.objpath[:-1]), self.objpath[-1])
++            analyzer = ModuleAnalyzer.for_module(self.modname)
++            analyzer.analyze()
++            return list(analyzer.attr_docs.get(key, []))
++        except PycodeError:
++            return []
++
+     def get_doc(self, ignore: int = None) -> Optional[List[List[str]]]:
+         if self.doc_as_attr:
+             # Don't show the docstring of the class when it is an alias.
+-            return None
++            comment = self.get_variable_comment()
++            if comment:
++                return [comment]
++            else:
++                return None
+ 
+         lines = getattr(self, '_new_docstrings', None)
+         if lines is not None:
