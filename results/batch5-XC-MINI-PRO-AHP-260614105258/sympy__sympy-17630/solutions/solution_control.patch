@@ -1,0 +1,18 @@
+diff --git a/sympy/matrices/expressions/matexpr.py b/sympy/matrices/expressions/matexpr.py
+index fd1e6d970a..ee93f7ddaf 100644
+--- a/sympy/matrices/expressions/matexpr.py
++++ b/sympy/matrices/expressions/matexpr.py
+@@ -627,6 +627,13 @@ def _postprocessor(expr):
+                 # manipulate them like non-commutative scalars.
+                 return cls._from_args(nonmatrices + [mat_class(*matrices).doit(deep=False)])
+ 
++        if cls == Add:
++            # Don't prepend the scalar additive identity (S.Zero, returned by
++            # ``_from_args`` for the empty ``nonmatrices``): folding it into a
++            # MatAdd of zero matrices makes the whole sum collapse to the scalar
++            # S.Zero instead of a ZeroMatrix (issue #17630).  MatMul's identity
++            # (S.One) is harmless, so its branch below is left unchanged.
++            return mat_class(*matrices).doit(deep=False)
+         return mat_class(cls._from_args(nonmatrices), *matrices).doit(deep=False)
+     return _postprocessor
+ 

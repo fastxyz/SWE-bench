@@ -1,0 +1,48 @@
+{
+    "total_instances": 9,
+    "submitted_instances": 9,
+    "completed_instances": 9,
+    "resolved_instances": 5,
+    "unresolved_instances": 4,
+    "empty_patch_instances": 0,
+    "error_instances": 0,
+    "completed_ids": [
+        "pydata__xarray-6992",
+        "scikit-learn__scikit-learn-25102",
+        "sympy__sympy-12489",
+        "sympy__sympy-13852",
+        "sympy__sympy-13878",
+        "sympy__sympy-14248",
+        "sympy__sympy-16597",
+        "sympy__sympy-17630",
+        "sympy__sympy-18199"
+    ],
+    "incomplete_ids": [],
+    "empty_patch_ids": [],
+    "submitted_ids": [
+        "pydata__xarray-6992",
+        "scikit-learn__scikit-learn-25102",
+        "sympy__sympy-12489",
+        "sympy__sympy-13852",
+        "sympy__sympy-13878",
+        "sympy__sympy-14248",
+        "sympy__sympy-16597",
+        "sympy__sympy-17630",
+        "sympy__sympy-18199"
+    ],
+    "resolved_ids": [
+        "scikit-learn__scikit-learn-25102",
+        "sympy__sympy-12489",
+        "sympy__sympy-13878",
+        "sympy__sympy-14248",
+        "sympy__sympy-17630"
+    ],
+    "unresolved_ids": [
+        "pydata__xarray-6992",
+        "sympy__sympy-13852",
+        "sympy__sympy-16597",
+        "sympy__sympy-18199"
+    ],
+    "error_ids": [],
+    "schema_version": 2
+}

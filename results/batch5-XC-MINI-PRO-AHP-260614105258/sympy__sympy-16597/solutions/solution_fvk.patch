@@ -1,0 +1,13 @@
+diff --git a/sympy/core/assumptions.py b/sympy/core/assumptions.py
+index ce4dd30f2e..3a064433f2 100644
+--- a/sympy/core/assumptions.py
++++ b/sympy/core/assumptions.py
+@@ -172,6 +172,8 @@
+     'imaginary      ->  antihermitian',
+     'complex        ->  commutative',
+ 
++    'rational       ->  finite',
++
+     'odd            ==  integer & !even',
+     'even           ==  integer & !odd',
+ 

@@ -1,0 +1,19 @@
+diff --git a/xarray/core/dataset.py b/xarray/core/dataset.py
+index 620f32f8..c9cd0266 100644
+--- a/xarray/core/dataset.py
++++ b/xarray/core/dataset.py
+@@ -4177,7 +4177,13 @@ class Dataset(
+         }
+         variables.update(new_variables)
+ 
+-        coord_names = set(new_variables) | self._coord_names
++        # Drop the reset coordinate names and re-add the (re)created ones, so that
++        # ``coord_names`` stays a subset of ``variables`` -- otherwise
++        # ``DataVariables.__len__`` (len(variables) - len(coord_names)) can go
++        # negative (GH6992). Subtracting ``drop_variables`` *before* adding
++        # ``new_variables`` (as ``set_index`` does) also keeps a coordinate that is
++        # recreated as a reduced index a coordinate, instead of demoting it.
++        coord_names = (self._coord_names - set(drop_variables)) | set(new_variables)
+ 
+         return self._replace(variables, coord_names=coord_names, indexes=indexes)
+ 

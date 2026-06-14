@@ -1,0 +1,283 @@
+{
+  "run_id": "batch5-XC-MINI-PRO-AHP-260614105258",
+  "instance_id": "pydata__xarray-6992",
+  "baseline_session_id": "a70737b7-4b30-4a27-b3d9-e148b6c355d2",
+  "core_hash_post_baseline": "5d87054b2474e8da6b330da202d11b02cfb776e883036e16c7c80bd5e1fe0c19",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "a70737b7-4b30-4a27-b3d9-e148b6c355d2",
+      "attempts": 1,
+      "started_at": "2026-06-14T03:04:49.919588+00:00",
+      "ended_at": "2026-06-14T03:16:31.075183+00:00",
+      "num_turns": 37,
+      "duration_seconds": 701.1550057000131,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 22,
+          "Grep": 10,
+          "Edit": 1,
+          "Glob": 2,
+          "Write": 1
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 141
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "6d6ad1a4-454e-44db-8d54-376b082e4515",
+      "attempts": 1,
+      "started_at": "2026-06-14T03:16:31.148525+00:00",
+      "ended_at": "2026-06-14T03:27:10.523888+00:00",
+      "num_turns": 24,
+      "duration_seconds": 639.3747816149844,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 33,
+          "Grep": 10,
+          "Edit": 3,
+          "Glob": 4,
+          "Write": 9
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 242
+      }
+    },
+    "control": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "4c132534-d78a-4701-bd49-a5e63b5df582",
+      "attempts": 1,
+      "started_at": "2026-06-14T03:27:10.570793+00:00",
+      "ended_at": "2026-06-14T03:35:35.403140+00:00",
+      "num_turns": 14,
+      "duration_seconds": 504.83157862798544,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 29,
+          "Grep": 13,
+          "Edit": 2,
+          "Glob": 2,
+          "Write": 3
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 190
+      }
+    }
+  },
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "285f34c0c41bb0ff1e784f2f0234b23ae0e382f96b0ba257b2bddae05a492271",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 699162,
+      "duration_api_ms": 700221,
+      "ttft_ms": 2103,
+      "ttft_stream_ms": 2101,
+      "time_to_request_ms": 12,
+      "num_turns": 37,
+      "result": "The fix and report are both complete.\n\n## Summary\n\nThe crash (`ValueError: __len__() should return >= 0` from `DataVariables.__len__`, which computes `len(_variables) - len(_coord_names)`) was caused by `Dataset.reset_index` producing an internally inconsistent dataset in which `_coord_names` was not a subset of `_variables`. When called with `drop=True`, `reset_index` removed the targeted coordinate from `_variables` (via `drop_variables`) but computed `coord_names = set(new_variables) | self._coord_names`, which never subtracted those dropped names \u2014 so e.g. `ds.set_index(z=['a','b']).reset_index(\"z\", drop=True)` left `coord_names={z,a,b}` against `variables={a,b}`, giving a negative length and breaking the repr and `data_vars`. I fixed it at the root by changing that single line in `repo/xarray/core/dataset.py` to `coord_names = (set(new_variables) | self._coord_names) - set(drop_variables)`, restoring the `coord_names \u2286 variables` invariant (mirroring what the sibling `set_index` method already does); `drop=False` behavior is byte-for-byte unchanged, while `drop=True` now yields a consistent dataset that keeps multi-index level coordinates and drops only the reset coordinate, matching the semantics already asserted by the existing `test_reset_index`/groupby tests. Details, the full trace, and rejected alternatives (e.g. clamping `__len__` instead) are documented in `reports/baseline_notes.md`.",
+      "stop_reason": "end_turn",
+      "session_id": "a70737b7-4b30-4a27-b3d9-e148b6c355d2",
+      "total_cost_usd": 2.6897120000000005,
+      "usage": {
+        "input_tokens": 71,
+        "cache_creation_input_tokens": 81426,
+        "cache_read_input_tokens": 1665227,
+        "output_tokens": 53874,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 81426,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 528,
+            "cache_read_input_tokens": 83104,
+            "cache_creation_input_tokens": 1697,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 1697
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 891,
+          "outputTokens": 18,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.0009809999999999999,
+          "contextWindow": 200000,
+          "maxOutputTokens": 32000
+        },
+        "claude-opus-4-8": {
+          "inputTokens": 71,
+          "outputTokens": 53874,
+          "cacheReadInputTokens": 1665227,
+          "cacheCreationInputTokens": 81426,
+          "webSearchRequests": 0,
+          "costUSD": 2.688731,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "a855a403-9ed4-44cc-bee9-24253d7ecd07"
+    },
+    "fvk": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 635821,
+      "duration_api_ms": 634813,
+      "ttft_ms": 2838,
+      "ttft_stream_ms": 2836,
+      "time_to_request_ms": 18,
+      "num_turns": 24,
+      "result": "All deliverables are complete and consistent. \n\n## Summary\n\nApplying the FVK methodology, I formalized the real contract behind issue #6992: the property at stake is a **Dataset class invariant** \u2014 `set(_coord_names) \u2286 set(_variables)` \u2014 which makes `DataVariables.__len__ = len(_variables) \u2212 len(_coord_names) \u2265 0`, and `reset_index` carries the obligation to *preserve* it (`fvk/SPEC.md`, `PROOF_OBLIGATIONS.md` PO1/PO5). The constructed proof (`fvk/PROOF.md`, with mini-X K semantics in `fvk/reset_index.k`/`reset_index-spec.k`) discharges this by elementary, induction-free finite set algebra over `coord_names = (C\u2212D)\u222aN \u2286 (V\u2212D)\u222aN`, confirming V1 was correct in **placement** (fix the producer `reset_index`, not the symptom site `DataVariables.__len__`) and in resolving the MVCE. The audit did surface one refinement: writing postcondition P2 (\"a coordinate recreated by `keep_levels` stays a coordinate\") exposed a narrow corner \u2014 `reset_index([dim, level], drop=True)` on a \u22653-level multi-index, where `N \u2229 D \u2260 \u2205` \u2014 on which V1's `(N \u222a C) \u2212 D` ordering demotes the recreated coordinate to a data variable carrying a dangling index (FINDINGS F3/F8, PO2). I therefore changed the single line to `coord_names = (self._coord_names - set(drop_variables)) | set(new_variables)` (subtract `D` before unioning `N`), which is **provably equal to V1 on every realistic and tested input** (they differ only when `N \u2229 D \u2260 \u2205`, and the MVCE has `N = \u2205`), strictly stronger on that corner, and now **identical to the sibling `set_index`** (line 4102). `DataVariables.__len__`, `dims` recomputation, the multi-key keep/drop value semantics (PO9), and all test files were deliberately left unchanged, each justified against the findings and obligations in `reports/fvk_notes.md`.",
+      "stop_reason": "end_turn",
+      "session_id": "6d6ad1a4-454e-44db-8d54-376b082e4515",
+      "total_cost_usd": 3.2079969999999998,
+      "usage": {
+        "input_tokens": 41,
+        "cache_creation_input_tokens": 89890,
+        "cache_read_input_tokens": 2905009,
+        "output_tokens": 47739,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 89890,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 977,
+            "cache_read_input_tokens": 171215,
+            "cache_creation_input_tokens": 3476,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 3476
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 41,
+          "outputTokens": 47739,
+          "cacheReadInputTokens": 2905009,
+          "cacheCreationInputTokens": 89890,
+          "webSearchRequests": 0,
+          "costUSD": 3.2079969999999998,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "31b2bcfe-3a5c-47b4-aaf9-13702ed3a1c5"
+    },
+    "control": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 502326,
+      "duration_api_ms": 502228,
+      "ttft_ms": 7633,
+      "ttft_stream_ms": 4246,
+      "time_to_request_ms": 16,
+      "num_turns": 14,
+      "result": "The fix is complete and well-formed. All three deliverables are in place: `review/FINDINGS.md`, the code edits, and `reports/control_notes.md`.\n\n## Summary\n\nMy review confirmed V1's core change is correct (subtracting `drop_variables` from `coord_names` restores the `_coord_names \u2286 _variables` invariant that the bug violated and that `testing.py::_assert_dataset_invariants` line 352 enforces), but it surfaced one concrete, invariant-checked defect (FINDINGS **F2**): V1 returned through `self._replace(...)`, which copies `self._dims` unchanged, so a `drop=True` that removes the last variable on a dimension leaves that dimension orphaned and fails the second invariant `_dims.keys() == {dims used by variables}` (line 362) \u2014 a state newly reachable precisely because V1 stopped the earlier crash. I fixed this by returning through `self._replace_with_new_dims(...)`, which recomputes dims via `calculate_dimensions`, exactly as the sibling `set_index` already does; this is zero-regression for all `drop=False` usage and every visible `drop=True` test (where a data variable or surviving level keeps each dimension alive) and corrects only the previously-broken orphan case. The review also justified two deliberate non-changes: keeping reset coordinates as `IndexVariable`s rather than converting them to base `Variable`s (**F3** \u2014 invariant lines 366-370/333-335 require dimension coordinates to be `IndexVariable`s, so conversion would fail), and leaving the untouched `drop=False`/`DataArray`/multi-index-level paths and out-of-scope observations alone (**F4\u2013F8**).",
+      "stop_reason": "end_turn",
+      "session_id": "4c132534-d78a-4701-bd49-a5e63b5df582",
+      "total_cost_usd": 2.0271427500000003,
+      "usage": {
+        "input_tokens": 27,
+        "cache_creation_input_tokens": 47609,
+        "cache_read_input_tokens": 1505203,
+        "output_tokens": 39074,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 47609,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 569,
+            "cache_read_input_tokens": 130573,
+            "cache_creation_input_tokens": 1837,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 1837
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 27,
+          "outputTokens": 39074,
+          "cacheReadInputTokens": 1505203,
+          "cacheCreationInputTokens": 47609,
+          "webSearchRequests": 0,
+          "costUSD": 2.0271427500000003,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "ea564ec8-098d-4ffb-8bf0-5c408edf8b51"
+    }
+  }
+}

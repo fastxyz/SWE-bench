@@ -1,0 +1,401 @@
+{
+  "run_id": "batch5-XC-MINI-PRO-AHP-260614105258",
+  "instances": {
+    "pydata__xarray-6992": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "a70737b7-4b30-4a27-b3d9-e148b6c355d2",
+        "num_turns": 37,
+        "duration_seconds": 701.1550057000131,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/12",
+          "ptp": "945/945"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "6d6ad1a4-454e-44db-8d54-376b082e4515",
+        "num_turns": 24,
+        "duration_seconds": 639.3747816149844,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/12",
+          "ptp": "945/945"
+        }
+      },
+      "control": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "4c132534-d78a-4701-bd49-a5e63b5df582",
+        "num_turns": 14,
+        "duration_seconds": 504.83157862798544,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "1/12",
+          "ptp": "945/945"
+        }
+      }
+    },
+    "scikit-learn__scikit-learn-25102": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "6dc07bcc-e15b-4fa7-969c-17964f4df628",
+        "num_turns": 61,
+        "duration_seconds": 1019.3723207989824,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "59/59"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "563c65ec-a995-4d89-9608-112214ecf8ef",
+        "num_turns": 41,
+        "duration_seconds": 1072.4799960780074,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "59/59"
+        }
+      },
+      "control": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "f48d0b4c-092c-49e3-b240-ddf4eef1aacc",
+        "num_turns": 9,
+        "duration_seconds": 526.0333041360136,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "59/59"
+        }
+      }
+    },
+    "sympy__sympy-12489": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "6c8d07b9-8442-466c-b52c-ed320441f3d2",
+        "num_turns": 48,
+        "duration_seconds": 636.1479936839896,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "8/8"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "92f2251f-5fa8-428c-85e6-53bfa8889cd4",
+        "num_turns": 59,
+        "duration_seconds": 1202.7998279829626,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "8/8"
+        }
+      },
+      "control": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "312d1cd7-efcc-4f6e-a8fc-93df9c6e4c0b",
+        "num_turns": 28,
+        "duration_seconds": 892.1491816120106,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "8/8"
+        }
+      }
+    },
+    "sympy__sympy-13852": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "449ae678-951a-44d2-89f5-e432789df989",
+        "num_turns": 18,
+        "duration_seconds": 358.643731825985,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "4/4"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "fb6791fc-4683-4a00-97cf-6ebf608e763b",
+        "num_turns": 23,
+        "duration_seconds": 709.6086498119985,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "4/4"
+        }
+      },
+      "control": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "443337fc-6b32-4fac-a1a6-88a67d9538fb",
+        "num_turns": 14,
+        "duration_seconds": 497.98733682598686,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "4/4"
+        }
+      }
+    },
+    "sympy__sympy-13878": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "43196133-50c6-46f3-9275-a4531332dcae",
+        "num_turns": 67,
+        "duration_seconds": 833.2253518240177,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "19/19"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "9ec5c3e0-b4de-4bfb-b04d-276cf6c67780",
+        "num_turns": 28,
+        "duration_seconds": 928.8917981269769,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "19/19"
+        }
+      },
+      "control": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "48d92acb-d3e8-4232-959e-d2cbedd44a8b",
+        "num_turns": 13,
+        "duration_seconds": 779.7214893200435,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "19/19"
+        }
+      }
+    },
+    "sympy__sympy-14248": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "29a5bbdc-8071-492c-85b3-160ae87ef1c2",
+        "num_turns": 55,
+        "duration_seconds": 1603.2236448629992,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "433/433"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "e26a3f59-7aeb-4d31-8680-c3dcf1a3b766",
+        "num_turns": 27,
+        "duration_seconds": 864.2130829439848,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "433/433"
+        }
+      },
+      "control": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "ea835ca6-8b61-4289-81d9-295c233d6806",
+        "num_turns": 24,
+        "duration_seconds": 917.0799692560104,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "433/433"
+        }
+      }
+    },
+    "sympy__sympy-16597": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "16b0c06b-a879-443f-9ea4-1883fe98ac39",
+        "num_turns": 32,
+        "duration_seconds": 580.1259477270069,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/3",
+          "ptp": "74/74"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "8213fbd6-f28a-4080-b7e0-94baa26140e9",
+        "num_turns": 25,
+        "duration_seconds": 694.6019051140174,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/3",
+          "ptp": "74/74"
+        }
+      },
+      "control": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "495a7b96-81d1-4042-9cec-9f9a0f6e034d",
+        "num_turns": 30,
+        "duration_seconds": 782.2831564440276,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/3",
+          "ptp": "74/74"
+        }
+      }
+    },
+    "sympy__sympy-17630": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "2d67f2b9-1761-46b0-bb77-89e2e744cb92",
+        "num_turns": 51,
+        "duration_seconds": 795.2974535079557,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "19/19"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "3d059061-8b26-4067-bd39-fad158183fe2",
+        "num_turns": 35,
+        "duration_seconds": 900.0537177399965,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "19/19"
+        }
+      },
+      "control": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "681a9e33-6fd1-48b8-aaf6-70361eec073b",
+        "num_turns": 14,
+        "duration_seconds": 494.6266576820053,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "19/19"
+        }
+      }
+    },
+    "sympy__sympy-18199": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "e31427ef-a201-4b1f-9fd9-4533e352f21f",
+        "num_turns": 26,
+        "duration_seconds": 360.8002573970007,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "113/113"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "b44670af-1677-4adb-8380-f7dec87d4892",
+        "num_turns": 21,
+        "duration_seconds": 620.8502870639786,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "113/113"
+        }
+      },
+      "control": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "f7d682f5-49ea-4871-9500-8077d36f7183",
+        "num_turns": 9,
+        "duration_seconds": 263.96536887204275,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "113/113"
+        }
+      }
+    }
+  },
+  "aggregates": {
+    "arms": {
+      "baseline": {
+        "resolved": 5,
+        "evaluated": 9
+      },
+      "fvk": {
+        "resolved": 5,
+        "evaluated": 9
+      },
+      "control": {
+        "resolved": 5,
+        "evaluated": 9
+      }
+    },
+    "flips": {
+      "baseline_to_fvk": {
+        "up": [],
+        "down": []
+      },
+      "baseline_to_control": {
+        "up": [],
+        "down": []
+      }
+    },
+    "fvk_vs_control_delta": 0
+  }
+}
