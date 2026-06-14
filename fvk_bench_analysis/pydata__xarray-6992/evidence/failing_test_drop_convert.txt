@@ -1,0 +1,39 @@
+        ],
+    )
+    def test_reset_index_drop_convert(
+        self, arg, drop, dropped, converted, renamed
+    ) -> None:
+        # regressions https://github.com/pydata/xarray/issues/6946 and
+        # https://github.com/pydata/xarray/issues/6989
+        # check that multi-index dimension or level coordinates are dropped, converted
+        # from IndexVariable to Variable or renamed to dimension as expected
+        midx = pd.MultiIndex.from_product([["a", "b"], [1, 2]], names=("foo", "bar"))
+        ds = xr.Dataset(coords={"x": midx})
+        reset = ds.reset_index(arg, drop=drop)
+    
+        for name in dropped:
+            assert name not in reset.variables
+        for name in converted:
+            assert_identical(reset[name].variable, ds[name].variable.to_base_variable())
+        for old_name, new_name in renamed.items():
+>           assert_identical(ds[old_name].variable, reset[new_name].variable)
+E           AssertionError: Left and right IndexVariable objects are not identical
+E           
+E           Differing values:
+E           L
+E               array([1, 2, 1, 2])
+E           R
+E               array([('a', 1), ('a', 2), ('b', 1), ('b', 2)], dtype=object)
+--- summary FAILED list ---
+FAILED xarray/tests/test_dataarray.py::TestDataArray::test_reset_index - Asse...
+FAILED xarray/tests/test_dataset.py::TestDataset::test_reset_index - Assertio...
+FAILED xarray/tests/test_dataset.py::TestDataset::test_reset_index_drop_dims
+FAILED xarray/tests/test_dataset.py::TestDataset::test_reset_index_drop_convert[foo-False-dropped0-converted0-renamed0]
+FAILED xarray/tests/test_dataset.py::TestDataset::test_reset_index_drop_convert[foo-True-dropped1-converted1-renamed1]
+FAILED xarray/tests/test_dataset.py::TestDataset::test_reset_index_drop_convert[x-False-dropped2-converted2-renamed2]
+FAILED xarray/tests/test_dataset.py::TestDataset::test_reset_index_drop_convert[x-True-dropped3-converted3-renamed3]
+FAILED xarray/tests/test_dataset.py::TestDataset::test_reset_index_drop_convert[arg4-False-dropped4-converted4-renamed4]
+FAILED xarray/tests/test_dataset.py::TestDataset::test_reset_index_drop_convert[arg5-True-dropped5-converted5-renamed5]
+FAILED xarray/tests/test_dataset.py::TestDataset::test_reset_index_drop_convert[arg6-False-dropped6-converted6-renamed6]
+FAILED xarray/tests/test_dataset.py::TestDataset::test_reset_index_drop_convert[arg7-True-dropped7-converted7-renamed7]
+FAILED xarray/tests/test_groupby.py::test_groupby_drops_nans - AssertionError...

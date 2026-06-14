@@ -1,0 +1,146 @@
+================================================================================
+EVIDENCE: .k implication/closure rules + spec claims touching the relevant
+predicates (finite / infinite / rational / integer / even / odd / irrational /
+noninteger). For each: CORRECT / BUGGY / NEITHER relative to the GOLD fix.
+Source files (FVK output, NOT machine-checked):
+  results/batch5-XC-MINI-PRO-AHP-260614105258/sympy__sympy-16597/fvk/mini_assumptions.k
+  results/batch5-XC-MINI-PRO-AHP-260614105258/sympy__sympy-16597/fvk/mini_assumptions-spec.k
+================================================================================
+
+KEY CONTEXT (the gold fix, for comparison):
+  Gold tightens the biconditional to EXCLUDE infinities from irrational:
+     sympy/core/assumptions.py:  'irrational == real & !rational & finite'
+     sympy/core/assumptions.py:  'rational  -> real & finite'
+     sympy/core/assumptions.py:  'algebraic -> complex & finite'
+     sympy/core/assumptions.py:  'transcendental == complex & !algebraic & finite'
+  Plus the NEW-STYLE engine in sympy/assumptions/ask.py / ask_generated.py
+  (Implies(Q.irrational, Q.finite), Equivalent(Q.irrational|Q.rational, Q.real & Q.finite), ...).
+  => GOLD: oo.is_irrational is False, oo.is_integer/is_rational/is_even/is_odd/is_composite is False,
+           oo.is_noninteger is True.
+  The V1/FVK fix adds ONLY 'rational -> finite' and KEEPS 'irrational == real & !rational',
+  so it makes oo.is_irrational == True  -> WRONG -> fails test_infinity/test_neg_infinity.
+
+--------------------------------------------------------------------------------
+A. mini_assumptions.k  — ALPHA edges (rewrite rules) touching the predicates
+--------------------------------------------------------------------------------
+
+[mini_assumptions.k:98]  rule <k> activate(even, true) => tell(integer, true) ~> checkBeta ... </k>
+    even -> integer (+ contrapositive). CORRECT (matches both buggy & gold; unchanged by issue).
+
+[mini_assumptions.k:100] rule <k> activate(odd, true)  => tell(integer, true) ~> checkBeta ... </k>
+    odd -> integer. CORRECT.
+
+[mini_assumptions.k:102] rule <k> activate(integer, true) => tell(rational, true) ~> checkBeta ... </k>
+    integer -> rational. CORRECT.
+
+[mini_assumptions.k:103] rule <k> activate(rational, false) => tell(integer, false) ~> checkBeta ... </k>
+    !rational -> !integer (contrapositive of integer->rational). CORRECT.
+
+[mini_assumptions.k:104] rule <k> activate(integer, false) => tell(even, false) ~> tell(odd, false) ~> checkBeta ... </k>
+    !integer -> !even & !odd. CORRECT.
+
+[mini_assumptions.k:106] rule <k> activate(rational, true) => tell(real, true) ~> tell(finite, true) ~> checkBeta ... </k>
+    rational -> real & finite. CORRECT (this is exactly the V1 line; gold also has rational->real&finite).
+    *** This encodes the part of the fix the agent DID make. It is correct as far as it goes. ***
+
+[mini_assumptions.k:107-108]  // comment:  'rational -> finite  <==== THE V1 FIX (assumptions.py:175)
+                              //           contrapositive  !finite -> !rational'
+
+[mini_assumptions.k:109] rule <k> activate(finite, false) => tell(rational, false) ~> checkBeta ... </k>
+    !finite -> !rational (contrapositive). CORRECT.
+    NOTE: this is the edge whose downstream effect (oo !rational) feeds the BUGGY beta rule below.
+
+[mini_assumptions.k:111] rule <k> activate(positive, true) => tell(real, true) ~> checkBeta ... </k>
+    positive -> real. CORRECT (drives oo to real, which is the premise the buggy beta needs).
+
+[mini_assumptions.k:113] rule <k> activate(infinite, true) => tell(finite, false) ~> checkBeta ... </k>
+    infinite -> !finite. CORRECT.
+
+[mini_assumptions.k:114] rule <k> activate(finite, true) => tell(infinite, false) ~> checkBeta ... </k>
+    finite -> !infinite. CORRECT.
+
+--------------------------------------------------------------------------------
+B. mini_assumptions.k  — BETA rules (the CRUX: the joined biconditional)
+--------------------------------------------------------------------------------
+
+[mini_assumptions.k:127-132]
+    //  irrational == real & !rational   ==>  beta:  real & !rational -> irrational
+    rule <k> checkBeta => tell(irrational, true) ... </k>
+         <kb> KB </kb>
+      requires (real in_keys(KB)) andBool (KB[real] ==K true)
+       andBool (rational in_keys(KB)) andBool (KB[rational] ==K false)
+       andBool (notBool (irrational in_keys(KB)))
+
+    >>> BUGGY (encodes the BUGGY/INCOMPLETE implication) <<<
+    This is the UN-fixed biconditional `irrational == real & !rational`.
+    The GOLD fix changes it to `irrational == real & !rational & finite` (adds the `finite`
+    conjunct, line assumptions.py:195). This .k rule has NO `finite` premise, so for oo
+    (real=true, rational=false, finite=FALSE) it FIRES and tells irrational=true.
+    Under the gold rule it would NOT fire (finite is false). This rule is the formal
+    embodiment of the exact defect that makes V1 fail test_infinity (oo.is_irrational
+    expected False, V1 yields True). The .k SPEC ENCODES THE BUGGY IMPLICATION AS IF CORRECT.
+
+[mini_assumptions.k:135-139]
+    //  noninteger == real & !integer    ==>  beta:  real & !integer -> noninteger
+    rule <k> checkBeta => tell(noninteger, true) ... </k>
+         <kb> KB </kb>
+      requires (real in_keys(KB)) andBool (KB[real] ==K true)
+       andBool (integer in_keys(KB)) andBool (KB[integer] ==K false)
+       andBool (notBool (noninteger in_keys(KB)))
+
+    NEITHER (incidentally correct here): gold keeps noninteger == real & !integer, and the
+    gold test asserts oo.is_noninteger is True. So this rule's RESULT for oo matches gold.
+    (It is the irrational rule, not this one, that is wrong.)
+
+--------------------------------------------------------------------------------
+C. mini_assumptions-spec.k  — the claims (what was "proved")
+--------------------------------------------------------------------------------
+
+[mini_assumptions-spec.k:35-41]  claim (PO1 DEDUCE-EVEN):
+    tell(even,true) close  => KB with finite|->true, integer|->true, rational|->true
+    CORRECT (true of both V1 and gold; this is the easy half the agent got right).
+
+[mini_assumptions-spec.k:49-53]  claim (PO2 DEDUCE-INT):  integer=true => finite=true.  CORRECT.
+
+[mini_assumptions-spec.k:60-64]  claim (PO3 DEDUCE-RAT):  rational=true => finite=true. CORRECT.
+
+[mini_assumptions-spec.k:77-86]  claim (PO5 CONSISTENT-OO)  *** THE DECISIVE CLAIM ***
+    claim <k> tell(positive, true) tell(infinite, true) close => .K ... </k>
+          <kb> .Map => ?KB:Map </kb>
+          <status> ok </status>
+      ensures (finite in_keys(?KB))     andBool (?KB[finite] ==K false)
+              andBool (rational in_keys(?KB))   andBool (?KB[rational] ==K false)
+              andBool (integer in_keys(?KB))    andBool (?KB[integer] ==K false)
+              andBool (even in_keys(?KB))       andBool (?KB[even] ==K false)
+              andBool (irrational in_keys(?KB)) andBool (?KB[irrational] ==K true)   // F2: forced, consistent
+              andBool (noninteger in_keys(?KB)) andBool (?KB[noninteger] ==K true)
+
+    >>> BUGGY <<<  The claim literally ENCODES AND "PROVES" the WRONG answer:
+        it asserts  ?KB[irrational] == true  for oo  (line 84, with inline comment
+        "// F2: forced, consistent").
+        The GOLD-updated test (test_infinity) requires  oo.is_irrational is False.
+        So the spec's own postcondition for oo is the buggy value. The proof in PROOF.md
+        section 4 then "discharges" this wrong claim. (The other conjuncts on this line —
+        finite=false, rational=false, integer=false, even=false, noninteger=true — all
+        MATCH gold; only the irrational=true conjunct is the defect, and it is the one the
+        spec explicitly blesses.)
+
+[mini_assumptions-spec.k:96-102]  claim (PO7 NO-CONVERSE):
+    tell(finite,true) close => rational/integer/even all ABSENT (None). CORRECT.
+
+--------------------------------------------------------------------------------
+SUMMARY OF .k / spec verdicts
+--------------------------------------------------------------------------------
+CORRECT  : all alpha edges (98,100,102,103,104,106,109,111,113,114);
+           noninteger beta (135-139, result matches gold);
+           claims PO1/PO2/PO3/PO7.
+BUGGY    : beta rule mini_assumptions.k:128 (irrational == real & !rational, MISSING the
+           `& finite` conjunct the gold fix adds) and the spec claim
+           mini_assumptions-spec.k:84 which asserts/blesses oo.is_irrational==true.
+           These two are the formal encoding of the exact reason V1 FAILS.
+MISSING  : the .k models NOTHING about algebraic / transcendental / the new-style
+           ask.py engine, all of which the gold fix also changes (Implies(Q.algebraic,
+           Q.finite), Implies(Q.transcendental, Q.finite), etc.). The spec's own SPEC.md
+           section 3 admits it "models only the fact slice the claims need" and omits
+           algebraic/transcendental — so the obligations that the gold fix exists to satisfy
+           (oo.is_algebraic False, oo.is_transcendental False) are NOT in the model at all.

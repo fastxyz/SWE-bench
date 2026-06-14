@@ -1,0 +1,91 @@
+================================================================================
+MATH-RELEVANT TRANSCRIPT EXCERPTS — fvk arm
+Source: results/batch5-XC-MINI-PRO-AHP-260614105258/sympy__sympy-13852/transcripts/fvk.jsonl.gz
+(decompressed; assistant text/tool_use blocks; block index = N-th assistant msg)
+NOTE: this transcript is the FORKED session — first the baseline/V1 build (blocks
+~1-41), then the FVK audit (blocks ~49-93). So it contains the V1 reasoning too.
+================================================================================
+
+-------------------------------------------------------------------------------
+[block #12]  V1 problem analysis — frames the task as EXACTLY the two issue
+examples; nothing about a broader special-value table or polylog.eval.
+-------------------------------------------------------------------------------
+"Now I understand the code. Let me analyze the two issues described:
+ 1. polylog(2, Rational(1,2)).expand(func=True) should give -log(2)**2/2 + pi**2/12
+    (the known special value Li2(1/2) = pi^2/12 - ln^2 2/2), but currently returns
+    unevaluated.
+ 2. expand_func(polylog(1, z)) returns -log(z*exp_polar(-I*pi) + 1) with a
+    meaningless exp_polar, when it should simply be -log(1 - z).
+ Let me check whether any other code depends on the current exp_polar behavior
+ before editing."
+
+-------------------------------------------------------------------------------
+[block #19]  Cross-checks hyperexpand; confines the change to s==1 and z==1/2.
+-------------------------------------------------------------------------------
+"The _eval_expand_func change is consistent with the rest of sympy — note
+ test_hyperexpand.py:582 already expects -log(1 + -z) (i.e. -log(1 - z)) for the
+ same function. The polylog(2, z) and polylog(3, ...) cases (lines 583, 608) use
+ symbolic z or s=3, which my targeted change won't touch."
+
+-------------------------------------------------------------------------------
+[block #41]  V1 final summary — places the dilog value in _eval_expand_func
+(reached only via .expand(func=True)); "no general behavior is affected."
+-------------------------------------------------------------------------------
+"I fixed polylog._eval_expand_func ... First, the s == 1 branch now returns
+ -log(1 - z) instead of -log(1 + exp_polar(-I*pi)*z) ... Second, I added a special
+ case so that polylog(2, S.Half) expands to the closed form -log(2)**2/2 + pi**2/12
+ (the standard dilogarithm value Li2(1/2)), which previously returned the input
+ unchanged. ... Symbolic and other arguments fall through unchanged, so no general
+ behavior is affected."
+ >>> The value is added to the EXPAND path, not eval. Gold asserts bare
+     polylog(2, S.Half) == ... at construction, which this never produces.
+
+-------------------------------------------------------------------------------
+[block #64]  FVK audit — the V2 "change": decides on TWO inert comments only.
+-------------------------------------------------------------------------------
+"Confirmed: the code-quality test checks trailing whitespace, tabs, carriage
+ returns, raise styles, and `.func is` — but not line length. My comments are safe.
+ Now let me apply the minimal refactor (clarifying comments that encode the
+ proof-obligation rationale directly in the source):"
+
+-------------------------------------------------------------------------------
+[block #84]  fvk_notes.md write — "V1's behavior is confirmed correct and stands
+unchanged. The only V2 edit is two inert clarifying comments (no behavior change)."
+-------------------------------------------------------------------------------
+(verbatim opening of reports/fvk_notes.md, written via Write tool)
+
+-------------------------------------------------------------------------------
+[block #93]  FVK final summary — CONFIRM verdict, "clean spec = positive evidence",
+escalation boundary on the two identities. Explicitly notes "the intentionally
+narrow single special value" as a deliberate non-change.
+-------------------------------------------------------------------------------
+"The FVK audit confirmed the V1 fix is correct and let it stand behaviorally
+ unchanged, with the only V2 source edit being two inert clarifying comments ... the
+ spec was clean — disjoint, exhaustive guards with no invented precondition — which
+ is itself positive evidence of correctness. All structural/boolean obligations
+ discharged ... PO7 eval removes z in {0,1,-1} first ... the two genuinely analytic
+ obligations — polylog(1,z) = -log(1-z) including branch cuts (PO1/VC-Li1) and
+ Li_2(1/2) = pi^2/12 - log^2 2/2 (PO2/VC-Li2 1/2) — were discharged at an explicit
+ [ESCALATION BOUNDARY] ... The five fvk/ artifacts plus reports/fvk_notes.md trace
+ every decision (including the deliberate non-changes for the benign float-0.5 edge,
+ the intentionally narrow single special value, and the stale visible test that the
+ hidden post-issue suite supersedes) ..."
+
+================================================================================
+ABSENCE EVIDENCE (searched whole transcript, all 93 assistant blocks)
+================================================================================
+The following NEVER appear anywhere in the fvk transcript:
+  - "polylog.eval" / "eval(cls" as the PLACE to add the new values
+    (eval is mentioned only as the z in {0,1,-1} pre-filter, blocks via PO7)
+  - "sqrt(5)" / "golden" / golden-ratio arguments
+  - "z == 2" / "z==2" / polylog(2, 2) / "pi**2/4"
+  - "test_polylog_values" (the actual gold FAIL_TO_PASS test name)
+  - any notion that polylog(2, S.Half) should evaluate WITHOUT .expand(func=True)
+  - any continuity / analytic-continuation numerical check across multiple z
+
+The ONLY "dilog" reference is the single Li_2(1/2) value the agent placed in
+_eval_expand_func. The agent inspected polylog.eval (PROOF_OBLIGATIONS PO7 cites
+"polylog.eval, lines 278-285") and described it correctly as a @classmethod that
+returns construction-time closed forms for z in {0,1,-1} — but never inferred that
+the new dilog values belong there. The "pointed-at-the-spot" signal (eval is the
+gold fix site) was physically read and then misread as merely a pre-filter.

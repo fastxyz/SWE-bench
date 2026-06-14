@@ -14,6 +14,16 @@ Format per entry: **[YYYY-MM-DD] title** — what happened · reference (paths/I
 
 ---
 
+## Batch5 expansion (2026-06-14)
+
+- **Scope extended 7 → 11.** Added the 4 fvk-failing instances from `batch5-XC-MINI-PRO-AHP-260614105258` (committed `c1e185c`): `pydata__xarray-6992`, `sympy__sympy-13852`, `sympy__sympy-16597`, `sympy__sympy-18199`. Identified by an evidence-triangulated discovery agent (`scores.json` + per-arm `eval/*__fvk*.json` + per-instance `eval/fvk.report.json`). New repos: **xarray, sympy** (6 repos total). Same method, primer, and lead-agent template as batch1–4.
+- **Zero flips holds for batch5** (`scores.json` `aggregates.flips.baseline_to_fvk = {up:[], down:[]}`; identical baseline/fvk `unresolved_ids`). The macro fact is now **zero flips across batch1–5**. No exclusions (unlike batch4's sphinx-11510); all 4 are genuine fvk-attempted unresolved (`patch_successfully_applied: true`, tests ran, F2P 0/N).
+- **Verdict correction — sympy-18199 headroom YES → NO (orchestrator).** The lead's first draft scored this MISSING-(inverted) case as "counts toward headroom: YES," conflating *reachable-from-public-data* with *present-in-artifacts*. Per PLAN §4, **MISSING-but-reachable does NOT count** (only STATED/BURIED do); and it is the same tell-#9 "certify-the-bug" shape as django-16263 / xarray-6992 (both MISSING / no-count). Corrected in `sympy__sympy-18199/ANALYSIS.md` §3 (verdict header + reachability reasoning). **Final headroom = 4/11, not 5/11.**
+- **Primer held with no corrections across all 4 batch5 instances / 6 repos.** Tells #7/#8/#9 fit cleanly: xarray-6992 = #7+#9 (half-captured coupled bug); sympy-13852 = #8 (pre-fix display as binding); sympy-16597 = #8 strongest + #9; sympy-18199 = #7+#9 (`NotImplementedError`-as-spec). The decoder is stable across astropy/django/pytest/sphinx/xarray/sympy.
+- **`.gitignore *.patch` continues to skip evidence patches** — 1 more in batch5 (`sympy__sympy-18199/evidence/solution_fvk.patch`); same policy and handling as the entry below (byte-identical to the run's own solution patch; the oracle is committed as `.diff`).
+
+---
+
 ## Accumulated primer corrections
 
 - **[2026-06-14] Added tell #7 "scope-induced false-negative" to primer §(v).** From astropy-13398: when V1 is incomplete vs. the issue, fvk draws the spec domain around the existing code and declares it "clean and total on its domain," masking a MISSING. Propagated so instances 2–7 don't mistake that false reassurance for correctness. Ref: `_shared/fvk-primer.md` §(v) item 7; `astropy__astropy-13398/ANALYSIS.md` §3.

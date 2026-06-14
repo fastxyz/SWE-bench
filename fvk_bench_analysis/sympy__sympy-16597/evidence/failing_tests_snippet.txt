@@ -1,0 +1,98 @@
+================================================================================
+FAILING-TEST ASSERTIONS for sympy__sympy-16597
+Source: gold eval.sh test patch applied to:
+  sympy/core/tests/test_assumptions.py
+  sympy/functions/elementary/tests/test_miscellaneous.py
+base_commit: 6fd65310fa3167b9626c38a5487e171ca407d988
+FAIL_TO_PASS: test_infinity, test_neg_infinity, test_other_symbol
+================================================================================
+
+PROBLEM STATEMENT
+-----------------
+a.is_even does not imply a.is_finite
+
+In [1]: m = Symbol('m', even=True)
+In [3]: print(m.is_finite)
+None
+
+I would expect that a number should be finite before it can be even.
+
+================================================================================
+test_infinity  (oo = S.Infinity)  -- changed assertions (None -> False/True)
+================================================================================
+    assert oo.is_integer is False          # was None
+    assert oo.is_rational is False         # was None
+    assert oo.is_algebraic is False        # was None
+    assert oo.is_transcendental is False   # was None
+    assert oo.is_noninteger is True        # was None
+    assert oo.is_irrational is False       # was None
+    assert oo.is_even is False             # was None
+    assert oo.is_odd is False              # was None
+    assert oo.is_finite is False           # (unchanged, already False)
+    assert oo.is_infinite is True          # (unchanged)
+    assert oo.is_composite is False        # was None
+
+================================================================================
+test_neg_infinity  (mm = S.NegativeInfinity)  -- changed assertions
+================================================================================
+    assert mm.is_integer is False          # was None
+    assert mm.is_rational is False         # was None
+    assert mm.is_algebraic is False        # was None
+    assert mm.is_transcendental is False   # was None
+    assert mm.is_noninteger is True        # was None
+    assert mm.is_irrational is False       # was None
+    assert mm.is_even is False             # was None
+    assert mm.is_odd is False              # was None
+    assert mm.is_finite is False           # (unchanged)
+    assert mm.is_infinite is True          # (unchanged)
+
+================================================================================
+test_other_symbol  -- new/changed assertions (the core of the issue)
+================================================================================
+    x = Symbol('x', integer=True)
+    assert x.is_finite is True                  # NEW
+
+    x = Symbol('x', integer=True, nonnegative=True)
+    assert x.is_finite is True                  # NEW
+
+    x = Symbol('x', integer=True, nonpositive=True)
+    assert x.is_finite is True                  # NEW
+
+    x = Symbol('x', odd=True)
+    assert x.is_finite is True                  # NEW
+
+    x = Symbol('x', odd=False)
+    assert x.is_finite is None                  # NEW (odd unknown -> finite unknown)
+
+    x = Symbol('x', even=True)                  # <-- the exact bug from the issue
+    assert x.is_finite is True                  # NEW
+
+    x = Symbol('x', even=False)
+    assert x.is_finite is None                  # NEW
+
+    x = Symbol('x', integer=True, nonnegative=True)
+    assert x.is_finite is True                  # NEW
+
+    x = Symbol('x', integer=True, nonpositive=True)
+    assert x.is_finite is True                  # NEW
+
+    x = Symbol('x', rational=True)
+    assert x.is_real is True
+    assert x.is_finite is True                  # NEW
+
+    x = Symbol('x', rational=False)
+    assert x.is_real is None
+    assert x.is_finite is None                  # NEW
+
+    x = Symbol('x', irrational=True)
+    assert x.is_real is True
+    assert x.is_finite is True                  # NEW
+
+    x = Symbol('x', irrational=False)
+    assert x.is_real is None
+    assert x.is_finite is None                  # NEW
+
+--------------------------------------------------------------------------------
+test_minmax_assumptions (test_miscellaneous.py) -- adjusted, NOT a FAIL_TO_PASS:
+    p = Symbol('p', irrational=True)   # was: Symbol('p', real=True, rational=False)
+--------------------------------------------------------------------------------

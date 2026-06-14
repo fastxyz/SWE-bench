@@ -1,0 +1,31 @@
+# V1 (solution_baseline.patch) vs FINAL (solution_fvk.patch) — pydata__xarray-6992
+# Source: results/batch5-XC-MINI-PRO-AHP-260614105258/pydata__xarray-6992/solutions/
+# Both patches edit ONLY ONE line in xarray/core/dataset.py reset_index (~L4180),
+# touch NO other line and NO other file (oracle edits 3 functions across 2 files).
+# The difference between V1 and FINAL is operand REORDER + a longer comment.
+# Per FVK's own FINDINGS F8: the two forms are "provably equal whenever N ∩ D = ∅",
+# which holds for EVERY tested input incl. the MVCE (N=∅) => provable no-op on the suite.
+
+## V1 (baseline) line:
++        # also drop any reset coordinate from the coordinate names so that
++        # ``coord_names`` stays a subset of ``variables`` (GH6992)
++        coord_names = (set(new_variables) | self._coord_names) - set(drop_variables)
+                          #  ==  (N ∪ C) − D
+
+## FINAL (fvk) line:
++        # Drop the reset coordinate names and re-add the (re)created ones, so that
++        # ``coord_names`` stays a subset of ``variables`` -- otherwise
++        # ``DataVariables.__len__`` (len(variables) - len(coord_names)) can go
++        # negative (GH6992). Subtracting ``drop_variables`` *before* adding
++        # ``new_variables`` (as ``set_index`` does) also keeps a coordinate that is
++        # recreated as a reduced index a coordinate, instead of demoting it.
++        coord_names = (self._coord_names - set(drop_variables)) | set(new_variables)
+                          #  ==  (C − D) ∪ N
+
+## What the ORACLE does on the SAME tail line (for contrast):
+-        coord_names = set(new_variables) | self._coord_names
++        coord_names = self._coord_names - drop_variables          # the tail
+... PLUS a ~130-line rewrite of the for-loop: drop_or_convert() closure calling
+    self._variables[k].to_base_variable(); drop_variables.add(index.dim) on the
+    whole-multi-index-dim branch; keep_levels rename in indexes.py;
+    self._replace_with_new_dims(...) instead of self._replace(...).

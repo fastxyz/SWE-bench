@@ -1,0 +1,94 @@
+================================================================================
+V1 (solution_baseline.patch) vs FINAL FVK (solution_fvk.patch)
+================================================================================
+
+VERDICT: IDENTICAL. The FVK arm did NOT change V1; it only CONFIRMED it.
+`diff solution_baseline.patch solution_fvk.patch` => no output (byte-for-byte equal).
+Both files have identical git index lines (ce4dd30f2e..3a064433f2) and identical body.
+
+--------------------------------------------------------------------------------
+The shared V1 == FVK patch (the COMPLETE source change in both arms):
+--------------------------------------------------------------------------------
+diff --git a/sympy/core/assumptions.py b/sympy/core/assumptions.py
+index ce4dd30f2e..3a064433f2 100644
+--- a/sympy/core/assumptions.py
++++ b/sympy/core/assumptions.py
+@@ -172,6 +172,8 @@
+     'imaginary      ->  antihermitian',
+     'complex        ->  commutative',
+
++    'rational       ->  finite',
++
+     'odd            ==  integer & !even',
+     'even           ==  integer & !odd',
+
+(One added rule: 'rational -> finite'. Nothing else. The fvk arm's only edits in
+the working tree were to the fvk/*.k and fvk/*.md artifacts, NOT to source.)
+
+--------------------------------------------------------------------------------
+For reference: control arm (solution_control.patch) — same one rule, only
+relocated next to 'rational -> real' (cosmetic, behaviorally identical):
+--------------------------------------------------------------------------------
+@@ -164,6 +164,7 @@
+     'integer        ->  rational',
+     'rational       ->  real',
++    'rational       ->  finite',
+     'rational       ->  algebraic',
+     'algebraic      ->  complex',
+
+All three arms (baseline/fvk/control) => FAIL_TO_PASS 0/3
+(test_infinity, test_neg_infinity, test_other_symbol all FAIL).
+
+================================================================================
+WHAT THE GOLD FIX ACTUALLY DID (why one rule is insufficient)
+Source: princeton-nlp/SWE-bench dataset, instance sympy__sympy-16597
+================================================================================
+The gold patch edits FIVE files, not one:
+
+ sympy/core/assumptions.py   (old-style FactRules):
+   -    'rational       ->  real',
+   +    'rational       ->  real & finite',
+   -    'algebraic      ->  complex',
+   +    'algebraic      ->  complex & finite',
+   -    'transcendental ==  complex & !algebraic',
+   +    'transcendental ==  complex & !algebraic & finite',
+   -    'irrational     ==  real & !rational',
+   +    'irrational     ==  real & !rational & finite',     <== THE KEY LINE V1 OMITS
+
+ sympy/assumptions/ask.py  (NEW-STYLE engine — FVK never opened this file):
+   +        Implies(Q.irrational, Q.finite),
+   +        Implies(Q.algebraic, Q.finite),
+   +        Implies(Q.transcendental, Q.finite),
+   -        Equivalent(Q.transcendental | Q.algebraic, Q.complex),
+   +        Equivalent(Q.transcendental | Q.algebraic, Q.complex & Q.finite),
+   -        Equivalent(Q.irrational | Q.rational, Q.real),
+   +        Equivalent(Q.irrational | Q.rational, Q.real & Q.finite),
+
+ sympy/assumptions/ask_generated.py  (regenerated CNF/dict — FVK never opened it).
+ sympy/core/power.py   (Pow._eval_is_rational fast path).
+ sympy/tensor/indexed.py  (Idx bounds allow +/-oo).
+ sympy/printing/tree.py   (doctest update).
+
+KEY CONSEQUENCE DIFFERENCE (the gold-updated tests, which V1 must now satisfy):
+  test_infinity / test_neg_infinity (gold expectations):
+     oo.is_integer       is False   (V1: False  -> OK on this line)
+     oo.is_rational      is False   (V1: False  -> OK)
+     oo.is_algebraic     is False   (V1: None   -> FAIL: V1 never adds algebraic->finite,
+                                                  so contrapositive never sets algebraic=False)
+     oo.is_transcendental is False  (V1: None   -> FAIL: same reason)
+     oo.is_noninteger    is True    (V1: True   -> OK)
+     oo.is_irrational    is False   (V1: True   -> FAIL: V1 keeps irrational==real&!rational,
+                                                  so beta fires irrational=True)
+     oo.is_even          is False   (V1: False  -> OK)
+     oo.is_odd           is False   (V1: False  -> OK)
+     oo.is_composite     is False   (V1: None on oo -> FAIL on test_infinity line)
+
+  test_other_symbol (gold adds): Symbol('irrational', True).is_finite is True
+     (V1: would be ... irrational not linked to finite -> is_finite None -> FAIL).
+     Symbol('rational', True).is_finite is True (V1: True via the one rule -> OK),
+     but the irrational=True case is NOT covered by V1.
+
+=> V1/FVK's single 'rational -> finite' rule is necessary-but-insufficient:
+   it fixes the EVEN/INTEGER/RATIONAL half (which the issue text states) but
+   leaves oo.is_irrational/is_algebraic/is_transcendental wrong and ignores the
+   parallel new-style ask.py engine. Hence FAIL_TO_PASS 0/3.

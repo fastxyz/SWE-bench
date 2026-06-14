@@ -1,0 +1,120 @@
+================================================================================
+V1 (solution_baseline.patch) vs FINAL FVK (solution_fvk.patch)
+sympy__sympy-13852
+================================================================================
+
+RESULT OF: diff solutions/solution_baseline.patch solutions/solution_fvk.patch
+(exit code 1 = differ, but only trivially)
+
+--------------------------------------------------------------------------------
+2c2
+< index b8e2b66195..fdd24b449c 100644
+---
+> index b8e2b66195..1ecaf9b9fb 100644
+23c23
+< @@ -288,10 +294,12 @@ def _eval_rewrite_as_lerchphi(self, s, z):
+---
+> @@ -288,10 +294,14 @@ def _eval_rewrite_as_lerchphi(self, s, z):
+31a32
+> +            # polylog(1, z) == -log(1 - z), unbranched at 1; no exp_polar
+33a35
+> +            # dilogarithm value Li_2(1/2) = pi**2/12 - log(2)**2/2
+--------------------------------------------------------------------------------
+
+VERDICT: **CONFIRMED V1, no behavioral change.** The FVK arm added exactly TWO
+inert source comments (plus the resulting hunk-header/index-hash deltas). No code,
+no new branch, no removed branch, no changed return value. This matches the agent's
+own statement ("the only V2 source edit being two inert clarifying comments") and
+fvk_notes.md D7.
+
+================================================================================
+THE V1 PATCH ITSELF (solution_baseline.patch) — what code it actually touched
+File: sympy/functions/special/zeta_functions.py, class polylog
+================================================================================
+
+(1) DOCSTRING (lines ~253-264): changed the polylog(1,z) doctest from
+        -log(z*exp_polar(-I*pi) + 1)
+    to
+        -log(-z + 1)
+    and added a new doctest:
+        >>> from sympy import S
+        >>> expand_func(polylog(2, S.Half))
+        -log(2)**2/2 + pi**2/12
+
+(2) METHOD polylog._eval_expand_func (the ONLY code change):
+
+    -        from sympy import log, expand_mul, Dummy, exp_polar, I
+    +        from sympy import log, expand_mul, Dummy
+             s, z = self.args
+             if s == 1:
+    -            return -log(1 + exp_polar(-I*pi)*z)
+    +            return -log(1 - z)
+    +        if s == 2 and z == S.Half:
+    +            return -log(2)**2/2 + pi**2/12
+             if s.is_Integer and s <= 0:
+                 u = Dummy('u')
+                 start = u/(1 - u)
+
+SUMMARY OF V1 CODE CHANGE:
+ - s==1 branch: -log(1 + exp_polar(-I*pi)*z)  ->  -log(1 - z)   (drop exp_polar)
+ - NEW branch:  if s == 2 and z == S.Half: return -log(2)**2/2 + pi**2/12
+ - trimmed unused imports exp_polar, I
+ ALL of this lives inside _eval_expand_func (reached only via .expand(func=True)).
+
+================================================================================
+WHY BOTH FAIL (eval reports — identical)
+================================================================================
+baseline.report.json : FAIL_TO_PASS failure = ["test_polylog_values"]  resolved=false
+fvk.report.json      : FAIL_TO_PASS failure = ["test_polylog_values"]  resolved=false
+PASS_TO_PASS (4) pass in both: test_zeta_eval, test_dirichlet_eta_eval,
+                               test_stieltjes, test_stieltjes_evalf
+
+================================================================================
+THE ACTUAL GOLD UPSTREAM FIX (found in the cache repo git history:
+ /home/xc/.swe-fvk-runs/batch5-XC-MINI-PRO-AHP-260614105258/sympy__sympy-13852/repo
+ commit 1c752d37e6904a2476597a79e8aaa565f4bfd428
+ "Implement special values of dilogarithm, most notably at 2 and 1/2")
+================================================================================
+
+GOLD SOURCE CHANGE -- in polylog.eval (the @classmethod, runs at CONSTRUCTION),
+NOT in _eval_expand_func:
+
+    @@ class polylog / def eval(cls, s, z):
+             elif z == 0:
+                 return 0
+    +        if s == 2:
+    +            if z == S.Half:
+    +                return pi**2/12 - log(2)**2/2
+    +            elif z == 2:
+    +                return pi**2/4 - I*pi*log(2)
+    +            elif z == -(sqrt(5) - 1)/2:
+    +                return -pi**2/15 + log((sqrt(5)-1)/2)**2/2
+    +            elif z == -(sqrt(5) + 1)/2:
+    +                return -pi**2/10 - log((sqrt(5)+1)/2)**2
+    +            elif z == (3 - sqrt(5))/2:
+    +                return pi**2/15 - log((sqrt(5)-1)/2)**2
+    +            elif z == (sqrt(5) - 1)/2:
+    +                return pi**2/10 - log((sqrt(5)-1)/2)**2
+    (plus module imports: add I, add sqrt)
+
+GOLD TEST (test_zeta_functions.py) -- the FAIL_TO_PASS test:
+
+    +def test_polylog_values():
+    +    assert polylog(2, 2) == pi**2/4 - I*pi*log(2)
+    +    assert polylog(2, S.Half) == pi**2/12 - log(2)**2/2
+    +    for z in [S.Half, 2, (sqrt(5)-1)/2, -(sqrt(5)-1)/2, -(sqrt(5)+1)/2, (3-sqrt(5))/2]:
+    +        assert Abs(polylog(2, z) - polylog(2, z + 1e-13)).evalf() < 1e-12
+
+KEY MISMATCHES (why V1/FVK fail test_polylog_values):
+ 1. PLACEMENT: gold puts values in polylog.eval (construction-time). The test
+    asserts BARE `polylog(2, S.Half) == ...` and `polylog(2, 2) == ...` with NO
+    .expand(func=True). V1/FVK put the single value only in _eval_expand_func, so
+    `polylog(2, S.Half)` stays unevaluated -> first/second asserts fail.
+ 2. COVERAGE: gold needs SIX z-values (1/2, 2, and four golden-ratio args) plus a
+    branch value at z=2 (pi**2/4 - I*pi*log(2)). V1/FVK implement ONLY z==1/2.
+ 3. CONTINUITY: the for-loop checks numerical continuity polylog(2,z) vs
+    polylog(2,z+1e-13); requires eval to NOT introduce a discontinuity, i.e. each
+    special value must equal the analytic continuation. Untouched by V1/FVK.
+ 4. The entire exp_polar / polylog(1,z) -> -log(1-z) work (V1's main effort and the
+    whole second half of the issue) is IRRELEVANT to the graded test — gold does
+    not change _eval_expand_func's s==1 branch at all.

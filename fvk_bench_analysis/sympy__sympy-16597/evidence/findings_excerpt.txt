@@ -1,0 +1,118 @@
+================================================================================
+EVIDENCE: FINDINGS.md / PROOF_OBLIGATIONS.md / SPEC.md / PROOF.md / fvk_notes.md
+excerpts that touch a finite/infinite/even/zero/positive/irrational predicate-
+implication. Each labeled CORRECT / BUGGY / NEITHER vs the GOLD fix.
+Base dir: results/batch5-XC-MINI-PRO-AHP-260614105258/sympy__sympy-16597/
+================================================================================
+
+THE DECISIVE PATTERN: every artifact correctly derives finite for even/integer/
+rational (the easy half), and then EXPLICITLY ARGUES that oo.is_irrational==True
+is "forced and consistent" and must be ACCEPTED. The gold fix proves the opposite:
+it tightens `irrational == real & !rational & finite` precisely so oo.is_irrational
+stays False. The FVK artifacts thus enshrine the bug as a "design gap / out-of-scope
+follow-up" instead of fixing it.
+
+--------------------------------------------------------------------------------
+SPEC.md
+--------------------------------------------------------------------------------
+[fvk/SPEC.md:45]  L1 ledger: "is_even=True ⟹ is_finite=True for any object" → PO1
+    CORRECT intent (gold agrees).
+[fvk/SPEC.md:46]  L2: "is_integer=True ⟹ is_finite=True"  CORRECT intent.
+[fvk/SPEC.md:47]  L3: 'rational->finite'; "is_rational=True ⟹ is_finite=True"  CORRECT (partial).
+[fvk/SPEC.md:48]  L4: "do NOT add real->finite (oo/-oo are real and infinite)"
+    NEITHER — true statement, but used to JUSTIFY stopping short of the gold fix.
+[fvk/SPEC.md:51]  L7 code: "irrational == real & !rational (unchanged biconditional)"
+    >>> BUGGY decision <<< treats the OLD biconditional as fixed/unchangeable. The gold
+    fix CHANGES exactly this line to `irrational == real & !rational & finite`.
+[fvk/SPEC.md:115-120]  section 6 "safety constraint": argues `rational` is "the maximal
+    safe choice" for attaching finite, and that real->finite is inconsistent.
+    NEITHER/BUGGY framing: correct about real->finite, but concludes the fix is COMPLETE,
+    missing that gold ALSO had to add finite to algebraic/transcendental/irrational and
+    tighten the irrational/transcendental biconditionals.
+[fvk/SPEC.md:73-76]  "Only the fact slice the claims exercise is encoded
+    (even/odd/integer/rational/real/finite/infinite/irrational/noninteger/positive/complex)"
+    >>> SCOPE GAP <<< algebraic and transcendental are NOT modeled, though the gold fix
+    changes both (Implies(Q.algebraic,Q.finite); transcendental==...&finite). The failing
+    tests assert oo.is_algebraic is False and oo.is_transcendental is False — unmodeled.
+
+--------------------------------------------------------------------------------
+FINDINGS.md
+--------------------------------------------------------------------------------
+[fvk/FINDINGS.md:9-19]  F1 "the reported bug, fixed (PO1/PO2/PO3)": even->...->finite
+    delivers finite=True. CORRECT but INCOMPLETE (only the half that doesn't fail).
+
+[fvk/FINDINGS.md:21-43]  F2 "forced new determinations on oo/-oo":
+    line 26-27: "is_irrational=True ... (all were None pre-fix)"
+    line 32-34: "All are mathematically correct except is_irrational=True ... Conventionally
+       an infinity is not an irrational number. This is the visible symptom of the design
+       gap F6, not an engine bug."
+    >>> BUGGY <<< This is the EXACT failing assertion. test_infinity (gold) requires
+    oo.is_irrational is False. FVK SEES the wrong value, calls it "mathematically
+    [incorrect]" itself, yet labels it an ACCEPTED CONSEQUENCE ("⚠ accepted") rather than
+    a defect to fix. line 38-43 rejects the two fixes that would correct it:
+       (a) irrational->finite  -> "makes oo inconsistent and crashes import"
+       (b) redefining irrational == real & finite & !rational -> "exceeds the issue/hint scope"
+    Option (b) is LITERALLY THE GOLD FIX (assumptions.py:195). FVK considered it and rejected it.
+
+[fvk/FINDINGS.md:79-90]  F6 "spec-difficulty signal: real is the extended reals (design gap)":
+    "the proper resolution is a separate extended_real predicate (a large, breaking change
+    the hint explicitly defers — L4)."
+    >>> BUGGY framing <<< routes the actual fix to an "out-of-scope" redesign. The gold fix
+    did NOT need a full extended_real redesign of `real`; it just added `& finite` conjuncts
+    to irrational/rational/algebraic/transcendental. FVK over-estimated the scope and bailed.
+
+[fvk/FINDINGS.md:111-113]  "Bottom line: the audit surfaced NO correctness defect in V1.
+    F1 confirms the fix; F2–F6 are forced consequences / residual design risk, all consistent.
+    V1 stands."
+    >>> BUGGY CONCLUSION <<< V1 is in fact wrong (FAIL_TO_PASS 0/3).
+
+--------------------------------------------------------------------------------
+PROOF_OBLIGATIONS.md
+--------------------------------------------------------------------------------
+[fvk/PROOF_OBLIGATIONS.md:14-25]  PO1/PO2/PO3 (even/integer/rational ⟹ finite) ✔  CORRECT.
+[fvk/PROOF_OBLIGATIONS.md:82-88]  PO-C1 "oo/-oo consequences are consistent ✔ ⚠F2":
+    "determines ... irrational=True ... All are mathematically correct EXCEPT irrational=True,
+     which is an artifact of the unchanged definition irrational == real & !rational (L7)
+     under extended-real real (L4). Recorded as Finding F2; it is consistent, not a crash."
+    >>> BUGGY <<< formally lists the wrong value irrational=True as a DISCHARGED obligation.
+[fvk/PROOF_OBLIGATIONS.md:90-93]  PO-C2 zoo/nan. NEITHER (zoo.is_irrational stays False — matches).
+    No obligation anywhere requires oo.is_algebraic / oo.is_transcendental to be False
+    (the gold's other two failing assertions) — those obligations are MISSING entirely.
+
+--------------------------------------------------------------------------------
+PROOF.md
+--------------------------------------------------------------------------------
+[fvk/PROOF.md:54-91]  section 4 (CONSISTENT-OO) "proves" the oo closure ends with:
+    line 75: "[checkBeta] irrational? real=true ∧ rational=false ⇒ FIRE ⇒ tell(irrational,true)"
+    line 88-90: "Forced ?KB: finite=false, rational=false, integer=false, even=false,
+                 odd=false, irrational=true, noninteger=true — exactly the new determinations
+                 in F2, and all consistent."
+    >>> BUGGY <<< the constructed proof DERIVES oo.is_irrational=true and declares it correct.
+    This is a proof of the wrong theorem (the gold beta rule has a `& finite` premise that
+    blocks this firing).
+[fvk/PROOF.md:175-177]  section 8: "The infinities' new is_rational=False / is_integer=False /
+    is_irrational=True values are forced and consistent consequences (F2/F3), not bugs".
+    >>> BUGGY conclusion <<<.
+
+--------------------------------------------------------------------------------
+reports/fvk_notes.md
+--------------------------------------------------------------------------------
+[reports/fvk_notes.md:41-54]  "Decision 4 — do NOT modify irrational == real & !rational.":
+    "redefining irrational == real & finite & !rational changes irrational for ordinary
+     symbols and exceeds the issue/hint scope (L3/L4) ... So the minimal, in-scope,
+     consistent choice is to leave irrational alone and record oo.is_irrational=True as an
+     accepted consequence (F2)".
+    >>> BUGGY <<< This is the explicit decision NOT to make the gold change. The gold patch
+    is exactly `irrational == real & !rational & finite`.
+[reports/fvk_notes.md:96-103]  conclusion: "the only surfaced smell — oo.is_irrational=True
+    (F2) ... is a forced, consistent, out-of-scope design gap, so the code stands unchanged."
+
+--------------------------------------------------------------------------------
+VERDICT
+--------------------------------------------------------------------------------
+Every artifact CORRECTLY handles even/integer/rational ⟹ finite (the half the bug
+report literally states), and every artifact BUGGILY blesses oo.is_irrational==True
+as "forced/consistent/out-of-scope" — which is precisely the assertion that fails
+(test_infinity/test_neg_infinity). The artifacts also entirely MISS the algebraic/
+transcendental obligations (oo.is_algebraic/is_transcendental must be False) and never
+touch the new-style ask.py engine that the gold fix also edits.

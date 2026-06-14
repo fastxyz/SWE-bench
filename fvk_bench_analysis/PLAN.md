@@ -1,10 +1,10 @@
 # FVK Bench — Post-Run Failure Analysis Plan
 
-*Status: LOCKED (2026-06-13/14). This document is the spec that drives the whole analysis run.*
+*Status: LOCKED (2026-06-13/14). This document is the spec that drives the whole analysis run. Extended to batch5 on 2026-06-14 (7 → 11 instances; method unchanged).*
 
 ## 0. Objective
 
-Post-mortem the instances where the **fvk arm failed** in batch1–4. For each instance:
+Post-mortem the instances where the **fvk arm failed** in batch1–5. For each instance:
 
 1. Establish the **true root cause** (read off the oracle/gold patch + hidden tests): where the bug is and why, and what the correct fix is.
 2. Measure whether that root cause is **present (probably hidden) in the FVK-generated artifacts** — or **missing**.
@@ -16,7 +16,7 @@ This is a measurement study, not a verification study. We are answering: *does t
 ## 1. Key facts established before analysis (ground the agents in these)
 
 - **The fvk arm is not an independent solver.** It is a *forked resume* of the frozen **baseline** session. It starts from **V1 = base commit + baseline's patch**, and its prompt says: *"Apply the FVK methodology to audit that fix, then improve or confirm it."* Tools are `Read, Write, Edit, Glob, Grep`. It has **no execution environment** — it is told to write `kompile`/`kprove`/test commands into artifacts and reason about expected outcomes, **never running them**. (Source: `fvk_bench/prompts/fvk.md`, `fvk_bench/arms.py`, `fvk_bench/config.py`.)
-- **Across batch1–4, fvk and baseline verdicts are identical — zero flips.** FVK never converted a baseline failure into a pass (and never broke a baseline pass). This is the macro context for the entire study and belongs at the top of `SYNTHESIS.md`. *(Consequence: a "calibration sample" of an FVK win does not exist — there are none.)*
+- **Across batch1–5, fvk and baseline verdicts are identical — zero flips.** FVK never converted a baseline failure into a pass (and never broke a baseline pass). This is the macro context for the entire study and belongs at the top of `SYNTHESIS.md`. *(Consequence: a "calibration sample" of an FVK win does not exist — there are none.)*
 - **What the fvk arm produces per instance** (the audit target), under `results/<batch_run_id>/<instance_id>/`:
   - `fvk/SPEC.md`, `fvk/FINDINGS.md`, `fvk/PROOF_OBLIGATIONS.md`, `fvk/PROOF.md`, `fvk/schema_index.k`, `fvk/schema_index-spec.k` (names vary per instance) — **the first-hand formal artifacts**.
   - `reports/fvk_notes.md` — the agent's decision log.
@@ -24,7 +24,7 @@ This is a measurement study, not a verification study. We are answering: *does t
   - `transcripts/fvk.jsonl.gz` — the fvk session transcript (gzipped; `zcat`/`gunzip` to read).
   - `eval/fvk.report.json` — pass/fail + which FAIL_TO_PASS tests failed.
 
-## 2. The 7 fvk-failing instances (process in this order)
+## 2. The 11 fvk-failing instances (process in this order)
 
 | # | instance_id | batch run-id (dir under `results/`) |
 |---|-------------|--------------------------------------|
@@ -35,8 +35,12 @@ This is a measurement study, not a verification study. We are answering: *does t
 | 5 | `django__django-16263`       | `batch3-XC-MINI-PRO-AHP-260613154559` |
 | 6 | `pytest-dev__pytest-10356`   | `batch4-XC-MINI-PRO-AHP-260613182909` |
 | 7 | `sphinx-doc__sphinx-9229`    | `batch4-XC-MINI-PRO-AHP-260613182909` |
+| 8 | `pydata__xarray-6992`        | `batch5-XC-MINI-PRO-AHP-260614105258` |
+| 9 | `sympy__sympy-13852`         | `batch5-XC-MINI-PRO-AHP-260614105258` |
+| 10 | `sympy__sympy-16597`        | `batch5-XC-MINI-PRO-AHP-260614105258` |
+| 11 | `sympy__sympy-18199`        | `batch5-XC-MINI-PRO-AHP-260614105258` |
 
-(batch2 had 0 fvk failures. `sphinx-doc__sphinx-11510` is excluded: its baseline failed audit, so the fvk arm never ran.)
+(batch2 had 0 fvk failures; batch5 added 4. `sphinx-doc__sphinx-11510` is excluded: its baseline failed audit, so the fvk arm never ran.)
 
 ## 3. Where to find each input (paths, relative to repo root)
 
@@ -67,7 +71,7 @@ No verification phase. Recommendations stay prose-level and within the no-exec p
 
 ## 6. FVK primer (Phase 0) — a decoder ring, built carefully
 
-The kit is rough ("vibe-coded"); a careless distillation would give every analyst a *wrong* model of FVK and corrupt all 7 verdicts. So the primer's purpose is narrow and explicit: **let an analyst recognize a root cause when it is hiding in FVK's formal idiom.** It must be:
+The kit is rough ("vibe-coded"); a careless distillation would give every analyst a *wrong* model of FVK and corrupt every verdict. So the primer's purpose is narrow and explicit: **let an analyst recognize a root cause when it is hiding in FVK's formal idiom.** It must be:
 
 - **Source-anchored** — every claim carries a quote + exact path into `third_party/formal-verification-kit/`; it tells readers to consult the primary source, it does not replace it.
 - **Honest about roughness** — flags where the kit is vague/inconsistent/aspirational ("constructed, not machine-checked"; mini-X fragment semantics), so analysts don't mistake a *kit* limitation for an *analysis* finding.
@@ -77,7 +81,7 @@ The kit is rough ("vibe-coded"); a careless distillation would give every analys
 
 ## 7. Subagent topology & sequencing
 
-- **Orchestrator (main session):** writes these docs, dispatches Phase 0, then dispatches the **7 lead agents one at a time** (sequential — so a running tally and primer corrections accrue, and later cases get sharper). Keeps its own context slim: each lead **writes its own deliverables** and returns a ≤180-word summary.
+- **Orchestrator (main session):** writes these docs, dispatches Phase 0, then dispatches the **lead agents one at a time (one per instance)** (sequential — so a running tally and primer corrections accrue, and later cases get sharper). Keeps its own context slim: each lead **writes its own deliverables** and returns a ≤180-word summary.
 - **Per-instance lead agent:** delegates gathering to its own sub-subagents (root-cause extractor; FVK-artifact forensics — runnable in parallel), then synthesizes, decides the verdict, and writes `ANALYSIS.md` + `evidence/`. (If it cannot spawn subagents, it does the gathering directly.)
 
 ## 8. Deliverables
