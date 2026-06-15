@@ -1,0 +1,307 @@
+{
+  "run_id": "verified003-codex-XC-MINI-PRO-AHP-20260615T162338Z",
+  "arms": [
+    "baseline",
+    "fvk"
+  ],
+  "instances": {
+    "astropy__astropy-8707": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecc25-8917-7081-a01c-87b10a405b18",
+        "num_turns": null,
+        "duration_seconds": 175.09755592299916,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "11/11"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecc25-8917-7081-a01c-87b10a405b18",
+        "num_turns": null,
+        "duration_seconds": 413.2214437729999,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "11/11"
+        }
+      }
+    },
+    "astropy__astropy-8872": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecc25-8919-76d3-a933-7407d56ceeee",
+        "num_turns": null,
+        "duration_seconds": 121.18823180800246,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "80/80"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecc25-8919-76d3-a933-7407d56ceeee",
+        "num_turns": null,
+        "duration_seconds": 419.6866826999976,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "80/80"
+        }
+      }
+    },
+    "django__django-10097": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecc25-9873-7aa1-9af3-9a8d3d300b02",
+        "num_turns": null,
+        "duration_seconds": 229.2291623150013,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "438/438",
+          "ptp": "1432/1432"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecc25-9873-7aa1-9af3-9a8d3d300b02",
+        "num_turns": null,
+        "duration_seconds": 424.87417589800316,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "438/438",
+          "ptp": "1432/1432"
+        }
+      }
+    },
+    "django__django-10554": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecc2d-f1ad-7333-b94c-89b1c99c930b",
+        "num_turns": null,
+        "duration_seconds": 204.45894068099733,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/2",
+          "ptp": "23/23"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecc2d-f1ad-7333-b94c-89b1c99c930b",
+        "num_turns": null,
+        "duration_seconds": 287.68494388899853,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/2",
+          "ptp": "23/23"
+        }
+      }
+    },
+    "django__django-10880": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecc2e-ab5d-7a53-855a-3d2ff108313f",
+        "num_turns": null,
+        "duration_seconds": 107.8350187640026,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "55/55"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecc2e-ab5d-7a53-855a-3d2ff108313f",
+        "num_turns": null,
+        "duration_seconds": 302.76104897500045,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "55/55"
+        }
+      }
+    },
+    "django__django-10914": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecc2f-bc94-7d23-90aa-6f9d1ff31531",
+        "num_turns": null,
+        "duration_seconds": 210.4385883119976,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "98/98"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecc2f-bc94-7d23-90aa-6f9d1ff31531",
+        "num_turns": null,
+        "duration_seconds": 393.3966367969988,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "98/98"
+        }
+      }
+    },
+    "django__django-10973": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecc35-188c-7142-a080-b49da69dfd48",
+        "num_turns": null,
+        "duration_seconds": 183.34251003599638,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "5/5",
+          "ptp": "0/0"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecc35-188c-7142-a080-b49da69dfd48",
+        "num_turns": null,
+        "duration_seconds": 445.6952049620013,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "5/5",
+          "ptp": "0/0"
+        }
+      }
+    },
+    "django__django-10999": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecc35-9d5b-7c51-a974-6405868b1470",
+        "num_turns": null,
+        "duration_seconds": 256.53240230600204,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "10/10"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecc35-9d5b-7c51-a974-6405868b1470",
+        "num_turns": null,
+        "duration_seconds": 400.202997114,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "10/10"
+        }
+      }
+    },
+    "django__django-11066": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecc39-1c8c-7071-be99-c0518a23a4f3",
+        "num_turns": null,
+        "duration_seconds": 96.29008612300095,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "3/3"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecc39-1c8c-7071-be99-c0518a23a4f3",
+        "num_turns": null,
+        "duration_seconds": 484.9620680799999,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "3/3"
+        }
+      }
+    },
+    "django__django-11087": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecc3e-da6b-7e22-a5fc-0152ab08db39",
+        "num_turns": null,
+        "duration_seconds": 503.00894488099584,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "41/41"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecc3e-da6b-7e22-a5fc-0152ab08db39",
+        "num_turns": null,
+        "duration_seconds": 496.29864239400194,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "41/41"
+        }
+      }
+    }
+  },
+  "aggregates": {
+    "arms": {
+      "baseline": {
+        "resolved": 9,
+        "evaluated": 10
+      },
+      "fvk": {
+        "resolved": 9,
+        "evaluated": 10
+      }
+    },
+    "flips": {
+      "baseline_to_fvk": {
+        "up": [],
+        "down": []
+      }
+    }
+  }
+}

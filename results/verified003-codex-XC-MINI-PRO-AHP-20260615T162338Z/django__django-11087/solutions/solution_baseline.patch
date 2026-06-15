@@ -1,0 +1,88 @@
+diff --git a/django/db/models/deletion.py b/django/db/models/deletion.py
+index 3a462f1c4c..b6bb516d9a 100644
+--- a/django/db/models/deletion.py
++++ b/django/db/models/deletion.py
+@@ -116,6 +116,46 @@ class Collector:
+             model, {}).setdefault(
+             (field, value), set()).update(objs)
+ 
++    def _has_signal_listeners(self, model):
++        return (
++            signals.pre_delete.has_listeners(model) or
++            signals.post_delete.has_listeners(model) or
++            signals.m2m_changed.has_listeners(model)
++        )
++
++    def _delete_fields(self, model, collect_related, keep_parents):
++        """
++        Return the field attnames needed to collect and delete instances of
++        model. When no signal listeners are connected, other fields can be
++        deferred.
++        """
++        opts = model._meta
++        fields = {opts.pk.attname}
++        if not keep_parents:
++            # Parent instances are materialized from the child instance.
++            # Include parent concrete fields to avoid per-instance reloads.
++            for ptr in opts.concrete_model._meta.parents.values():
++                if ptr:
++                    fields.update(
++                        field.attname
++                        for field in ptr.remote_field.model._meta.concrete_fields
++                    )
++        if collect_related:
++            for related in get_candidate_relations_to_delete(opts):
++                related_field = related.field
++                if related_field.remote_field.on_delete == DO_NOTHING:
++                    continue
++                fields.update(
++                    field.attname for field in related_field.foreign_related_fields
++                )
++        return fields
++
++    def _optimize_delete_queryset(self, queryset, collect_related, keep_parents):
++        if self._has_signal_listeners(queryset.model):
++            return queryset
++        fields = self._delete_fields(queryset.model, collect_related, keep_parents)
++        return queryset.only(*fields)
++
+     def can_fast_delete(self, objs, from_field=None):
+         """
+         Determine if the objects in the given queryset-like or single object
+@@ -135,9 +175,7 @@ class Collector:
+             model = objs.model
+         else:
+             return False
+-        if (signals.pre_delete.has_listeners(model) or
+-                signals.post_delete.has_listeners(model) or
+-                signals.m2m_changed.has_listeners(model)):
++        if self._has_signal_listeners(model):
+             return False
+         # The use of from_field comes from the need to avoid cascade back to
+         # parent when parent delete is cascading to child.
+@@ -188,6 +226,11 @@ class Collector:
+         if self.can_fast_delete(objs):
+             self.fast_deletes.append(objs)
+             return
++        if (
++            hasattr(objs, 'model') and hasattr(objs, 'only') and
++            getattr(objs, '_result_cache', None) is None
++        ):
++            objs = self._optimize_delete_queryset(objs, collect_related, keep_parents)
+         new_objs = self.add(objs, source, nullable,
+                             reverse_dependency=reverse_dependency)
+         if not new_objs:
+@@ -232,9 +275,12 @@ class Collector:
+         """
+         Get a QuerySet of objects related to `objs` via the relation `related`.
+         """
+-        return related.related_model._base_manager.using(self.using).filter(
++        qs = related.related_model._base_manager.using(self.using).filter(
+             **{"%s__in" % related.field.name: objs}
+         )
++        if related.field.remote_field.on_delete is CASCADE:
++            return self._optimize_delete_queryset(qs, collect_related=True, keep_parents=False)
++        return self._optimize_delete_queryset(qs, collect_related=False, keep_parents=True)
+ 
+     def instances_with_model(self):
+         for model, instances in self.data.items():
