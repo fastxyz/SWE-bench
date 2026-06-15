@@ -3,4 +3,4 @@
 	url = https://github.com/fastxyz/swebench-fvk-reproducibility.git
 [submodule "third_party/formal-verification-kit"]
 	path = third_party/formal-verification-kit
-	url = https://github.com/grosu/formal-verification-kit.git
+	url = git@github.com:xc93/formal-verification-kit.git
