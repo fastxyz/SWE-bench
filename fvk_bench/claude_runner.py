@@ -24,6 +24,7 @@ import re
 import signal
 import subprocess
 import time
+import uuid
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
@@ -370,3 +371,76 @@ def audit_transcript(
         "unparseable_lines": unparseable,
         "lines": total,
     }
+
+
+class ClaudeRunner:
+    """:class:`fvk_bench.runner.AgentRunner` backed by the ``claude`` CLI.
+
+    A thin adapter over this module's free functions — it adds no behavior,
+    so the Claude arm runs byte-for-byte as before. ``transcript_path`` and
+    ``audit_transcript`` deliberately call the module-level functions by global
+    name (not captured references) so tests that monkeypatch
+    ``claude_runner.transcript_path`` keep working through the adapter.
+    """
+
+    name = "claude"
+
+    def __init__(self, *, claude_bin: str = "claude", model: str = config.MODEL):
+        self._bin = claude_bin
+        self._model = model
+
+    def new_session_id(self) -> str:
+        """Claude takes a caller-chosen ``--session-id``, so the id is known
+        before the run — forensics survive a mid-run crash."""
+        return str(uuid.uuid4())
+
+    def run_fresh(
+        self,
+        ws: Path,
+        arm: str,
+        prompt: str,
+        *,
+        session_id: str | None = None,
+        timeout: int = config.ARM_TIMEOUT_SECONDS,
+        max_turns: int | None = None,
+    ) -> ClaudeResult:
+        if session_id is None:
+            session_id = self.new_session_id()
+        return run_arm_session(
+            ws, arm, prompt,
+            session_id=session_id, timeout=timeout,
+            claude_bin=self._bin, model=self._model, max_turns=max_turns,
+        )
+
+    def run_fork(
+        self,
+        ws: Path,
+        arm: str,
+        prompt: str,
+        baseline_session_id: str,
+        *,
+        timeout: int = config.ARM_TIMEOUT_SECONDS,
+        max_turns: int | None = None,
+    ) -> ClaudeResult:
+        return run_arm_session(
+            ws, arm, prompt,
+            resume_id=baseline_session_id, timeout=timeout,
+            claude_bin=self._bin, model=self._model, max_turns=max_turns,
+        )
+
+    def transcript_path(self, ws: Path, session_id: str) -> Path | None:
+        return transcript_path(ws, session_id)
+
+    def audit_transcript(self, path: Path) -> dict:
+        return audit_transcript(path)
+
+    def version(self) -> str | None:
+        try:
+            proc = subprocess.run(
+                [self._bin, "--version"], capture_output=True, text=True, timeout=15
+            )
+        except OSError:
+            return None
+        if proc.returncode != 0:
+            return None
+        return proc.stdout.strip() or None
