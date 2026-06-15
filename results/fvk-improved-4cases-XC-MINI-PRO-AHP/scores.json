@@ -1,0 +1,182 @@
+{
+  "run_id": "fvk-improved-4cases-XC-MINI-PRO-AHP",
+  "instances": {
+    "django__django-12325": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "3d5fb6c1-8f03-40bc-904b-455a7f8cddf4",
+        "num_turns": 27,
+        "duration_seconds": 999.0202612089997,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/2",
+          "ptp": "201/201"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "347f03ed-4a9a-482c-b68e-9a972f54ba9f",
+        "num_turns": 20,
+        "duration_seconds": 723.6973179400011,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/2",
+          "ptp": "201/201"
+        }
+      },
+      "control": {
+        "status": "pending",
+        "reason": null,
+        "session_id": null,
+        "num_turns": null,
+        "duration_seconds": null,
+        "empty_patch": true,
+        "eval": null
+      }
+    },
+    "pytest-dev__pytest-10356": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "b591bbba-830b-490f-a03b-911709fb543c",
+        "num_turns": 23,
+        "duration_seconds": 296.96499438200044,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "79/79"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "ab51c67e-cc35-4df9-b366-871a1ff08718",
+        "num_turns": 42,
+        "duration_seconds": 1297.6752638559992,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "79/79"
+        }
+      },
+      "control": {
+        "status": "pending",
+        "reason": null,
+        "session_id": null,
+        "num_turns": null,
+        "duration_seconds": null,
+        "empty_patch": true,
+        "eval": null
+      }
+    },
+    "sympy__sympy-13852": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "3a17a68f-e265-4d20-a7e5-874cb17839d4",
+        "num_turns": 20,
+        "duration_seconds": 350.4178398019976,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "4/4"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "95ff9a8b-30d1-442c-9d32-45ffae5a09b1",
+        "num_turns": 30,
+        "duration_seconds": 1006.9617097020018,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "4/4"
+        }
+      },
+      "control": {
+        "status": "pending",
+        "reason": null,
+        "session_id": null,
+        "num_turns": null,
+        "duration_seconds": null,
+        "empty_patch": true,
+        "eval": null
+      }
+    },
+    "sympy__sympy-16597": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "11f3ca56-681f-4467-880e-20bbe7ad2cf4",
+        "num_turns": 28,
+        "duration_seconds": 467.4876647630008,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/3",
+          "ptp": "74/74"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "c32cd60d-923c-4a92-8d52-ea0a2cc21e1e",
+        "num_turns": 20,
+        "duration_seconds": 899.5517460519986,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/3",
+          "ptp": "74/74"
+        }
+      },
+      "control": {
+        "status": "pending",
+        "reason": null,
+        "session_id": null,
+        "num_turns": null,
+        "duration_seconds": null,
+        "empty_patch": true,
+        "eval": null
+      }
+    }
+  },
+  "aggregates": {
+    "arms": {
+      "baseline": {
+        "resolved": 0,
+        "evaluated": 4
+      },
+      "fvk": {
+        "resolved": 1,
+        "evaluated": 4
+      },
+      "control": {
+        "resolved": 0,
+        "evaluated": 0
+      }
+    },
+    "flips": {
+      "baseline_to_fvk": {
+        "up": [
+          "pytest-dev__pytest-10356"
+        ],
+        "down": []
+      },
+      "baseline_to_control": {
+        "up": [],
+        "down": []
+      }
+    },
+    "fvk_vs_control_delta": 1
+  }
+}

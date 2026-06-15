@@ -1,0 +1,209 @@
+{
+  "run_id": "fvk-improved-4cases-XC-MINI-PRO-AHP",
+  "instance_id": "django__django-12325",
+  "baseline_session_id": "3d5fb6c1-8f03-40bc-904b-455a7f8cddf4",
+  "core_hash_post_baseline": "344614766b1f6df9a6ac30de27706eae99b39564fbc740b53857804bf5be768d",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "3d5fb6c1-8f03-40bc-904b-455a7f8cddf4",
+      "attempts": 1,
+      "started_at": "2026-06-15T06:01:36.368907+00:00",
+      "ended_at": "2026-06-15T06:18:15.389990+00:00",
+      "num_turns": 27,
+      "duration_seconds": 999.0202612089997,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 13,
+          "Grep": 9,
+          "Edit": 2,
+          "Glob": 1,
+          "Write": 1
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 117
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "347f03ed-4a9a-482c-b68e-9a972f54ba9f",
+      "attempts": 1,
+      "started_at": "2026-06-15T06:18:15.953091+00:00",
+      "ended_at": "2026-06-15T06:30:19.651119+00:00",
+      "num_turns": 20,
+      "duration_seconds": 723.6973179400011,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 20,
+          "Grep": 11,
+          "Edit": 2,
+          "Glob": 3,
+          "Write": 9
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 196
+      }
+    },
+    "control": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    }
+  },
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "b7c2dd08d551bc15b1a3f1af5beab7dbf555521a2e7047fbd2b2ef7a18b6679a",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 998252,
+      "duration_api_ms": 999910,
+      "ttft_ms": 3081,
+      "ttft_stream_ms": 3081,
+      "time_to_request_ms": 50,
+      "num_turns": 27,
+      "result": "Confirmed: with the fix, `parent_links[Document]` holds the explicit `document_ptr`, so line 248 takes the `field = parent_links[base_key]` branch and skips auto-creation \u2014 exactly the intended behavior, in either field order.\n\nThe fix is complete. Both `repo/django/db/models/base.py` and `reports/baseline_notes.md` are done.\n\n## Summary\n\nThe bug was in `ModelBase.__new__` (`django/db/models/base.py`): when collecting multi-table-inheritance parent links, it stored every `OneToOneField` into a dict keyed solely by the target model, so for several `OneToOneField`s pointing at the same parent the *last-declared* field simply overwrote the others \u2014 completely ignoring the `parent_link=True` marker. With `Picking` declaring `document_ptr` (parent_link) before `origin` (a plain `OneToOneField` to the same `Document`), `origin` won and `Options._prepare()` then raised `ImproperlyConfigured: Add parent_link=True to ...origin`, making behavior depend on declaration order. I fixed it by making the selection deterministic: all `OneToOneField`s are still collected, but a field already recorded as the explicit `parent_link` is never overwritten by an ordinary `OneToOneField` to the same model (while a later parent link, or the last plain field, still wins otherwise). This makes field order irrelevant whenever an explicit `parent_link=True` exists, while preserving the documented error for a lone unmarked `OneToOneField` (`test_missing_parent_link`) and abstract-base parent links (`test_abstract_parent_link`); I rejected both the \"collect only parent_link fields\" approach (breaks the documented lone-field error) and the ticket's \"sort + first-wins\" PR (introduces a cross-base regression).",
+      "stop_reason": "end_turn",
+      "session_id": "3d5fb6c1-8f03-40bc-904b-455a7f8cddf4",
+      "total_cost_usd": 3.2374687499999997,
+      "usage": {
+        "input_tokens": 41,
+        "cache_creation_input_tokens": 100339,
+        "cache_read_input_tokens": 1128914,
+        "output_tokens": 81789,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 100339,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 716,
+            "cache_read_input_tokens": 101812,
+            "cache_creation_input_tokens": 1902,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 1902
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 883,
+          "outputTokens": 16,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.000963,
+          "contextWindow": 200000,
+          "maxOutputTokens": 32000
+        },
+        "claude-opus-4-8": {
+          "inputTokens": 41,
+          "outputTokens": 81789,
+          "cacheReadInputTokens": 1128914,
+          "cacheCreationInputTokens": 100339,
+          "webSearchRequests": 0,
+          "costUSD": 3.236505749999999,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "7bda4a7d-68fd-4c2d-b758-4ef0ffb18d9b"
+    },
+    "fvk": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 722908,
+      "duration_api_ms": 722413,
+      "ttft_ms": 4442,
+      "ttft_stream_ms": 4441,
+      "time_to_request_ms": 27,
+      "num_turns": 20,
+      "result": "All eight artifacts are in place and the V1 code is intact (`base.py:203\u2013216`). The FVK audit is complete.\n\n## Summary\n\nThe FVK pass audited the V1 fix and **confirms it stands unchanged**. I built a mini-Python K semantics (`fvk/mini-python.k`) and reachability claims (`fvk/parent-links-spec.k`) modeling the `parent_links` selection loop as a per-key fold over the in-order list of `OneToOneField` `parent_link` flags, then constructed a proof that V1 implements `selectResult(L)` = \"first `parent_link=True` field wins, else last field, else none.\" Concrete claims `(CASE-A)`/`(CASE-B)` discharge the reported bug in *both* declaration orders (winner is order-independent \u2014 obligation O1), the `(LOOP)` circularity generalizes it across abstract bases (O5b), and a change-confinement argument shows V1 differs from the original code *only* in the exact multiple-reference ambiguity (frame condition O5). The one genuine adequacy question the audit surfaced \u2014 whether a lone *unmarked* `OneToOneField` should keep raising `Add parent_link=True` \u2014 was resolved **for** V1 by positive documentation evidence (the deprecation/removal of implicit promotion, ledger E6/E7) rather than by legacy inertia, and the two tempting alternative patches were formally falsified: the \"filter to `parent_link` only\" reading of the maintainer hint fails O2 (it makes the documented error dead code and breaks `test_missing_parent_link`, PROOF \u00a77), and the community sort+first-wins PR regresses a cross-base case that V1's \"never overwrite a stored parent link\" guard handles correctly. All five required `fvk/` artifacts plus the two `.k` formal-core files and `reports/fvk_notes.md` are written, with every decision traced to specific `FINDINGS`/`PROOF_OBLIGATIONS` entries; no source or test files were changed.",
+      "stop_reason": "end_turn",
+      "session_id": "347f03ed-4a9a-482c-b68e-9a972f54ba9f",
+      "total_cost_usd": 3.1368329999999998,
+      "usage": {
+        "input_tokens": 31,
+        "cache_creation_input_tokens": 85432,
+        "cache_read_input_tokens": 2448506,
+        "output_tokens": 55139,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 85432,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 1134,
+            "cache_read_input_tokens": 188069,
+            "cache_creation_input_tokens": 1077,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 1077
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 31,
+          "outputTokens": 55139,
+          "cacheReadInputTokens": 2448506,
+          "cacheCreationInputTokens": 85432,
+          "webSearchRequests": 0,
+          "costUSD": 3.1368329999999998,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "40ef4eb0-af27-447e-b9f6-7a2109362827"
+    },
+    "control": null
+  }
+}

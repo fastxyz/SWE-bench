@@ -1,0 +1,209 @@
+{
+  "run_id": "fvk-improved-4cases-XC-MINI-PRO-AHP",
+  "instance_id": "sympy__sympy-16597",
+  "baseline_session_id": "11f3ca56-681f-4467-880e-20bbe7ad2cf4",
+  "core_hash_post_baseline": "b4fc1e3b574d608cad91532343cb4da1c05856953e0b380874225ef80715a1cd",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "11f3ca56-681f-4467-880e-20bbe7ad2cf4",
+      "attempts": 1,
+      "started_at": "2026-06-15T06:01:34.007956+00:00",
+      "ended_at": "2026-06-15T06:09:21.496205+00:00",
+      "num_turns": 28,
+      "duration_seconds": 467.4876647630008,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 16,
+          "Grep": 7,
+          "Edit": 2,
+          "Glob": 1,
+          "Write": 1
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 118
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "c32cd60d-923c-4a92-8d52-ea0a2cc21e1e",
+      "attempts": 1,
+      "started_at": "2026-06-15T06:09:21.697063+00:00",
+      "ended_at": "2026-06-15T06:24:21.249484+00:00",
+      "num_turns": 20,
+      "duration_seconds": 899.5517460519986,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 24,
+          "Grep": 9,
+          "Edit": 2,
+          "Glob": 2,
+          "Write": 9
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 214
+      }
+    },
+    "control": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    }
+  },
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "b7c2dd08d551bc15b1a3f1af5beab7dbf555521a2e7047fbd2b2ef7a18b6679a",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 466661,
+      "duration_api_ms": 467525,
+      "ttft_ms": 2655,
+      "ttft_stream_ms": 2655,
+      "time_to_request_ms": 55,
+      "num_turns": 28,
+      "result": "The rule block is clean and the fix is in place.\n\n## Summary\n\nThe issue was that `Symbol('m', even=True).is_finite` (and the integer/rational cases) returned `None` instead of `True`. The old-assumptions inference engine in `sympy/core/assumptions.py` derives all `is_*` facts from the `_assume_rules` graph, where `even`/`odd \u2192 integer \u2192 rational \u2192 real`, but `finite` was never connected to this chain \u2014 so the engine could not conclude that an integer/rational symbol is finite. The fix changes the single rule `'rational -> real'` to `'rational -> real & finite'` (the standard split form already used by `'zero -> even & finite'`), which makes every node at or below `rational` (`integer`, `even`, `odd`, `prime`, `composite`, `rational`, `zero`) imply `finite`. I deliberately attached `finite` to `rational` rather than `real` or `complex`, because `real` currently means *extended real* (`oo`/`-oo` are `real` but infinite) and `complex` likewise admits `zoo`, so attaching `finite` there would make those singletons inconsistent; `rational` is the lowest node that is always finite, exactly as the issue's public hint recommends. I verified no source class declares an integer/rational-type assumption together with `infinite`, so the change introduces no construction-time inconsistencies, and documented the root cause, the change, and the rejected alternatives (including the unavoidable, internally-consistent side effect of `oo.is_rational`/`is_integer` becoming `False`) in `reports/baseline_notes.md`.",
+      "stop_reason": "end_turn",
+      "session_id": "11f3ca56-681f-4467-880e-20bbe7ad2cf4",
+      "total_cost_usd": 1.6252792500000004,
+      "usage": {
+        "input_tokens": 49,
+        "cache_creation_input_tokens": 54463,
+        "cache_read_input_tokens": 828607,
+        "output_tokens": 34775,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 54463,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 529,
+            "cache_read_input_tokens": 56759,
+            "cache_creation_input_tokens": 1079,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 1079
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 887,
+          "outputTokens": 15,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.000962,
+          "contextWindow": 200000,
+          "maxOutputTokens": 32000
+        },
+        "claude-opus-4-8": {
+          "inputTokens": 49,
+          "outputTokens": 34775,
+          "cacheReadInputTokens": 828607,
+          "cacheCreationInputTokens": 54463,
+          "webSearchRequests": 0,
+          "costUSD": 1.6243172500000003,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "f776bb6e-d160-4ee3-8f85-dfe3e0329937"
+    },
+    "fvk": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 898810,
+      "duration_api_ms": 897470,
+      "ttft_ms": 5635,
+      "ttft_stream_ms": 5629,
+      "time_to_request_ms": 38,
+      "num_turns": 20,
+      "result": "Everything is in place and verified. The V1 fix is intact (`'rational -> real & finite'`), all five required `fvk/` artifacts exist plus the non-negotiable formal core (`mini-assume.k`, `assume-spec.k`), and `reports/fvk_notes.md` is complete.\n\n## Summary\n\nThe FVK audit **confirms V1 unchanged**: the single edit `'rational -> real'` \u2192 `'rational -> real & finite'` in `sympy/core/assumptions.py`. I built a mini-K semantics of the assumptions forward-chaining closure (`mini-assume.k`) and five reachability claims (`assume-spec.k`), then discharged eight proof obligations: PO1\u2013PO3 prove `even`/`integer`/`rational` \u27f9 `finite` (the reported bug), PO4/PO6 prove `oo`/`-oo`/`zoo`/`nan` still close consistently, and PO7 falsifies the two tempting alternatives \u2014 attaching `finite` to `real` or to `complex` would force the infinite singletons to `finite=True` and raise `InconsistentAssumptions` (claim CLASH-DETECTED), so `rational` is the *forced* safe attachment point. Crucially, the methodology made me revisit the smell I had waved away in V1 (`oo.is_irrational` flipping `None \u2192 True`): a side-by-side derivation (PROOF \u00a74, FINDINGS F1) shows that value is *under-determined* by public intent but *entailed* by the unchanged glossary definition `irrational == real & !rational` together with the pre-existing, deliberately out-of-scope choice `oo.is_real=True`; the \"fix it\" alternative (`irrational == real & !rational & finite`) is rejected on positive grounds because it contradicts the documented definition (I6) and presupposes the very `real \u27f9 finite` change the issue forbids (I4). Remaining findings (F4 `floor` order-dependence, F5 irrational-symbol asymmetry) are pre-existing imprecisions surfaced\u2014not created\u2014by V1, with no intent support, so they are recorded for a separate upstream \"extended-real\" effort rather than patched here; no source change beyond V1 is justified, and no test files were modified.",
+      "stop_reason": "end_turn",
+      "session_id": "c32cd60d-923c-4a92-8d52-ea0a2cc21e1e",
+      "total_cost_usd": 3.3811607500000007,
+      "usage": {
+        "input_tokens": 35,
+        "cache_creation_input_tokens": 106895,
+        "cache_read_input_tokens": 2106334,
+        "output_tokens": 66389,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 106895,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 1652,
+            "cache_read_input_tokens": 164069,
+            "cache_creation_input_tokens": 664,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 664
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 35,
+          "outputTokens": 66389,
+          "cacheReadInputTokens": 2106334,
+          "cacheCreationInputTokens": 106895,
+          "webSearchRequests": 0,
+          "costUSD": 3.3811607500000007,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "b39bf66b-c87d-4347-93e2-a75334b661eb"
+    },
+    "control": null
+  }
+}

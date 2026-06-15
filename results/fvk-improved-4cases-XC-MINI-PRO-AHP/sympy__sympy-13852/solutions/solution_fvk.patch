@@ -1,0 +1,46 @@
+diff --git a/sympy/functions/special/zeta_functions.py b/sympy/functions/special/zeta_functions.py
+index b8e2b66195..f7a4676506 100644
+--- a/sympy/functions/special/zeta_functions.py
++++ b/sympy/functions/special/zeta_functions.py
+@@ -253,10 +253,17 @@ class polylog(Function):
+     >>> from sympy import expand_func
+     >>> from sympy.abc import z
+     >>> expand_func(polylog(1, z))
+-    -log(z*exp_polar(-I*pi) + 1)
++    -log(-z + 1)
+     >>> expand_func(polylog(0, z))
+     z/(-z + 1)
+ 
++    The dilogarithm at certain rational arguments has a known closed form,
++    which is also obtained with expand_func():
++
++    >>> from sympy import Rational
++    >>> expand_func(polylog(2, Rational(1, 2)))
++    -log(2)**2/2 + pi**2/12
++
+     The derivative with respect to :math:`z` can be computed in closed form:
+ 
+     >>> polylog(s, z).diff(z)
+@@ -288,16 +295,20 @@ def _eval_rewrite_as_lerchphi(self, s, z):
+         return z*lerchphi(z, s, 1)
+ 
+     def _eval_expand_func(self, **hints):
+-        from sympy import log, expand_mul, Dummy, exp_polar, I
++        from sympy import log, expand_mul, Dummy
+         s, z = self.args
+         if s == 1:
+-            return -log(1 + exp_polar(-I*pi)*z)
++            return -log(1 - z)
+         if s.is_Integer and s <= 0:
+             u = Dummy('u')
+             start = u/(1 - u)
+             for _ in range(-s):
+                 start = u*start.diff(u)
+             return expand_mul(start).subs(u, z)
++        if s == 2 and z == S.Half:
++            # Li_2(1/2): the one dilogarithm value with an elementary closed
++            # form; every other polylog(s, 1/2) is left untouched below.
++            return -log(2)**2/2 + pi**2/12
+         return polylog(s, z)
+ 
+ ###############################################################################

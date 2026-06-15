@@ -1,0 +1,209 @@
+{
+  "run_id": "fvk-improved-4cases-XC-MINI-PRO-AHP",
+  "instance_id": "sympy__sympy-13852",
+  "baseline_session_id": "3a17a68f-e265-4d20-a7e5-874cb17839d4",
+  "core_hash_post_baseline": "0c851f6440453957b8da62fe337b0cab107d2c96e1cea78cd022460dd05ed633",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "3a17a68f-e265-4d20-a7e5-874cb17839d4",
+      "attempts": 1,
+      "started_at": "2026-06-15T06:01:33.963722+00:00",
+      "ended_at": "2026-06-15T06:07:24.382253+00:00",
+      "num_turns": 20,
+      "duration_seconds": 350.4178398019976,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 7,
+          "Grep": 5,
+          "Edit": 4,
+          "Glob": 2,
+          "Write": 1
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 82
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "95ff9a8b-30d1-442c-9d32-45ffae5a09b1",
+      "attempts": 1,
+      "started_at": "2026-06-15T06:07:24.561393+00:00",
+      "ended_at": "2026-06-15T06:24:11.523833+00:00",
+      "num_turns": 30,
+      "duration_seconds": 1006.9617097020018,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 17,
+          "Grep": 7,
+          "Edit": 5,
+          "Glob": 5,
+          "Write": 14
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 214
+      }
+    },
+    "control": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    }
+  },
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "b7c2dd08d551bc15b1a3f1af5beab7dbf555521a2e7047fbd2b2ef7a18b6679a",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 349606,
+      "duration_api_ms": 350620,
+      "ttft_ms": 3859,
+      "ttft_stream_ms": 3808,
+      "time_to_request_ms": 55,
+      "num_turns": 20,
+      "result": "The fix is complete and coherent. \n\nI fixed two related issues in `polylog._eval_expand_func` in `repo/sympy/functions/special/zeta_functions.py`: (1) the `s == 1` expansion now returns the genuine analytic identity `-log(1 - z)` instead of `-log(1 + exp_polar(-I*pi)*z)`, dropping the meaningless polar/winding factor (which referred to winding about 1, where `log` is unbranched) that had broken derivative consistency \u2014 and I removed the now-unused `exp_polar`/`I` imports; (2) I added the well-known dilogarithm special value so that `expand_func(polylog(2, Rational(1,2)))` evaluates to `-log(2)**2/2 + pi**2/12`. I also updated the class docstring's `polylog(1, z)` example to `-log(-z + 1)` and added an example for the new `Li\u2082(1/2)` evaluation, and confirmed no other code paths (notably `lerchphi`, whose examples/tests use symbolic `s`) depend on the old polar form. Root cause, per-file rationale, and rejected alternatives are documented in `reports/baseline_notes.md`.",
+      "stop_reason": "end_turn",
+      "session_id": "3a17a68f-e265-4d20-a7e5-874cb17839d4",
+      "total_cost_usd": 1.1996562499999999,
+      "usage": {
+        "input_tokens": 33,
+        "cache_creation_input_tokens": 47033,
+        "cache_read_input_tokens": 519296,
+        "output_tokens": 25797,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 47033,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 399,
+            "cache_read_input_tokens": 49498,
+            "cache_creation_input_tokens": 910,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 910
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 887,
+          "outputTokens": 15,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.000962,
+          "contextWindow": 200000,
+          "maxOutputTokens": 32000
+        },
+        "claude-opus-4-8": {
+          "inputTokens": 33,
+          "outputTokens": 25797,
+          "cacheReadInputTokens": 519296,
+          "cacheCreationInputTokens": 47033,
+          "webSearchRequests": 0,
+          "costUSD": 1.19869425,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "f1ddabe2-b8bf-4682-958e-66345d2de768"
+    },
+    "fvk": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 1006178,
+      "duration_api_ms": 1005350,
+      "ttft_ms": 3651,
+      "ttft_stream_ms": 3650,
+      "time_to_request_ms": 25,
+      "num_turns": 30,
+      "result": "All artifacts are in place and the code is final. Here is my summary.\n\n**V1 stands, confirmed by the FVK audit, with one behavior-preserving refactor.** I formalized `polylog._eval_expand_func` as a finite case-dispatcher in `fvk/mini-sympy.k` + `fvk/polylog-expand-spec.k`, built the intent ledger from the public issue, docstring, and the `test_polylog_expansion` encoding pattern (`fvk/INTENT_SPEC.md`, `fvk/PUBLIC_EVIDENCE_LEDGER.md`), and ran the adequacy round-trip (`fvk/FORMAL_SPEC_ENGLISH.md` \u2192 `fvk/SPEC_AUDIT.md`: PASS) and compatibility audit (PASS). The proof's load-bearing obligation (PO-6 in `fvk/PROOF_OBLIGATIONS.md`/`fvk/PROOF.md`) shows V1's `-log(1 - z)` discharges the issue's derivative-consistency requirement (`d/dz = 1/(1-z) = polylog(0,z)/z`) while the old `-log(1 + exp_polar(-I*pi)*z)` provably cannot, since SymPy keeps `exp_polar(-I*pi)` opaque \u2014 so the exp_polar removal is correct and necessary, not cosmetic. I gave special scrutiny to the FVK warning against enshrining the \"stays-unevaluated\" symptom: I promoted the named alternative (auto-evaluate `polylog(2, 1/2)` in `eval`) to a tested hypothesis and rejected it on *positive* grounds (the public-test pattern groups specific-`(s,z)` reductions under `expand_func`, and the class routes all non-universal closed forms through `_eval_expand_func`), not by treating the symptom as a spec (Finding F4 / SPEC_AUDIT D1). The only code edit this pass produced is flattening the nested `if z == S.Half: / if s == 2:` into a single `if s == 2 and z == S.Half:` guard in `repo/sympy/functions/special/zeta_functions.py` \u2014 identical truth table (PO-7), matching the flat style of the neighboring guards \u2014 so V1's behavior (`expand_func(polylog(1, z)) = -log(1 - z)` and `expand_func(polylog(2, 1/2)) = -log(2)**2/2 + pi**2/12`) is unchanged and fully justified by the FVK artifacts.",
+      "stop_reason": "end_turn",
+      "session_id": "95ff9a8b-30d1-442c-9d32-45ffae5a09b1",
+      "total_cost_usd": 4.542529499999999,
+      "usage": {
+        "input_tokens": 49,
+        "cache_creation_input_tokens": 127138,
+        "cache_read_input_tokens": 3401294,
+        "output_tokens": 81881,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 127138,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 1442,
+            "cache_read_input_tokens": 176435,
+            "cache_creation_input_tokens": 1111,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 1111
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 49,
+          "outputTokens": 81881,
+          "cacheReadInputTokens": 3401294,
+          "cacheCreationInputTokens": 127138,
+          "webSearchRequests": 0,
+          "costUSD": 4.542529499999999,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "44371bba-d90c-4e1f-ab24-0117bc7ee130"
+    },
+    "control": null
+  }
+}
