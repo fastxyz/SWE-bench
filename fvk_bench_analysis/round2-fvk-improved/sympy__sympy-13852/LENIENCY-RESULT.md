@@ -83,3 +83,35 @@ All three landed in the operative command files (`commands/formalize.md`, `comma
 **P2 — A branch/sign fixed by a documented convention is derivable (sharpen leniency).** A complex or branch-sensitive value is **not automatically "underivable."** When a library documents a principal-branch convention, the sign/branch of a standard special value **follows from that convention** — derive it (cite the convention) and commit. *"I can't confirm the sign against the numerics without executing"* is the execution double-check the leniency rule already says is **not** grounds to withhold. Reserve deferral for when the convention itself is genuinely undocumented/ambiguous in the code.
 
 **P3 — Discharge a family *uniformly*, on the required path (chain R3-B + R3-C + leniency).** When discharging a family/table obligation, **every** derived member must be placed on the **same** path the contract/test form requires (P1) **and** committed (leniency). You may not commit the easy members and scatter or defer the hard ones onto a different path or an open Finding. A family discharged on a path the contract doesn't exercise, or split across `eval` and an opt-in method, is **not** discharged — it is a Finding. This is the single clause that makes the three rules jointly binding.
+
+---
+
+## Re-run result (pin `fef0123`) — P1 fixed placement; one blocker left
+
+Run `sympy13852-fef0123-XC-MINI-PRO-AHP`, `--arms baseline,fvk`. **baseline 0/1, fvk 0/1, +0 flips; PASS_TO_PASS 4/4** (no regression). FTP still `test_polylog_values`. The score is unchanged but the behavior moved decisively.
+
+**P1 worked — placement is fixed, and robustly.** The fvk patch now puts the value on the construction path, and adds a docstring example showing bare `polylog(2, Rational(1,2))` auto-evaluating:
+```python
+def eval(cls, s, z):
+    ...
+    elif z == 0:
+        return 0
+    elif s == 2 and z == S.Half:
+        return -log(2)**2/2 + pi**2/12        # ← eval, not _eval_expand_func
+```
+The agent explicitly records that any further member "must be placed on the construction path too — not in `_eval_expand_func`." The prior run's oscillation (value in the opt-in method) is gone. **Blocker 1 resolved, and robustly** (R3-B never held two runs running; now P1's semantic framing does).
+
+**Blocker 2 (the complex member `polylog(2,2)`) remains — and the re-run pins its true cause.** The agent again *named* `Li_2(2) = pi**2/4 − I*pi*log(2)` (correct value + sign, Finding F4) but did not commit it, on two grounds:
+1. **Recall-confidence:** *"named but not cleanly/safely derivable from memory without a references check; per 'never guess a value you cannot derive,' left as an open Finding rather than guessed."* It wrote the right value but won't commit a less-familiar complex constant it cannot verify (no execution, no references in the sandbox). P2 addressed *sign-from-convention*; the agent's hedge is broader — confidence in the whole recalled closed form.
+2. **Scope:** *"no positive intent evidence this issue wants them … adding them risks auto-evaluating points a hidden test may expect to stay symbolic."*
+
+**Decisive context — the hidden test exceeds the public issue.** The issue text ("Add evaluation for polylog") exhibits **only** `Li_2(1/2)` (plus a separate `exp_polar` complaint); it never mentions `Li_2(2)`, the golden-ratio points, or "the full table." But `test_polylog_values` asserts `polylog(2, 2)` on its **first** line. So the agent's scope-conservatism is a **defensible reading of the public intent** — the only bridge to `Li_2(2)` is the family-completeness inference ("title names a capability + one member shown ⟹ implement the standard dilog table"), which fired (it enumerated the family) but lost to the conservative read.
+
+**Net:** the flip is now **one line away** (`elif z == 2: return pi**2/4 - I*pi*log(2)` in `eval`), the agent *has the value*, and the sole remaining blocker is the **decision to commit a domain-inferred complex constant the public issue never exhibits**. This is the cleanest characterization across all rounds — it is **not** localization, **not** placement (P1 fixed), **not** enumeration/awareness (family rule fired), **not** even sign-derivation (P2). It is the **public-intent-vs-hidden-test gap**: the test demands completeness the issue text does not license, against a reasonable scope-conservative + recall-confidence instinct.
+
+## Options for a further round (with a generality caveat)
+
+- **P4 — derive a hard member from the unit's own identities; don't decline it as "unrecallable."** When a family member isn't confidently recalled, derive it from the function's defining functional equations (for the dilogarithm: inversion / reflection / Landen — `Li_2(2)` follows from `Li_2(1/2)` via inversion plus the principal branch `log(-2) = log 2 + iπ`). Deriving *is* the kit's job; "I can't recall it confidently" is not "it is underivable."
+- **P5 — never reason from a hypothetical hidden test, in either direction.** "A hidden test might want this symbolic" is the same forbidden reliance as "a hidden test might want this value." Decide inclusion/placement from public intent + the domain definition only; a speculative hidden-test preference may neither compel nor withhold a change.
+- **Caveat (generality > this flip).** Both push toward more aggressive evaluation. The agent's caution here is *not* unreasonable given the issue text, so a push strong enough to flip sympy-13852 risks **over-evaluation regressions** in other instances. Validate any such change against the full batch / control set, not just this case — the kit must stay correct across instances, not overfit to one. sympy-13852 may simply be a case where the **hidden test over-specifies relative to the public issue**, making it an intentionally hard (or unfair) materials target.
+
