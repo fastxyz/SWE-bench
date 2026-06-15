@@ -1,0 +1,28 @@
+diff --git a/django/core/cache/backends/db.py b/django/core/cache/backends/db.py
+index 33c79c5a14..d6de98b505 100644
+--- a/django/core/cache/backends/db.py
++++ b/django/core/cache/backends/db.py
+@@ -264,12 +264,17 @@ class DatabaseCache(BaseDatabaseCache):
+             num = cursor.fetchone()[0]
+             if num > self._max_entries:
+                 cull_num = num // self._cull_frequency
+-                cursor.execute(
+-                    connection.ops.cache_key_culling_sql() % table,
+-                    [cull_num])
+-                cursor.execute("DELETE FROM %s "
+-                               "WHERE cache_key < %%s" % table,
+-                               [cursor.fetchone()[0]])
++                if cull_num == num:
++                    cursor.execute('DELETE FROM %s' % table)
++                else:
++                    cursor.execute(
++                        connection.ops.cache_key_culling_sql() % table,
++                        [cull_num])
++                    cull_key = cursor.fetchone()
++                    if cull_key is not None:
++                        cursor.execute("DELETE FROM %s "
++                                       "WHERE cache_key < %%s" % table,
++                                       [cull_key[0]])
+ 
+     def clear(self):
+         db = router.db_for_write(self.cache_model_class)

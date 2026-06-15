@@ -1,0 +1,35 @@
+diff --git a/django/db/models/base.py b/django/db/models/base.py
+index 6c9e9d3707..e65262a4d2 100644
+--- a/django/db/models/base.py
++++ b/django/db/models/base.py
+@@ -1735,7 +1735,8 @@ class Model(metaclass=ModelBase):
+         for field in related_fields:
+             _cls = cls
+             fld = None
+-            for part in field.split(LOOKUP_SEP):
++            parts = field.split(LOOKUP_SEP)
++            for index, part in enumerate(parts):
+                 try:
+                     # pk is an alias that won't be found by opts.get_field.
+                     if part == 'pk':
+@@ -1747,7 +1748,19 @@ class Model(metaclass=ModelBase):
+                     else:
+                         _cls = None
+                 except (FieldDoesNotExist, AttributeError):
+-                    if fld is None or fld.get_transform(part) is None:
++                    if fld is None:
++                        valid = False
++                    else:
++                        get_transform = getattr(fld, 'get_transform', None)
++                        get_lookup = getattr(fld, 'get_lookup', None)
++                        valid = (
++                            (get_transform and get_transform(part) is not None) or
++                            (
++                                index == len(parts) - 1 and
++                                get_lookup and get_lookup(part) is not None
++                            )
++                        )
++                    if not valid:
+                         errors.append(
+                             checks.Error(
+                                 "'ordering' refers to the nonexistent field, "
