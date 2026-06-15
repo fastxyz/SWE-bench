@@ -170,6 +170,105 @@ def test_run_official_eval_nonzero_exit_not_raised(tmp_path, monkeypatch):
     assert rc == 3
 
 
+def test_run_official_eval_retries_missing_nonempty_reports_locally(
+    tmp_path, monkeypatch
+):
+    results_dir = tmp_path / "results"
+    repo_root = tmp_path / "repo_root"
+    monkeypatch.setattr(evaluate.config, "REPO_ROOT", repo_root)
+    calls: list[dict] = []
+
+    def fake_popen(argv, cwd=None, stdout=None, stderr=None, **kwargs):
+        calls.append({"argv": list(argv), "cwd": cwd})
+        if argv[argv.index("--namespace") + 1] == "none":
+            retried = (
+                repo_root
+                / "logs"
+                / "run_evaluation"
+                / f"{RID}.baseline"
+                / f"{RID}__baseline"
+                / "demo__demo-2"
+            )
+            retried.mkdir(parents=True)
+            (retried / "report.json").write_text(
+                json.dumps(
+                    _report_payload("demo__demo-2", resolved=True, ftp=(1, 0), ptp=(1, 0))
+                ),
+                encoding="utf-8",
+            )
+            return _FakeProc(0)
+        return _FakeProc(7)
+
+    monkeypatch.setattr(evaluate.subprocess, "Popen", fake_popen)
+    eval_dir = results_dir / RID / "eval"
+    eval_dir.mkdir(parents=True)
+    (eval_dir / "predictions_baseline.jsonl").write_text(
+        "\n".join(
+            [
+                json.dumps(
+                    {
+                        "instance_id": "demo__demo-1",
+                        "model_name_or_path": f"{RID}__baseline",
+                        "model_patch": "diff --git a/a b/a\n+fix\n",
+                    }
+                ),
+                json.dumps(
+                    {
+                        "instance_id": "demo__demo-2",
+                        "model_name_or_path": f"{RID}__baseline",
+                        "model_patch": "diff --git a/b b/b\n+fix\n",
+                    }
+                ),
+                json.dumps(
+                    {
+                        "instance_id": "demo__demo-3",
+                        "model_name_or_path": f"{RID}__baseline",
+                        "model_patch": "",
+                    }
+                ),
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    completed = (
+        repo_root
+        / "logs"
+        / "run_evaluation"
+        / f"{RID}.baseline"
+        / f"{RID}__baseline"
+        / "demo__demo-1"
+    )
+    completed.mkdir(parents=True)
+    (completed / "report.json").write_text(
+        json.dumps(_report_payload("demo__demo-1", resolved=True, ftp=(1, 0), ptp=(1, 0))),
+        encoding="utf-8",
+    )
+
+    rc = evaluate.run_official_eval(
+        RID,
+        "baseline",
+        ["demo__demo-1", "demo__demo-2", "demo__demo-3"],
+        results_dir=results_dir,
+    )
+
+    assert rc == 0
+    assert len(calls) == 2
+    first_argv = calls[0]["argv"]
+    retry_argv = calls[1]["argv"]
+    assert first_argv[first_argv.index("--namespace") + 1] == "swebench"
+    assert retry_argv[retry_argv.index("--namespace") + 1] == "none"
+    assert retry_argv[retry_argv.index("--instance_ids") + 1:] == [
+        "demo__demo-2",
+        "--max_workers",
+        "4",
+        "--namespace",
+        "none",
+        "--report_dir",
+        str(eval_dir.resolve()),
+    ]
+
+
 # ---------------------------------------------------------------------------
 # 3. harvest_eval: copies report.json per instance, parses tests_status counts,
 #    tolerates missing reports
@@ -280,3 +379,61 @@ def test_gold_eval(tmp_path, capture_popen):
     assert argv[argv.index("--max_workers") + 1] == "3"
     assert argv[argv.index("--instance_ids") + 1] == "demo__demo-1"
     assert (results_dir / RID / "eval" / "harness_goldcheck.log").is_file()
+
+
+def test_gold_eval_retries_missing_reports_with_local_images(
+    tmp_path, monkeypatch
+):
+    results_dir = tmp_path / "results"
+    repo_root = tmp_path / "repo_root"
+    monkeypatch.setattr(evaluate.config, "REPO_ROOT", repo_root)
+    calls: list[dict] = []
+
+    def fake_popen(argv, cwd=None, stdout=None, stderr=None, **kwargs):
+        calls.append({"argv": list(argv), "cwd": cwd})
+        if argv[argv.index("--namespace") + 1] == "none":
+            retried = (
+                repo_root
+                / "logs"
+                / "run_evaluation"
+                / f"{RID}.goldcheck"
+                / "gold"
+                / "demo__demo-2"
+            )
+            retried.mkdir(parents=True)
+            (retried / "report.json").write_text(
+                json.dumps(
+                    _report_payload("demo__demo-2", resolved=True, ftp=(1, 0), ptp=(1, 0))
+                ),
+                encoding="utf-8",
+            )
+        return _FakeProc(0)
+
+    monkeypatch.setattr(evaluate.subprocess, "Popen", fake_popen)
+    gold_dir = repo_root / "logs" / "run_evaluation" / f"{RID}.goldcheck" / "gold"
+    d1 = gold_dir / "demo__demo-1"
+    d1.mkdir(parents=True)
+    (d1 / "report.json").write_text(
+        json.dumps(_report_payload("demo__demo-1", resolved=True, ftp=(1, 0), ptp=(1, 0))),
+        encoding="utf-8",
+    )
+
+    res = evaluate.gold_eval(
+        RID,
+        ["demo__demo-1", "demo__demo-2"],
+        max_workers=2,
+        results_dir=results_dir,
+        repo_root=repo_root,
+    )
+
+    assert res == {"demo__demo-1": True, "demo__demo-2": True}
+    assert len(calls) == 2
+    retry_argv = calls[1]["argv"]
+    assert retry_argv[retry_argv.index("--namespace") + 1] == "none"
+    assert retry_argv[retry_argv.index("--instance_ids") + 1:] == [
+        "demo__demo-2",
+        "--max_workers",
+        "2",
+        "--namespace",
+        "none",
+    ]

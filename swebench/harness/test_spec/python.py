@@ -27,6 +27,42 @@ REPLACE_REQ_PACKAGES = [
     ("types-pkg_resources", "types-setuptools")
 ]
 
+ASTROPY_LEGACY_WARNING_SHIM = """python - <<'PY'
+from pathlib import Path
+
+import _pytest.python as pytest_python
+import setuptools._distutils.version as distutils_version
+
+version_path = Path(distutils_version.__file__)
+version_text = version_path.read_text()
+version_warning = '''        warnings.warn(
+            "distutils Version classes are deprecated. "
+            "Use packaging.version instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+'''
+if version_warning in version_text:
+    version_path.write_text(
+        version_text.replace(
+            version_warning,
+            "        # Suppressed for legacy SWE-bench Astropy evaluations.\\n",
+        )
+    )
+
+pytest_path = Path(pytest_python.__file__)
+pytest_text = pytest_path.read_text()
+pytest_text_patched = pytest_text.replace(
+    "emit_nose_setup_warning = True",
+    "emit_nose_setup_warning = False",
+).replace(
+    "emit_nose_teardown_warning = True",
+    "emit_nose_teardown_warning = False",
+)
+if pytest_text_patched != pytest_text:
+    pytest_path.write_text(pytest_text_patched)
+PY"""
+
 
 @cache
 def get_environment_yml_by_commit(repo: str, commit: str, env_name: str) -> str:
@@ -432,6 +468,15 @@ def make_eval_script_list_py(
             *get_test_directives(instance),
         ]
     )
+    if instance["repo"] == "astropy/astropy":
+        test_command = test_command.replace(
+            "pytest ",
+            "pytest "
+            "-p no:warnings "
+            "-o filterwarnings=ignore:Support.*nose.*deprecated:Warning "
+            "-o filterwarnings=ignore:distutils.*Version.*deprecated:DeprecationWarning ",
+            1,
+        )
     eval_commands = [
         "source /opt/miniconda3/bin/activate",
         f"conda activate {env_name}",
@@ -451,6 +496,8 @@ def make_eval_script_list_py(
     ]
     if "install" in specs:
         eval_commands.append(specs["install"])
+    if instance["repo"] == "astropy/astropy":
+        eval_commands.append(ASTROPY_LEGACY_WARNING_SHIM)
     eval_commands += reset_commands
     eval_commands += [
         apply_test_patch_command,

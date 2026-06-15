@@ -132,6 +132,57 @@ def _relocate_aggregate(
         shutil.move(str(stray), str(eval_dir / stray.name))
 
 
+def _relocate_fallback_aggregate(
+    model_name: str, harness_run_id: str, eval_dir: Path, repo_root: Path
+) -> None:
+    """Keep a retry aggregate without overwriting the primary aggregate."""
+    stray = Path(repo_root) / f"{model_name}.{harness_run_id}.json"
+    if stray.is_file():
+        shutil.move(
+            str(stray),
+            str(eval_dir / f"{model_name}.{harness_run_id}.local-fallback.json"),
+        )
+
+
+def _nonempty_prediction_ids(predictions_path: Path, instance_ids: list[str]) -> set[str]:
+    """Return ids whose prediction patch should produce a harness report."""
+    expected = set(instance_ids)
+    try:
+        lines = Path(predictions_path).read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return expected
+    nonempty: set[str] = set()
+    for line in lines:
+        if not line.strip():
+            continue
+        try:
+            row = json.loads(line)
+        except ValueError:
+            return expected
+        iid = row.get("instance_id")
+        if iid in expected and row.get("model_patch") not in ("", None):
+            nonempty.add(iid)
+    return nonempty
+
+
+def _missing_report_ids(
+    repo_root: Path,
+    harness_run_id: str,
+    model_name: str,
+    instance_ids: list[str],
+    *,
+    expected_ids: set[str] | None = None,
+) -> list[str]:
+    """Return expected instance ids that lack per-instance harness reports."""
+    model_dir = Path(repo_root) / "logs" / "run_evaluation" / harness_run_id / model_name
+    expected_ids = expected_ids if expected_ids is not None else set(instance_ids)
+    return [
+        iid
+        for iid in instance_ids
+        if iid in expected_ids and not (model_dir / iid / "report.json").is_file()
+    ]
+
+
 def _test_output_contains_pass(report_path: Path, test_id: str) -> bool:
     """Return True when the adjacent harness test output shows ``test_id`` passed."""
     test_output = Path(report_path).with_name("test_output.txt")
@@ -215,10 +266,11 @@ def run_official_eval(
     eval_dir = (Path(results_dir) / run_id / "eval").resolve()
     eval_dir.mkdir(parents=True, exist_ok=True)
     harness_run_id = f"{run_id}.{arm}"
+    predictions_path = eval_dir / f"predictions_{arm}.jsonl"
     argv = [
         sys.executable, "-m", "swebench.harness.run_evaluation",
         "--dataset_name", config.DATASET_NAME,
-        "--predictions_path", str(eval_dir / f"predictions_{arm}.jsonl"),
+        "--predictions_path", str(predictions_path),
         "--run_id", harness_run_id,
         "--instance_ids", *instance_ids,
         "--max_workers", str(max_workers),
@@ -229,6 +281,47 @@ def run_official_eval(
         argv += ["--timeout", str(timeout)]
     rc = _launch_harness(argv, eval_dir / f"harness_{arm}.log", config.REPO_ROOT)
     _relocate_aggregate(f"{run_id}__{arm}", harness_run_id, eval_dir, config.REPO_ROOT)
+
+    if namespace is not None and predictions_path.is_file():
+        expected_ids = _nonempty_prediction_ids(predictions_path, instance_ids)
+        missing = _missing_report_ids(
+            config.REPO_ROOT,
+            harness_run_id,
+            f"{run_id}__{arm}",
+            instance_ids,
+            expected_ids=expected_ids,
+        )
+        if missing:
+            retry_argv = [
+                sys.executable, "-m", "swebench.harness.run_evaluation",
+                "--dataset_name", config.DATASET_NAME,
+                "--predictions_path", str(predictions_path),
+                "--run_id", harness_run_id,
+                "--instance_ids", *missing,
+                "--max_workers", str(max_workers),
+                "--namespace", "none",
+                "--report_dir", str(eval_dir),
+            ]
+            if timeout is not None:
+                retry_argv += ["--timeout", str(timeout)]
+            retry_rc = _launch_harness(
+                retry_argv, eval_dir / f"harness_{arm}.log", config.REPO_ROOT
+            )
+            _relocate_fallback_aggregate(
+                f"{run_id}__{arm}", harness_run_id, eval_dir, config.REPO_ROOT
+            )
+            still_missing = _missing_report_ids(
+                config.REPO_ROOT,
+                harness_run_id,
+                f"{run_id}__{arm}",
+                instance_ids,
+                expected_ids=expected_ids,
+            )
+            if retry_rc != 0:
+                return retry_rc
+            if still_missing:
+                return 2
+            return 0
     return rc
 
 
@@ -379,19 +472,28 @@ def gold_eval(
     eval_dir = (Path(results_dir) / run_id / "eval").resolve()
     eval_dir.mkdir(parents=True, exist_ok=True)
     harness_run_id = f"{run_id}.goldcheck"
-    argv = [
-        sys.executable, "-m", "swebench.harness.run_evaluation",
-        "--dataset_name", config.DATASET_NAME,
-        "--predictions_path", "gold",
-        "--run_id", harness_run_id,
-        "--instance_ids", *instance_ids,
-        "--max_workers", str(max_workers),
-        "--namespace", "swebench",
-    ]
-    _launch_harness(argv, eval_dir / "harness_goldcheck.log", repo_root)
+
+    def run_gold(namespace: str, ids: list[str]) -> None:
+        argv = [
+            sys.executable, "-m", "swebench.harness.run_evaluation",
+            "--dataset_name", config.DATASET_NAME,
+            "--predictions_path", "gold",
+            "--run_id", harness_run_id,
+            "--instance_ids", *ids,
+            "--max_workers", str(max_workers),
+            "--namespace", namespace,
+        ]
+        _launch_harness(argv, eval_dir / "harness_goldcheck.log", repo_root)
+
+    run_gold("swebench", instance_ids)
     _relocate_aggregate("gold", harness_run_id, eval_dir, repo_root)
 
     log_root = repo_root / "logs" / "run_evaluation" / harness_run_id
+    missing = _missing_report_ids(repo_root, harness_run_id, "gold", instance_ids)
+    if missing:
+        run_gold("none", missing)
+        _relocate_fallback_aggregate("gold", harness_run_id, eval_dir, repo_root)
+
     results: dict = {}
     for iid in instance_ids:
         report_path = next(iter(sorted(log_root.glob(f"*/{iid}/report.json"))), None)
