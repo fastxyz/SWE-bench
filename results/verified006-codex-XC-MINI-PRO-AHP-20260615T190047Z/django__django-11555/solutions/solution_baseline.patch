@@ -1,0 +1,56 @@
+diff --git a/django/db/models/sql/compiler.py b/django/db/models/sql/compiler.py
+index eaccc96d7d..03c71dc889 100644
+--- a/django/db/models/sql/compiler.py
++++ b/django/db/models/sql/compiler.py
+@@ -5,7 +5,7 @@ from itertools import chain
+ 
+ from django.core.exceptions import EmptyResultSet, FieldError
+ from django.db.models.constants import LOOKUP_SEP
+-from django.db.models.expressions import OrderBy, Random, RawSQL, Ref, Value
++from django.db.models.expressions import F, OrderBy, Random, RawSQL, Ref, Value
+ from django.db.models.functions import Cast
+ from django.db.models.query_utils import QueryWrapper, select_related_descend
+ from django.db.models.sql.constants import (
+@@ -704,6 +704,18 @@ class SQLCompiler:
+         not be) and column name for ordering by the given 'name' parameter.
+         The 'name' is of the form 'field1__field2__...__fieldN'.
+         """
++        if hasattr(name, 'resolve_expression'):
++            name = self._resolve_ordering_expression(name, opts, alias)
++            if isinstance(name, Value):
++                # output_field must be resolved for constants.
++                name = Cast(name, name.output_field)
++            if not isinstance(name, OrderBy):
++                name = name.asc()
++            if default_order == 'DESC':
++                name = name.copy()
++                name.reverse_ordering()
++            return [(name, False)]
++
+         name, order = get_order_dir(name, default_order)
+         descending = order == 'DESC'
+         pieces = name.split(LOOKUP_SEP)
+@@ -728,6 +740,23 @@ class SQLCompiler:
+         targets, alias, _ = self.query.trim_joins(targets, joins, path)
+         return [(OrderBy(transform_function(t, alias), descending=descending), False) for t in targets]
+ 
++    def _resolve_ordering_expression(self, expr, opts, alias):
++        if expr.__class__ is F:
++            _, targets, alias, joins, path, _, transform_function = self._setup_joins(
++                expr.name.split(LOOKUP_SEP), opts, alias)
++            targets, alias, _ = self.query.trim_joins(targets, joins, path)
++            if len(targets) > 1:
++                raise FieldError("Referencing multicolumn fields with F() objects "
++                                 "isn't supported")
++            return transform_function(targets[0], alias)
++        clone = expr.copy()
++        clone.set_source_expressions([
++            self._resolve_ordering_expression(source, opts, alias)
++            if source is not None else None
++            for source in clone.get_source_expressions()
++        ])
++        return clone
++
+     def _setup_joins(self, pieces, opts, alias):
+         """
+         Helper method for get_order_by() and get_distinct().

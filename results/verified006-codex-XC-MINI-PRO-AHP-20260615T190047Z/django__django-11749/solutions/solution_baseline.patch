@@ -1,0 +1,55 @@
+diff --git a/django/core/management/__init__.py b/django/core/management/__init__.py
+index 5f2e64761e..c8ac2e46eb 100644
+--- a/django/core/management/__init__.py
++++ b/django/core/management/__init__.py
+@@ -129,13 +129,47 @@ def call_command(command_name, *args, **options):
+             else:
+                 yield opt
+ 
++    def get_mutually_exclusive_required_options(parser):
++        for group in parser._mutually_exclusive_groups:
++            if group.required:
++                for opt in group._group_actions:
++                    if opt.dest in arg_options:
++                        yield opt
++        for opt in parser._actions:
++            if isinstance(opt, _SubParsersAction):
++                for sub_opt in opt.choices.values():
++                    yield from get_mutually_exclusive_required_options(sub_opt)
++
++    def get_option_args(opt):
++        if not opt.option_strings:
++            return []
++        value = arg_options[opt.dest]
++        option_string = min(opt.option_strings)
++        if opt.nargs == 0:
++            if value == getattr(opt, 'const', True):
++                return [option_string]
++            return []
++        if opt.nargs in ('*', '+') or isinstance(opt.nargs, int):
++            if isinstance(value, (list, tuple)):
++                return [option_string] + [str(v) for v in value]
++        return ['{}={}'.format(option_string, value)]
++
+     parser_actions = list(get_actions(parser))
+     # Any required arguments which are passed in via **options must be passed
+     # to parse_args().
+-    parse_args += [
+-        '{}={}'.format(min(opt.option_strings), arg_options[opt.dest])
+-        for opt in parser_actions if opt.required and opt.dest in options
++    required_options = [
++        opt for opt in parser_actions if opt.required and opt.dest in arg_options
+     ]
++    # Required mutually exclusive groups aren't marked as required actions,
++    # but argparse must see one of the group's options to avoid rejecting
++    # kwargs that satisfy the group.
++    required_options.extend(get_mutually_exclusive_required_options(parser))
++    seen_options = set()
++    for opt in required_options:
++        if opt in seen_options:
++            continue
++        parse_args.extend(get_option_args(opt))
++        seen_options.add(opt)
+     defaults = parser.parse_args(args=parse_args)
+     defaults = dict(defaults._get_kwargs(), **arg_options)
+     # Raise an error if any unknown options were passed.
