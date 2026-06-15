@@ -1,0 +1,52 @@
+diff --git a/django/db/models/sql/query.py b/django/db/models/sql/query.py
+index d69c24419b..b4fda4c665 100644
+--- a/django/db/models/sql/query.py
++++ b/django/db/models/sql/query.py
+@@ -1666,6 +1666,7 @@ class Query(BaseExpression):
+             filter_expr = (filter_lhs, OuterRef(filter_rhs.name))
+         # Generate the inner query.
+         query = Query(self.model)
++        query._filtered_relations = self._filtered_relations.copy()
+         query.add_filter(filter_expr)
+         query.clear_ordering(True)
+         # Try to have as simple as possible subquery -> trim leading joins from
+@@ -2145,11 +2146,34 @@ class Query(BaseExpression):
+         if self.alias_map[lookup_tables[trimmed_paths + 1]].join_type != LOUTER:
+             select_fields = [r[0] for r in join_field.related_fields]
+             select_alias = lookup_tables[trimmed_paths + 1]
+-            self.unref_alias(lookup_tables[trimmed_paths])
+-            extra_restriction = join_field.get_extra_restriction(
+-                self.where_class, None, lookup_tables[trimmed_paths + 1])
+-            if extra_restriction:
+-                self.where.add(extra_restriction, AND)
++            trim_first_join = True
++            first_join = self.alias_map[select_alias]
++            if first_join.filtered_relation:
++                filtered_relation = first_join.filtered_relation
++                old_alias_refcount = self.alias_refcount.copy()
++                try:
++                    condition = self.build_filtered_relation_q(
++                        filtered_relation.condition,
++                        reuse=set(filtered_relation.path),
++                    )
++                finally:
++                    self.reset_refcounts(old_alias_refcount)
++                trimmed_aliases = set(lookup_tables[:trimmed_paths + 1])
++                condition_aliases = {
++                    col.alias for col in condition.get_group_by_cols()
++                    if hasattr(col, 'alias')
++                }
++                if condition:
++                    if not trimmed_aliases.intersection(condition_aliases):
++                        self.where.add(condition, AND)
++                    else:
++                        trim_first_join = False
++            if trim_first_join:
++                self.unref_alias(lookup_tables[trimmed_paths])
++                extra_restriction = join_field.get_extra_restriction(
++                    self.where_class, None, lookup_tables[trimmed_paths + 1])
++                if extra_restriction:
++                    self.where.add(extra_restriction, AND)
+         else:
+             # TODO: It might be possible to trim more joins from the start of the
+             # inner query if it happens to have a longer join chain containing the

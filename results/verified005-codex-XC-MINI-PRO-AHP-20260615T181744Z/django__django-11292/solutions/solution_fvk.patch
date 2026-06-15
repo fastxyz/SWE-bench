@@ -1,0 +1,75 @@
+diff --git a/django/core/management/base.py b/django/core/management/base.py
+index 0c3a981290..5bf81f379f 100644
+--- a/django/core/management/base.py
++++ b/django/core/management/base.py
+@@ -95,7 +95,7 @@ class DjangoHelpFormatter(HelpFormatter):
+     """
+     show_last = {
+         '--version', '--verbosity', '--traceback', '--settings', '--pythonpath',
+-        '--no-color', '--force-color',
++        '--no-color', '--force-color', '--skip-checks',
+     }
+ 
+     def _reordered_actions(self, actions):
+@@ -286,6 +286,11 @@ class BaseCommand:
+             '--force-color', action='store_true',
+             help='Force colorization of the command output.',
+         )
++        if self.requires_system_checks:
++            parser.add_argument(
++                '--skip-checks', action='store_true',
++                help='Skip system checks.',
++            )
+         self.add_arguments(parser)
+         return parser
+ 
+diff --git a/django/core/management/commands/runserver.py b/django/core/management/commands/runserver.py
+index f501e995e0..30ec95bbfc 100644
+--- a/django/core/management/commands/runserver.py
++++ b/django/core/management/commands/runserver.py
+@@ -50,6 +50,10 @@ class Command(BaseCommand):
+             '--noreload', action='store_false', dest='use_reloader',
+             help='Tells Django to NOT use the auto-reloader.',
+         )
++        parser.add_argument(
++            '--skip-checks', action='store_true',
++            help='Skip system checks.',
++        )
+ 
+     def execute(self, *args, **options):
+         if options['no_color']:
+@@ -113,8 +117,9 @@ class Command(BaseCommand):
+         shutdown_message = options.get('shutdown_message', '')
+         quit_command = 'CTRL-BREAK' if sys.platform == 'win32' else 'CONTROL-C'
+ 
+-        self.stdout.write("Performing system checks...\n\n")
+-        self.check(display_num_errors=True)
++        if not options.get('skip_checks'):
++            self.stdout.write("Performing system checks...\n\n")
++            self.check(display_num_errors=True)
+         # Need to check migrations here, so can't use the
+         # requires_migrations_check attribute.
+         self.check_migrations()
+diff --git a/django/core/management/commands/testserver.py b/django/core/management/commands/testserver.py
+index 03814e5ea3..fcf8c8ac32 100644
+--- a/django/core/management/commands/testserver.py
++++ b/django/core/management/commands/testserver.py
+@@ -25,6 +25,10 @@ class Command(BaseCommand):
+             '--ipv6', '-6', action='store_true', dest='use_ipv6',
+             help='Tells Django to use an IPv6 address.',
+         )
++        parser.add_argument(
++            '--skip-checks', action='store_true',
++            help='Skip system checks.',
++        )
+ 
+     def handle(self, *fixture_labels, **options):
+         verbosity = options['verbosity']
+@@ -50,5 +54,6 @@ class Command(BaseCommand):
+             shutdown_message=shutdown_message,
+             use_reloader=False,
+             use_ipv6=options['use_ipv6'],
+-            use_threading=use_threading
++            use_threading=use_threading,
++            skip_checks=options.get('skip_checks', False),
+         )

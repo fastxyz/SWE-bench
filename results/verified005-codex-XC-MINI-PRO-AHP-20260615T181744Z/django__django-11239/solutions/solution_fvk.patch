@@ -1,0 +1,20 @@
+diff --git a/django/db/backends/postgresql/client.py b/django/db/backends/postgresql/client.py
+index cf4df76882..13850b1295 100644
+--- a/django/db/backends/postgresql/client.py
++++ b/django/db/backends/postgresql/client.py
+@@ -30,6 +30,15 @@ class DatabaseClient(BaseDatabaseClient):
+         subprocess_env = os.environ.copy()
+         if passwd:
+             subprocess_env['PGPASSWORD'] = str(passwd)
++        ssl_env = {
++            'sslmode': 'PGSSLMODE',
++            'sslrootcert': 'PGSSLROOTCERT',
++            'sslcert': 'PGSSLCERT',
++            'sslkey': 'PGSSLKEY',
++        }
++        for conn_param, env_name in ssl_env.items():
++            if conn_params.get(conn_param):
++                subprocess_env[env_name] = str(conn_params[conn_param])
+         try:
+             # Allow SIGINT to pass to psql to abort queries.
+             signal.signal(signal.SIGINT, signal.SIG_IGN)
