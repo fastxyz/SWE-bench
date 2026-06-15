@@ -1,0 +1,83 @@
+diff --git a/django/db/models/fields/json.py b/django/db/models/fields/json.py
+index fafc1beee8..5dbc35251e 100644
+--- a/django/db/models/fields/json.py
++++ b/django/db/models/fields/json.py
+@@ -378,6 +378,10 @@ class KeyTransformIsNull(lookups.IsNull):
+         return super().as_sql(compiler, connection)
+ 
+ 
++def _json_value_literal(value):
++    return json.dumps({'value': value}).replace("'", "''")
++
++
+ class KeyTransformExact(JSONExact):
+     def process_lhs(self, compiler, connection):
+         lhs, lhs_params = super().process_lhs(compiler, connection)
+@@ -399,7 +403,7 @@ class KeyTransformExact(JSONExact):
+                 function = 'JSON_QUERY' if isinstance(value, (list, dict)) else 'JSON_VALUE'
+                 func.append("%s('%s', '$.value')" % (
+                     function,
+-                    json.dumps({'value': value}),
++                    _json_value_literal(value),
+                 ))
+             rhs = rhs % tuple(func)
+             rhs_params = []
+@@ -423,6 +427,50 @@ class KeyTransformExact(JSONExact):
+         return super().as_sql(compiler, connection)
+ 
+ 
++class KeyTransformIn(lookups.In):
++    def split_parameter_list_as_sql(self, compiler, connection):
++        if connection.vendor != 'oracle':
++            return super().split_parameter_list_as_sql(compiler, connection)
++        max_in_list_size = connection.ops.max_in_list_size()
++        lhs, lhs_params = self.process_lhs(compiler, connection)
++        rhs, rhs_params = self.batch_process_rhs(compiler, connection)
++        if rhs_params:
++            return super().split_parameter_list_as_sql(compiler, connection)
++        in_clause_elements = ['(']
++        params = []
++        for offset in range(0, len(rhs), max_in_list_size):
++            if offset > 0:
++                in_clause_elements.append(' OR ')
++            in_clause_elements.append('%s IN (' % lhs)
++            params.extend(lhs_params)
++            in_clause_elements.append(', '.join(rhs[offset: offset + max_in_list_size]))
++            in_clause_elements.append(')')
++        in_clause_elements.append(')')
++        return ''.join(in_clause_elements), params
++
++    def resolve_expression_parameter(self, compiler, connection, sql, param):
++        sql, params = super().resolve_expression_parameter(
++            compiler, connection, sql, param,
++        )
++        if (
++            not hasattr(param, 'resolve_expression') and
++            not connection.features.has_native_json_field
++        ):
++            if connection.vendor == 'oracle':
++                value = json.loads(param)
++                function = 'JSON_QUERY' if isinstance(value, (list, dict)) else 'JSON_VALUE'
++                sql = "%s('%s', '$.value')" % (
++                    function,
++                    _json_value_literal(value),
++                )
++                params = []
++            elif connection.vendor == 'sqlite':
++                sql = "JSON_EXTRACT(%s, '$')" if param != 'null' else '%s'
++            elif connection.vendor == 'mysql':
++                sql = "JSON_EXTRACT(%s, '$')"
++        return sql, params
++
++
+ class KeyTransformIExact(CaseInsensitiveMixin, KeyTransformTextLookupMixin, lookups.IExact):
+     pass
+ 
+@@ -480,6 +528,7 @@ class KeyTransformGte(KeyTransformNumericLookupMixin, lookups.GreaterThanOrEqual
+ 
+ 
+ KeyTransform.register_lookup(KeyTransformExact)
++KeyTransform.register_lookup(KeyTransformIn)
+ KeyTransform.register_lookup(KeyTransformIExact)
+ KeyTransform.register_lookup(KeyTransformIsNull)
+ KeyTransform.register_lookup(KeyTransformIContains)
