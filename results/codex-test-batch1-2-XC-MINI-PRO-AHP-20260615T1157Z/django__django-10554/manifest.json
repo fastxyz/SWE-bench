@@ -1,0 +1,83 @@
+{
+  "run_id": "codex-test-batch1-2-XC-MINI-PRO-AHP-20260615T1157Z",
+  "instance_id": "django__django-10554",
+  "baseline_session_id": "019ecb26-fd28-7273-b12b-5b7757670872",
+  "core_hash_post_baseline": "82f39791dd691cc2ee677f23f637bab9eaf9fa89875942d6a3dae7bc877620b1",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ecb26-fd28-7273-b12b-5b7757670872",
+      "attempts": 1,
+      "started_at": "2026-06-15T11:59:50.353202+00:00",
+      "ended_at": "2026-06-15T12:05:10.798019+00:00",
+      "num_turns": null,
+      "duration_seconds": 320.4419271519946,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "exec_command": 51,
+          "apply_patch": 2
+        },
+        "violations": [],
+        "exec_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 187
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ecb26-fd28-7273-b12b-5b7757670872",
+      "attempts": 2,
+      "started_at": "2026-06-15T12:11:42.640444+00:00",
+      "ended_at": "2026-06-15T12:17:15.706831+00:00",
+      "num_turns": null,
+      "duration_seconds": 333.0623295680052,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "exec_command": 75,
+          "apply_patch": 4,
+          "update_plan": 5
+        },
+        "violations": [],
+        "exec_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 303
+      }
+    },
+    "control": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ecb26-fd28-7273-b12b-5b7757670872",
+      "attempts": 2,
+      "started_at": "2026-06-15T12:17:15.981927+00:00",
+      "ended_at": "2026-06-15T12:19:31.869824+00:00",
+      "num_turns": null,
+      "duration_seconds": 135.8842319789983,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "exec_command": 72,
+          "apply_patch": 4
+        },
+        "violations": [],
+        "exec_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 276
+      }
+    }
+  },
+  "agent": "codex",
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "b7c2dd08d551bc15b1a3f1af5beab7dbf555521a2e7047fbd2b2ef7a18b6679a",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": null,
+    "fvk": null,
+    "control": null
+  }
+}

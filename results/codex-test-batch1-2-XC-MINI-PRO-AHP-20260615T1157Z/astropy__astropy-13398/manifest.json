@@ -1,0 +1,106 @@
+{
+  "run_id": "codex-test-batch1-2-XC-MINI-PRO-AHP-20260615T1157Z",
+  "instance_id": "astropy__astropy-13398",
+  "baseline_session_id": "019ecb1f-ae90-71c0-86a0-a61a1a6e7b61",
+  "core_hash_post_baseline": "9597dd7f38a3bec328576dac45c2296794db3675486445193326aae649b479e4",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ecb1f-ae90-71c0-86a0-a61a1a6e7b61",
+      "attempts": 1,
+      "started_at": "2026-06-15T11:59:46.220410+00:00",
+      "ended_at": "2026-06-15T12:10:44.109144+00:00",
+      "num_turns": null,
+      "duration_seconds": 657.8855926920005,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "exec_command": 81,
+          "write_stdin": 9,
+          "update_plan": 4,
+          "apply_patch": 3
+        },
+        "violations": [],
+        "exec_warnings": [
+          "{\"cmd\":\".venv/bin/python -m pytest tests/fvk_bench/\",\"workdir\":\"/home/xc/Projects/fastxyz-SWE-bench\",\"yield_time_ms\":30000,\"max_output_tokens\":40000}",
+          "{\"cmd\":\".venv/bin/python -m pytest tests/fvk_bench/test_codex_runner.py -q\",\"workdir\":\"/home/xc/Projects/fastxyz-SWE-bench\",\"yield_time_ms\":30000,\"max_output_tokens\":30000}",
+          "{\"cmd\":\".venv/bin/python -m pytest tests/fvk_bench/test_codex_runner.py -q\",\"workdir\":\"/home/xc/Projects/fastxyz-SWE-bench\",\"yield_time_ms\":30000,\"max_output_tokens\":30000}",
+          "{\"cmd\":\".venv/bin/python -m pytest tests/fvk_bench/test_codex_runner.py -q\",\"workdir\":\"/home/xc/Projects/fastxyz-SWE-bench\",\"yield_time_ms\":30000,\"max_output_tokens\":30000}"
+        ],
+        "unparseable_lines": 0,
+        "lines": 413
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ecb1f-ae90-71c0-86a0-a61a1a6e7b61",
+      "attempts": 2,
+      "started_at": "2026-06-15T12:11:42.538380+00:00",
+      "ended_at": "2026-06-15T12:18:32.597718+00:00",
+      "num_turns": null,
+      "duration_seconds": 410.0507275760028,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "exec_command": 144,
+          "write_stdin": 12,
+          "update_plan": 7,
+          "apply_patch": 12
+        },
+        "violations": [],
+        "exec_warnings": [
+          "{\"cmd\":\".venv/bin/python -m pytest tests/fvk_bench/\",\"workdir\":\"/home/xc/Projects/fastxyz-SWE-bench\",\"yield_time_ms\":30000,\"max_output_tokens\":40000}",
+          "{\"cmd\":\".venv/bin/python -m pytest tests/fvk_bench/test_codex_runner.py -q\",\"workdir\":\"/home/xc/Projects/fastxyz-SWE-bench\",\"yield_time_ms\":30000,\"max_output_tokens\":30000}",
+          "{\"cmd\":\".venv/bin/python -m pytest tests/fvk_bench/test_codex_runner.py -q\",\"workdir\":\"/home/xc/Projects/fastxyz-SWE-bench\",\"yield_time_ms\":30000,\"max_output_tokens\":30000}",
+          "{\"cmd\":\".venv/bin/python -m pytest tests/fvk_bench/test_codex_runner.py -q\",\"workdir\":\"/home/xc/Projects/fastxyz-SWE-bench\",\"yield_time_ms\":30000,\"max_output_tokens\":30000}",
+          "{\"cmd\":\".venv/bin/python -m pytest tests/fvk_bench/test_doctor.py tests/fvk_bench/test_cli.py -q\",\"workdir\":\"/home/xc/Projects/fastxyz-SWE-bench\",\"yield_time_ms\":30000,\"max_output_tokens\":40000}",
+          "{\"cmd\":\".venv/bin/python -m pytest tests/fvk_bench/test_doctor.py tests/fvk_bench/test_cli.py -q\",\"workdir\":\"/home/xc/Projects/fastxyz-SWE-bench\",\"yield_time_ms\":30000,\"max_output_tokens\":40000}",
+          "{\"cmd\":\".venv/bin/python -m pytest tests/fvk_bench/\",\"workdir\":\"/home/xc/Projects/fastxyz-SWE-bench\",\"yield_time_ms\":30000,\"max_output_tokens\":50000}"
+        ],
+        "unparseable_lines": 0,
+        "lines": 731
+      }
+    },
+    "control": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ecb1f-ae90-71c0-86a0-a61a1a6e7b61",
+      "attempts": 2,
+      "started_at": "2026-06-15T12:18:32.691195+00:00",
+      "ended_at": "2026-06-15T12:21:39.197111+00:00",
+      "num_turns": null,
+      "duration_seconds": 186.50151242099673,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "exec_command": 103,
+          "write_stdin": 14,
+          "update_plan": 4,
+          "apply_patch": 4
+        },
+        "violations": [],
+        "exec_warnings": [
+          "{\"cmd\":\".venv/bin/python -m pytest tests/fvk_bench/\",\"workdir\":\"/home/xc/Projects/fastxyz-SWE-bench\",\"yield_time_ms\":30000,\"max_output_tokens\":40000}",
+          "{\"cmd\":\".venv/bin/python -m pytest tests/fvk_bench/test_codex_runner.py -q\",\"workdir\":\"/home/xc/Projects/fastxyz-SWE-bench\",\"yield_time_ms\":30000,\"max_output_tokens\":30000}",
+          "{\"cmd\":\".venv/bin/python -m pytest tests/fvk_bench/test_codex_runner.py -q\",\"workdir\":\"/home/xc/Projects/fastxyz-SWE-bench\",\"yield_time_ms\":30000,\"max_output_tokens\":30000}",
+          "{\"cmd\":\".venv/bin/python -m pytest tests/fvk_bench/test_codex_runner.py -q\",\"workdir\":\"/home/xc/Projects/fastxyz-SWE-bench\",\"yield_time_ms\":30000,\"max_output_tokens\":30000}"
+        ],
+        "unparseable_lines": 0,
+        "lines": 533
+      }
+    }
+  },
+  "agent": "codex",
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "b7c2dd08d551bc15b1a3f1af5beab7dbf555521a2e7047fbd2b2ef7a18b6679a",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": null,
+    "fvk": null,
+    "control": null
+  }
+}

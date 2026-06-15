@@ -1,0 +1,114 @@
+{
+  "run_id": "codex-test-batch1-2-XC-MINI-PRO-AHP-20260615T1157Z",
+  "instances": {
+    "astropy__astropy-13398": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecb1f-ae90-71c0-86a0-a61a1a6e7b61",
+        "num_turns": null,
+        "duration_seconds": 657.8855926920005,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "2/4",
+          "ptp": "62/68"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecb1f-ae90-71c0-86a0-a61a1a6e7b61",
+        "num_turns": null,
+        "duration_seconds": 410.0507275760028,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "2/4",
+          "ptp": "62/68"
+        }
+      },
+      "control": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecb1f-ae90-71c0-86a0-a61a1a6e7b61",
+        "num_turns": null,
+        "duration_seconds": 186.50151242099673,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "2/4",
+          "ptp": "62/68"
+        }
+      }
+    },
+    "django__django-10554": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecb26-fd28-7273-b12b-5b7757670872",
+        "num_turns": null,
+        "duration_seconds": 320.4419271519946,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/2",
+          "ptp": "23/23"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecb26-fd28-7273-b12b-5b7757670872",
+        "num_turns": null,
+        "duration_seconds": 333.0623295680052,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/2",
+          "ptp": "23/23"
+        }
+      },
+      "control": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecb26-fd28-7273-b12b-5b7757670872",
+        "num_turns": null,
+        "duration_seconds": 135.8842319789983,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/2",
+          "ptp": "23/23"
+        }
+      }
+    }
+  },
+  "aggregates": {
+    "arms": {
+      "baseline": {
+        "resolved": 0,
+        "evaluated": 2
+      },
+      "fvk": {
+        "resolved": 0,
+        "evaluated": 2
+      },
+      "control": {
+        "resolved": 0,
+        "evaluated": 2
+      }
+    },
+    "flips": {
+      "baseline_to_fvk": {
+        "up": [],
+        "down": []
+      },
+      "baseline_to_control": {
+        "up": [],
+        "down": []
+      }
+    },
+    "fvk_vs_control_delta": 0
+  }
+}
