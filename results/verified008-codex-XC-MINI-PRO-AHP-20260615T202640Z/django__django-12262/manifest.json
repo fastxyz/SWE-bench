@@ -1,0 +1,73 @@
+{
+  "run_id": "verified008-codex-XC-MINI-PRO-AHP-20260615T202640Z",
+  "instance_id": "django__django-12262",
+  "baseline_session_id": "019ecd07-d253-7571-8e76-d2d2dd122ebf",
+  "core_hash_post_baseline": "ec50ca5f9e816d1e5bc3096e74eeff2cb08dff0d7c4b191ea0393b39967425b8",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ecd07-d253-7571-8e76-d2d2dd122ebf",
+      "attempts": 1,
+      "started_at": "2026-06-15T20:45:02.297136+00:00",
+      "ended_at": "2026-06-15T20:47:40.408981+00:00",
+      "num_turns": null,
+      "duration_seconds": 158.10999521300255,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "exec_command": 26,
+          "apply_patch": 2
+        },
+        "violations": [],
+        "exec_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 114
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ecd07-d253-7571-8e76-d2d2dd122ebf",
+      "attempts": 1,
+      "started_at": "2026-06-15T20:47:40.858252+00:00",
+      "ended_at": "2026-06-15T20:55:48.415349+00:00",
+      "num_turns": null,
+      "duration_seconds": 487.55351014700136,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "exec_command": 64,
+          "apply_patch": 5,
+          "update_plan": 6
+        },
+        "violations": [],
+        "exec_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 286
+      }
+    },
+    "control": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    }
+  },
+  "agent": "codex",
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "b7c2dd08d551bc15b1a3f1af5beab7dbf555521a2e7047fbd2b2ef7a18b6679a",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": null,
+    "fvk": null,
+    "control": null
+  }
+}
