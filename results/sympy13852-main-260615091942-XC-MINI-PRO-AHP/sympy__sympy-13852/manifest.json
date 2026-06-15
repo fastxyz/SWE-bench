@@ -1,0 +1,209 @@
+{
+  "run_id": "sympy13852-main-260615091942-XC-MINI-PRO-AHP",
+  "instance_id": "sympy__sympy-13852",
+  "baseline_session_id": "7fb9e99b-3434-4731-ade5-ebf0e4983141",
+  "core_hash_post_baseline": "9612bc38c878718867d79cb0bc555a2b3fb3e63e56cd303bd4deedc37c78176f",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "7fb9e99b-3434-4731-ade5-ebf0e4983141",
+      "attempts": 1,
+      "started_at": "2026-06-15T09:22:10.046674+00:00",
+      "ended_at": "2026-06-15T09:27:48.939912+00:00",
+      "num_turns": 21,
+      "duration_seconds": 338.89243457100383,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 6,
+          "Grep": 7,
+          "Edit": 4,
+          "Glob": 2,
+          "Write": 1
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 85
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "ddf91368-1780-418c-a4d6-0a7cc0094a36",
+      "attempts": 1,
+      "started_at": "2026-06-15T09:27:49.075079+00:00",
+      "ended_at": "2026-06-15T09:45:02.688921+00:00",
+      "num_turns": 18,
+      "duration_seconds": 1033.6131168430002,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 12,
+          "Grep": 8,
+          "Edit": 4,
+          "Glob": 4,
+          "Write": 9
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 171
+      }
+    },
+    "control": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    }
+  },
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "b7c2dd08d551bc15b1a3f1af5beab7dbf555521a2e7047fbd2b2ef7a18b6679a",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 338161,
+      "duration_api_ms": 340294,
+      "ttft_ms": 3289,
+      "ttft_stream_ms": 3287,
+      "time_to_request_ms": 52,
+      "num_turns": 21,
+      "result": "The remaining `exp_polar` references (lines 104/107 in the `lerchphi` docstring, lines 119/156 in `lerchphi._eval_expand_func`) belong to the root-of-unity machinery for the Lerch\u2011to\u2011polylog reduction with *general* `s`, where the polar lift genuinely tracks the branch sheet. They are unrelated to the `polylog(1, z)` defect and correctly left intact.\n\nThe fix is complete.\n\n## Summary\n\nThe issue reported two related defects in `polylog._eval_expand_func` (`repo/sympy/functions/special/zeta_functions.py`): `expand_func(polylog(1, z))` emitted a meaningless `-log(z*exp_polar(-I*pi) + 1)` instead of `-log(1 - z)` (the polar winding factor is irrelevant because `log` is unbranched at `1`, and it blocked derivative-consistency simplifications), and `polylog(2, 1/2)` had no closed-form expansion. I changed the `s == 1` branch to return `-log(1 - z)`, added a dilogarithm special-value branch returning `-log(2)**2/2 + pi**2/12` when `s == 2 and z == S.Half`, dropped the now-unused `exp_polar`/`I` local imports, and updated the class docstring's doctest to `-log(-z + 1)`. The change is consistent with `hyperexpand`'s existing `-log(1 - z)` output and leaves the `lerchphi` reduction path (which only invokes `polylog` expansion for symbolic `s`) unaffected; full rationale and rejected alternatives are documented in `reports/baseline_notes.md`.",
+      "stop_reason": "end_turn",
+      "session_id": "7fb9e99b-3434-4731-ade5-ebf0e4983141",
+      "total_cost_usd": 1.2768199999999998,
+      "usage": {
+        "input_tokens": 31,
+        "cache_creation_input_tokens": 49386,
+        "cache_read_input_tokens": 479131,
+        "output_tokens": 29099,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 49386,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 951,
+            "cache_read_input_tokens": 51508,
+            "cache_creation_input_tokens": 1253,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 1253
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 887,
+          "outputTokens": 15,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.000962,
+          "contextWindow": 200000,
+          "maxOutputTokens": 32000
+        },
+        "claude-opus-4-8": {
+          "inputTokens": 31,
+          "outputTokens": 29099,
+          "cacheReadInputTokens": 479131,
+          "cacheCreationInputTokens": 49386,
+          "webSearchRequests": 0,
+          "costUSD": 1.275858,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "163b0152-7adf-4347-b9b2-4281d26edf68"
+    },
+    "fvk": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 1032856,
+      "duration_api_ms": 1032742,
+      "ttft_ms": 3701,
+      "ttft_stream_ms": 3360,
+      "time_to_request_ms": 39,
+      "num_turns": 18,
+      "result": "All five required `fvk/` artifacts, the two `.k` formal-core files (required by FVK's non-negotiable artifact contract), and `reports/fvk_notes.md` are in place. The source code under `repo/` remains byte-for-byte identical to V1 \u2014 I applied no edits this pass because the audit justified **confirmation, not revision**.\n\n## Summary\n\n**V1 stands unchanged**, justified by the FVK artifacts rather than by any test or pre-fix display. I formalized `polylog._eval_expand_func` as a four-branch term-rewriting dispatch (`fvk/mini-python.k`, `fvk/polylog-spec.k`) and constructed proofs that V1's two changes are correct: branch 1 yields `-log(1 - z)` \u2014 proved mathematically identical to `Li\u2081(z)` including its branch cut, exp_polar-free, and derivative-consistent (PO-1, PO-2) \u2014 and branch 3 yields `Li\u2082(\u00bd) = -log(2)\u00b2/2 + \u03c0\u00b2/12`, re-derived from Euler's reflection law (PO-3), correctly placed on the `expand_func` transform path that the issue's In[2] exhibits (intent I3; I neither enshrined \"stays unevaluated in `eval`\" nor blindly inverted it, per the methodology's \u00a742 warning that names this exact issue). The audit's main value was the **family-completeness** pass: I enumerated the whole dilogarithm special-value family and found `\u00bd` is the one member with both a clean value *and* a canonical SymPy argument (`S.Half`), so it is the unique safe addition; the golden-ratio values, though I derived and triple-checked them (reflection \u2295 Landen \u2295 duplication, PROOF \u00a7A3), are deferred as Finding F2 on positive grounds \u2014 `S.GoldenRatio`, `(sqrt(5)-1)/2`, and `1/S.GoldenRatio` are distinct non-canonical objects (verified in-repo), so a literal guard would be un-confirmable dead code, a separate engineering problem the issue never demonstrates \u2014 while `Li\u2082(2)` (branch-cut-dependent sign, F1) and `Li_n(\u00bd)` (F3) genuinely cannot be confidently derived here. Compatibility holds (no API/dispatch change; `lerchphi`/`hyperexpand` use symbolic `s` and are untouched), the SUSPECT legacy test at `test_zeta_functions.py:131` is flagged as a positive bug signal but left unedited, and the deferred members are recorded as un-audited remainder with derivations preserved for a follow-up pass (`fvk/ITERATION_GUIDANCE.md`), never folded into a false \"fix complete\" claim.",
+      "stop_reason": "end_turn",
+      "session_id": "ddf91368-1780-418c-a4d6-0a7cc0094a36",
+      "total_cost_usd": 3.799012,
+      "usage": {
+        "input_tokens": 29,
+        "cache_creation_input_tokens": 121330,
+        "cache_read_input_tokens": 1857909,
+        "output_tokens": 84464,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 121330,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 1318,
+            "cache_read_input_tokens": 172832,
+            "cache_creation_input_tokens": 1259,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 1259
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 29,
+          "outputTokens": 84464,
+          "cacheReadInputTokens": 1857909,
+          "cacheCreationInputTokens": 121330,
+          "webSearchRequests": 0,
+          "costUSD": 3.799012,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "8fd621a6-c542-43ee-b069-69c1a0410274"
+    },
+    "control": null
+  }
+}
