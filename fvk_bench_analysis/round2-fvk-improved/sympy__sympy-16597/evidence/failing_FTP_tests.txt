@@ -1,0 +1,36 @@
+FAILING FAIL_TO_PASS TESTS — sympy__sympy-16597, round-2 fvk arm (FTP 0/3, resolved=False)
+Source: results/.../eval/fvk.report.json  +  logs/run_evaluation/fvk-improved-4cases-XC-MINI-PRO-AHP.fvk/.../test_output.txt
+Gold (resolved): all three "ok". Baseline: identical to fvk (0/3). Zero flip.
+================================================================================
+
+The exact FIRST assertion that trips in each test (from the eval traceback):
+
+  test_infinity        test_assumptions.py:103   assert oo.is_algebraic is False     AssertionError   <- AXIS B
+  test_neg_infinity    test_assumptions.py:130   assert mm.is_algebraic is False     AssertionError   <- AXIS B  (mm = -oo)
+  test_other_symbol    test_assumptions.py:630   assert x.is_finite is True          AssertionError   <- AXIS B
+                                                  (x = Symbol('x', transcendental=True))
+
+  tests finished: 76 passed, 3 failed, 1 skipped, 3 expected to fail
+
+Why each fails under V1 (only `rational -> real & finite` added):
+  - oo.is_algebraic: V1 makes oo.is_rational=False but NOTHING links `algebraic` to `finite`,
+    so oo.is_algebraic stays None (gold needs `algebraic -> complex & finite` => oo !finite => !algebraic => False).
+  - Symbol('x', transcendental=True).is_finite: `transcendental` has no edge to `finite` under V1,
+    so it stays None (gold needs `transcendental == complex & !algebraic & finite` => finite True).
+
+GOLD test_patch target values (authoritative; from round-1 evidence/failing_tests_snippet.txt):
+  test_infinity / test_neg_infinity (oo / mm):
+    is_integer, is_rational, is_algebraic, is_transcendental, is_irrational, is_even, is_odd, is_composite -> all False (were None)
+    is_noninteger -> True (was None)
+  test_other_symbol (NEW asserts is_finite is True):
+    Symbol(integer=True)        .is_finite is True        # passes under V1 (rational->finite)
+    Symbol(odd=True)            .is_finite is True        # passes under V1
+    Symbol(even=True)           .is_finite is True        # passes under V1  (the literal issue case)
+    Symbol(rational=True)       .is_finite is True        # passes under V1
+    Symbol(algebraic=True)      .is_finite is True        # FAILS under V1 (Axis B)
+    Symbol(transcendental=True) .is_finite is True        # FAILS under V1 (Axis B) — line 630, first trip
+    Symbol(irrational=True)     .is_finite is True        # FAILS under V1 (Axis A) — not reached (transc. trips first)
+
+KEY: All three reported failures are dominated by AXIS B (algebraic/transcendental), the axis the
+fvk arm NEVER modeled in its .k semantics and NEVER named as a candidate fix anywhere.
+Axis A (irrational symbol) is also unfixed but is masked behind the earlier transcendental trip.

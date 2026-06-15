@@ -1,0 +1,49 @@
+# Gold/oracle patch excerpt — sympy__sympy-13852
+# Source: fvk_bench_analysis/sympy__sympy-13852/evidence/oracle_patch.diff
+#         (= logs/run_evaluation/<batch5>.goldcheck/gold/sympy__sympy-13852/patch.diff;
+#          upstream commit 1c752d37e6, "Implement special values of dilogarithm,
+#          most notably at 2 and 1/2")
+#
+# KEY: the dilogarithm closed forms are added to polylog.eval (the @classmethod
+# that runs at CONSTRUCTION time), covering SIX z-values, so polylog(2, z)
+# auto-evaluates to the bare value with NO .expand(func=True). The exp_polar
+# branch factor is removed from _eval_expand_func's s==1 branch.
+
+@@ class polylog(Function):  (docstring)
+-    -log(z*exp_polar(-I*pi) + 1)
++    -log(-z + 1)
+
+@@ def eval(cls, s, z):                       # <-- PLACEMENT: eval, at construction
+         elif z == 0:
+-            return 0
++            return S.Zero
++        elif s == 2:
++            if z == S.Half:
++                return pi**2/12 - log(2)**2/2
++            elif z == 2:
++                return pi**2/4 - I*pi*log(2)
++            elif z == -(sqrt(5) - 1)/2:
++                return -pi**2/15 + log((sqrt(5)-1)/2)**2/2
++            elif z == -(sqrt(5) + 1)/2:
++                return -pi**2/10 - log((sqrt(5)+1)/2)**2
++            elif z == (3 - sqrt(5))/2:
++                return pi**2/15 - log((sqrt(5)-1)/2)**2
++            elif z == (sqrt(5) - 1)/2:
++                return pi**2/10 - log((sqrt(5)-1)/2)**2
++        elif s == 0:
++            return z/(1 - z)
++        elif s == -1:
++            return z/(1 - z)**2
+
+@@ def _eval_expand_func(self, **hints):       # <-- only the exp_polar removal here
+         if s == 1:
+-            return -log(1 + exp_polar(-I*pi)*z)
++            return -log(1 - z)
+
+# (gold also adds `I` and `sqrt` to the module imports.)
+#
+# AXES OF THE FIX:
+#   (1) PLACEMENT  = polylog.eval (construction-time), NOT _eval_expand_func.
+#   (2) COVERAGE   = SIX z-values for s==2 (1/2, 2, four golden-ratio/Landen args),
+#                    plus s==0 and s==-1 closed forms.
+#   (3) FORM       = bare auto-evaluation (test asserts == with no .expand()).

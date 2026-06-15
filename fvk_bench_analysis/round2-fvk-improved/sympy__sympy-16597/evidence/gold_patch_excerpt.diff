@@ -1,0 +1,34 @@
+# GOLD / ORACLE PATCH — sympy__sympy-16597 (excerpt of the 5 substantive edits)
+# Full file: fvk_bench_analysis/sympy__sympy-16597/evidence/oracle_patch.diff (228 lines)
+# Source: logs/run_evaluation/fvk-improved-4cases-XC-MINI-PRO-AHP.goldcheck/gold/sympy__sympy-16597/patch.diff
+#
+# Two axes of the assumptions fix, mirrored across BOTH inference engines + the regenerated cache.
+# ---------------------------------------------------------------------------
+
+## (1) OLD-STYLE engine — sympy/core/assumptions.py :: _assume_rules  (FOUR rules gain `& finite`)
+-    'rational       ->  real',
++    'rational       ->  real & finite',
+-    'algebraic      ->  complex',                       # Axis B
++    'algebraic      ->  complex & finite',
+-    'transcendental ==  complex & !algebraic',          # Axis B
++    'transcendental ==  complex & !algebraic & finite',
+-    'irrational     ==  real & !rational',              # Axis A
++    'irrational     ==  real & !rational & finite',
+
+## (2) NEW-STYLE engine — sympy/assumptions/ask.py :: get_known_facts()  (MIRROR — agent never opened this file)
++        Implies(Q.irrational, Q.finite),
++        Implies(Q.algebraic, Q.finite),
+-        Equivalent(Q.transcendental | Q.algebraic, Q.complex),
++        Equivalent(Q.transcendental | Q.algebraic, Q.complex & Q.finite),
++        Implies(Q.transcendental, Q.finite),
+-        Equivalent(Q.irrational | Q.rational, Q.real),
++        Equivalent(Q.irrational | Q.rational, Q.real & Q.finite),
+
+## (3) REGENERATED cache — sympy/assumptions/ask_generated.py (get_known_facts_cnf/_dict; agent never opened)
++        Q.finite | ~Q.algebraic,
++        Q.finite | ~Q.irrational,
++        Q.finite | ~Q.rational,
++        Q.finite | ~Q.transcendental,
+   ... and the get_known_facts_dict() sets gain Q.finite for algebraic/transcendental/irrational/rational/...
+
+# (Plus two test-irrelevant edits: a Pow._eval_is_rational perf guard and an Idx +-oo-bounds fix.)

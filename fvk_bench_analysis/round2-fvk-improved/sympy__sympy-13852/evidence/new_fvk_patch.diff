@@ -1,0 +1,48 @@
+# NEW round-2 fvk patch (FAILED: fvk resolved=False, FTP 0/1)
+# Source: results/fvk-improved-4cases-XC-MINI-PRO-AHP/sympy__sympy-13852/solutions/solution_fvk.patch
+#
+# This is the 46-line real patch the hardened materials produced. Contrast with gold:
+#   - PLACEMENT: the dilog value is added to _eval_expand_func (WRONG: gold puts it in eval).
+#   - COVERAGE : ONE z-value (z == S.Half) for s==2 (WRONG: gold covers SIX).
+#   - FORM     : reachable ONLY under .expand(func=True); polylog(2, z) does NOT
+#                auto-evaluate at construction (WRONG: hidden test asserts bare ==).
+#   - The exp_polar removal (s==1) IS correct and matches gold (this half is right).
+#
+# vs the NEW V1 (solution_baseline.patch): the fvk pass changed only the nesting of
+# the guard — V1 had `if z == S.Half: / if s == 2:`, fvk flattened it to
+# `if s == 2 and z == S.Half:` (identical truth table). NO behavioral change; fvk
+# CONFIRMED V1. (See fvk_notes.md "V1 stands.")
+
+diff --git a/sympy/functions/special/zeta_functions.py b/sympy/functions/special/zeta_functions.py
+@@ class polylog(Function):  (docstring)
+     >>> expand_func(polylog(1, z))
+-    -log(z*exp_polar(-I*pi) + 1)
++    -log(-z + 1)
+     >>> expand_func(polylog(0, z))
+     z/(-z + 1)
++
++    The dilogarithm at certain rational arguments has a known closed form,
++    which is also obtained with expand_func():
++
++    >>> from sympy import Rational
++    >>> expand_func(polylog(2, Rational(1, 2)))
++    -log(2)**2/2 + pi**2/12
++
+@@ def _eval_expand_func(self, **hints):
+-        from sympy import log, expand_mul, Dummy, exp_polar, I
++        from sympy import log, expand_mul, Dummy
+         s, z = self.args
+         if s == 1:
+-            return -log(1 + exp_polar(-I*pi)*z)
++            return -log(1 - z)
+         if s.is_Integer and s <= 0:
+             u = Dummy('u')
+             start = u/(1 - u)
+             for _ in range(-s):
+                 start = u*start.diff(u)
+             return expand_mul(start).subs(u, z)
++        if s == 2 and z == S.Half:                       # <-- in _eval_expand_func, NOT eval
++            # Li_2(1/2): the one dilogarithm value with an elementary closed
++            # form; every other polylog(s, 1/2) is left untouched below.
++            return -log(2)**2/2 + pi**2/12               # <-- ONE value only (z==1/2)
+         return polylog(s, z)

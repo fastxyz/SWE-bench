@@ -1,0 +1,27 @@
+# NEW (ROUND-2) fvk PATCH — sympy__sympy-16597
+# Source: results/fvk-improved-4cases-XC-MINI-PRO-AHP/sympy__sympy-16597/solutions/solution_fvk.patch
+#
+# *** CRITICAL FACT ***  solution_fvk.patch is BYTE-IDENTICAL to solution_baseline.patch
+#   md5(solution_baseline.patch) == md5(solution_fvk.patch) == a980a85535a3b57eb1f1528e65ccd710
+#   diff baseline fvk  ->  (no output; identical)
+#   13 lines = the whole diff FILE (headers + 1 substantive edit). fvk CONFIRMED V1; it did NOT
+#   produce a new patch. This is also identical to ROUND-1's V1 (round1 md5 3e30b9e0... same single edit).
+# ---------------------------------------------------------------------------
+
+diff --git a/sympy/core/assumptions.py b/sympy/core/assumptions.py
+index ce4dd30f2e..280cc6ecba 100644
+--- a/sympy/core/assumptions.py
++++ b/sympy/core/assumptions.py
+@@ -163,7 +163,7 @@
+ _assume_rules = FactRules([
+
+     'integer        ->  rational',
+-    'rational       ->  real',
++    'rational       ->  real & finite',
+     'rational       ->  algebraic',
+     'algebraic      ->  complex',
+     'real           ->  complex',
+
+# ONE rule changed: rational -> real & finite.
+# vs GOLD: missing `& finite` on THREE further rules — algebraic (Axis B),
+#   transcendental (Axis B), irrational (Axis A) — AND the entire ask.py / ask_generated.py mirror.

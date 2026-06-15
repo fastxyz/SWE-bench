@@ -1,0 +1,59 @@
+FAILING FAIL_TO_PASS TEST — sympy__sympy-13852
+(This file only quotes test source and harness output. No executable code here.)
+
+==============================================================================
+1. The hidden test (applied by the evaluator)
+   Source: logs/run_evaluation/<batch5>.goldcheck/gold/sympy__sympy-13852/eval.sh
+           (test patch into sympy/functions/special/tests/test_zeta_functions.py)
+==============================================================================
+
+    def test_polylog_values():
+        import random
+        assert polylog(2, 2) == pi**2/4 - I*pi*log(2)                 # <-- line 140, BARE ==
+        assert polylog(2, S.Half) == pi**2/12 - log(2)**2/2          # <-- BARE ==
+        for z in [S.Half, 2, (sqrt(5)-1)/2, -(sqrt(5)-1)/2, -(sqrt(5)+1)/2, (3-sqrt(5))/2]:
+            assert Abs(polylog(2, z).evalf() - polylog(2, z, evaluate=False).evalf()) < 1e-15
+        for s in [-1, 0, 1]:
+            for _ in range(10):
+                z = random.uniform(-5, 5) + I*random.uniform(-5, 5)
+                assert Abs(polylog(s, z).evalf() - polylog(s, z, evaluate=False).evalf()) < 1e-15
+
+   The same test patch ALSO updates test_polylog_expansion:
+        -    assert myexpand(polylog(1, z), -log(1 + exp_polar(-I*pi)*z))
+        +    assert myexpand(polylog(1, z), -log(1 - z))               # exp_polar removal: fvk got this right
+        -    assert myexpand(polylog(-1, z), z**2/(1 - z)**2 + z/(1 - z))
+        +    assert myexpand(polylog(-1, z), z/(1 - z)**2)
+        +    assert ((1-z)**3 * expand_func(polylog(-2, z))).simplify() == z*(1 + z)
+
+   CRITICAL OBSERVATIONS:
+   - The graded test is a NEW test, test_polylog_values, SEPARATE from the
+     test_polylog_expansion that the fvk agent reasoned about.
+   - It asserts BARE equality (polylog(2, 2) == ...) with NO .expand(func=True).
+     => the value MUST auto-evaluate at CONSTRUCTION, i.e. in polylog.eval.
+   - The FIRST assertion is polylog(2, 2) — a value the fvk patch never added
+     (fvk added only z == S.Half). So it fails on the very first line.
+   - It sweeps SIX z-values for s==2 (the golden-ratio args the fvk arm dismissed
+     by name) via a numeric continuity check.
+
+==============================================================================
+2. The exact failure (fvk run)
+   Source: logs/run_evaluation/fvk-improved-4cases-XC-MINI-PRO-AHP.fvk/
+           ...__fvk/sympy__sympy-13852/test_output.txt  (lines 531-534)
+==============================================================================
+
+    test_polylog_values F
+    ...
+    ___ sympy/functions/special/tests/test_zeta_functions.py:test_polylog_values ___
+      File "/testbed/sympy/functions/special/tests/test_zeta_functions.py", line 140, in test_polylog_values
+        assert polylog(2, 2) == pi**2/4 - I*pi*log(2)
+    AssertionError
+
+   eval/fvk.report.json:  resolved=False; FAIL_TO_PASS failure ["test_polylog_values"];
+                          PASS_TO_PASS all 4 pass.
+   eval/baseline.report.json: identical (zero flip — V1 and fvk behave the same).
+
+==============================================================================
+3. Gold passes the same test
+   Source: logs/run_evaluation/<batch5>.goldcheck/gold/.../test_output.txt:388
+==============================================================================
+    test_polylog_values ok
