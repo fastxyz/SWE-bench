@@ -10,6 +10,7 @@
 | batch5-XC-MINI-PRO-AHP-260614105258 | XC-MINI-PRO-AHP | claude-opus-4-8 | 9 | 5/9 | 5/9 | 5/9 | 2026-06-14T05:07:39.413618+00:00 |
 | fvk-improved-4cases-XC-MINI-PRO-AHP | XC-MINI-PRO-AHP | claude-opus-4-8 | 4 | 0/4 | 1/4 | 0/0 | 2026-06-15T06:30:19.856704+00:00 |
 | fvk-r3b-sympy13852-XC-MINI-PRO-AHP | XC-MINI-PRO-AHP | claude-opus-4-8 | 1 | 0/1 | 0/1 | 0/0 | 2026-06-15T07:49:53.851567+00:00 |
+| fvk-r3bc-sympy13852-XC-MINI-PRO-AHP | XC-MINI-PRO-AHP | claude-opus-4-8 | 1 | 0/1 | 0/1 | 0/0 | 2026-06-15T08:28:20.845564+00:00 |
 | repro5x-XC-MINI-PRO-AHP-s1 | XC-MINI-PRO-AHP | claude-opus-4-8 | 6 | 0/6 | 0/0 | 0/0 | 2026-06-15T02:53:17.375243+00:00 |
 | repro5x-XC-MINI-PRO-AHP-s2 | XC-MINI-PRO-AHP | claude-opus-4-8 | 6 | 0/6 | 0/0 | 0/0 | 2026-06-15T02:51:00.546293+00:00 |
 | repro5x-XC-MINI-PRO-AHP-s3 | XC-MINI-PRO-AHP | claude-opus-4-8 | 6 | 0/6 | 0/0 | 0/0 | 2026-06-15T03:19:53.657646+00:00 |

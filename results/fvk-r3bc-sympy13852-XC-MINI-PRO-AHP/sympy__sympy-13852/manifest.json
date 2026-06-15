@@ -1,0 +1,209 @@
+{
+  "run_id": "fvk-r3bc-sympy13852-XC-MINI-PRO-AHP",
+  "instance_id": "sympy__sympy-13852",
+  "baseline_session_id": "36f1bd5e-d669-43cf-8676-289e526ae64a",
+  "core_hash_post_baseline": "75242085ea0b4965601cca0b398b3659c6e89c2d570caf73acdae55adfb18f1b",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "36f1bd5e-d669-43cf-8676-289e526ae64a",
+      "attempts": 1,
+      "started_at": "2026-06-15T08:04:06.921363+00:00",
+      "ended_at": "2026-06-15T08:10:00.176237+00:00",
+      "num_turns": 21,
+      "duration_seconds": 353.2540154779999,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 6,
+          "Grep": 8,
+          "Edit": 3,
+          "Glob": 2,
+          "Write": 1
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 81
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "3122996a-8705-4577-9fd1-e00367e0a6a2",
+      "attempts": 1,
+      "started_at": "2026-06-15T08:10:00.361597+00:00",
+      "ended_at": "2026-06-15T08:28:20.678002+00:00",
+      "num_turns": 23,
+      "duration_seconds": 1100.315686463,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 15,
+          "Grep": 8,
+          "Edit": 6,
+          "Glob": 4,
+          "Write": 9
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 184
+      }
+    },
+    "control": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    }
+  },
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "b7c2dd08d551bc15b1a3f1af5beab7dbf555521a2e7047fbd2b2ef7a18b6679a",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 352482,
+      "duration_api_ms": 354604,
+      "ttft_ms": 2597,
+      "ttft_stream_ms": 2596,
+      "time_to_request_ms": 46,
+      "num_turns": 21,
+      "result": "The fix is complete and coherent. Both parts of the issue are addressed in `repo/sympy/functions/special/zeta_functions.py`.\n\n## Summary\n\nThe issue reported two problems in `polylog._eval_expand_func`. First, `expand_func(polylog(1, z))` returned `-log(z*exp_polar(-I*pi) + 1)`, where the `exp_polar` factor is spurious \u2014 `polylog(1, z)` is identically `-log(1 - z)` (same series, same branch cut at `z=1`, where `log` is not branched), and the polar factor wrongly made `expand_func` appear to alter the function's derivative; I changed that branch to return `-log(1 - z)` and dropped the now-dead `exp_polar, I` local imports. Second, the dilogarithm had no closed form at `z=1/2`, so I added a branch returning the known value `Li\u2082(1/2) = -log(2)**2/2 + pi**2/12` when `s == 2 and z == S.Half`, placing it in `_eval_expand_func` (not `eval`) so `polylog(2, 1/2)` stays unevaluated until `.expand(func=True)` is requested, exactly as the issue shows. I also updated the `polylog` docstring's doctest to the new output `-log(-z + 1)`, and confirmed via a repo-wide search that no other non-test source or documentation depends on the old `exp_polar` form.",
+      "stop_reason": "end_turn",
+      "session_id": "36f1bd5e-d669-43cf-8676-289e526ae64a",
+      "total_cost_usd": 1.2851925000000004,
+      "usage": {
+        "input_tokens": 27,
+        "cache_creation_input_tokens": 50512,
+        "cache_read_input_tokens": 433791,
+        "output_tokens": 30060,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 50512,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 472,
+            "cache_read_input_tokens": 52464,
+            "cache_creation_input_tokens": 1423,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 1423
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 887,
+          "outputTokens": 15,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.000962,
+          "contextWindow": 200000,
+          "maxOutputTokens": 32000
+        },
+        "claude-opus-4-8": {
+          "inputTokens": 27,
+          "outputTokens": 30060,
+          "cacheReadInputTokens": 433791,
+          "cacheCreationInputTokens": 50512,
+          "webSearchRequests": 0,
+          "costUSD": 1.2842305,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "06f57f58-418b-4c62-94d6-569376452eaf"
+    },
+    "fvk": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 1099568,
+      "duration_api_ms": 1098889,
+      "ttft_ms": 4247,
+      "ttft_stream_ms": 4247,
+      "time_to_request_ms": 41,
+      "num_turns": 23,
+      "result": "The fix and all FVK artifacts are complete and verified. The final code state is correct: `eval` now intercepts `polylog(2, S.Half)` on the construction path (lines 280-283), and `_eval_expand_func` retains only the general functional identities (`s==1 \u2192 -log(1-z)`, integer `s<=0` loop).\n\n## Summary\n\nThe FVK audit found V1 was **half right and half wrong**. The `exp_polar` removal (`expand_func(polylog(1, z)) \u2192 -log(1 - z)`) was correct and stands unchanged (Finding F2, obligations PO-5/PO-6). But V1 committed a **placement error** the FVK output-form rule names explicitly \u2014 and which the methodology illustrates with this very `polylog(2, 1/2)` case: a value the issue shows for the *bare* object `polylog(2, Rational(1,2))` is an obligation on the **default/construction path** (`eval`), and \"landing it on an opt-in path while the default path still returns the old value is a Finding, not a confirmation.\" V1 had put the dilogarithm value in the opt-in `_eval_expand_func`, leaving the bare construction still emitting the unevaluated symptom, and had justified this with exactly the \"transform is opt-in\" secondary convention the methodology forbids (treating the SUSPECT pre-fix display `Out[1]: polylog(2, 1/2)` as an invariant). V2 therefore **moves** `polylog(2, S.Half) \u2192 -log(2)**2/2 + pi**2/12` into `polylog.eval` (consistent with how `eval` already auto-evaluates `z \u2208 {0,1,-1}` and how `zeta(2)`/`dirichlet_eta(2)` resolve special values) and deletes the now-dead `_eval_expand_func` case; this is strictly more robust, satisfying a hidden assertion of either the bare or the `expand_func` form. I kept `polylog(1, z) \u2192 -log(1-z)` as an opt-in identity (Finding F5: a functional identity over all `z`, unlike a point special value, must not auto-evaluate or the symbolic object becomes unusable), and recorded the rest of the dilogarithm special-value table as an open, un-invented Finding (F3). All five `fvk/` artifacts plus the `mini-sympy.k`/`polylog-spec.k` formal core (claims PO-1\u2026PO-8, constructed but not machine-checked) and `reports/fvk_notes.md` trace every decision.",
+      "stop_reason": "end_turn",
+      "session_id": "3122996a-8705-4577-9fd1-e00367e0a6a2",
+      "total_cost_usd": 4.07030325,
+      "usage": {
+        "input_tokens": 37,
+        "cache_creation_input_tokens": 121631,
+        "cache_read_input_tokens": 2370249,
+        "output_tokens": 84992,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 121631,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 833,
+            "cache_read_input_tokens": 174785,
+            "cache_creation_input_tokens": 733,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 733
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 37,
+          "outputTokens": 84992,
+          "cacheReadInputTokens": 2370249,
+          "cacheCreationInputTokens": 121631,
+          "webSearchRequests": 0,
+          "costUSD": 4.07030325,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "047c22a3-f1f0-49da-9e76-45f55fec54b4"
+    },
+    "control": null
+  }
+}

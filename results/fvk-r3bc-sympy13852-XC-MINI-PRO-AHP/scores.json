@@ -1,0 +1,69 @@
+{
+  "run_id": "fvk-r3bc-sympy13852-XC-MINI-PRO-AHP",
+  "instances": {
+    "sympy__sympy-13852": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "36f1bd5e-d669-43cf-8676-289e526ae64a",
+        "num_turns": 21,
+        "duration_seconds": 353.2540154779999,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "4/4"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "3122996a-8705-4577-9fd1-e00367e0a6a2",
+        "num_turns": 23,
+        "duration_seconds": 1100.315686463,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "4/4"
+        }
+      },
+      "control": {
+        "status": "pending",
+        "reason": null,
+        "session_id": null,
+        "num_turns": null,
+        "duration_seconds": null,
+        "empty_patch": true,
+        "eval": null
+      }
+    }
+  },
+  "aggregates": {
+    "arms": {
+      "baseline": {
+        "resolved": 0,
+        "evaluated": 1
+      },
+      "fvk": {
+        "resolved": 0,
+        "evaluated": 1
+      },
+      "control": {
+        "resolved": 0,
+        "evaluated": 0
+      }
+    },
+    "flips": {
+      "baseline_to_fvk": {
+        "up": [],
+        "down": []
+      },
+      "baseline_to_control": {
+        "up": [],
+        "down": []
+      }
+    },
+    "fvk_vs_control_delta": 0
+  }
+}
