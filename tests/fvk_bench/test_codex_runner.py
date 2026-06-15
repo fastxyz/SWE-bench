@@ -52,10 +52,25 @@ def test_build_argv_fork_resume_golden():
         PROMPT, "fvk", resume_id=SID, cwd=Path("/ws"), last_message_file=Path("/ws/last.txt")
     )
     assert argv == (
-        ["codex", "exec", "resume", SID, PROMPT]
+        ["codex", "exec"]
         + _shared_opts()
         + ["-C", "/ws", "-o", "/ws/last.txt"]
+        + ["resume", SID, PROMPT]
     )
+
+
+def test_build_argv_fork_parent_options_precede_resume_subcommand():
+    argv = codex_runner.build_argv(
+        PROMPT, "fvk", resume_id=SID, cwd=Path("/ws"), last_message_file=Path("/ws/last.txt")
+    )
+    resume_index = argv.index("resume")
+
+    assert "--sandbox" in argv[:resume_index]
+    assert "-C" in argv[:resume_index]
+    assert "-o" in argv[:resume_index]
+    assert "--sandbox" not in argv[resume_index:]
+    assert "-C" not in argv[resume_index:]
+    assert "-o" not in argv[resume_index:]
 
 
 def test_build_argv_overrides_bin_and_model():

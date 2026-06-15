@@ -703,14 +703,30 @@ def test_doctor_ok_and_fail_exit_codes(monkeypatch, capsys):
 def test_doctor_no_eval_checks_passthrough(monkeypatch):
     seen = {}
 
-    def fake_checks(*, eval_checks=True):
+    def fake_checks(*, eval_checks=True, agent="claude", claude_bin="claude", codex_bin="codex"):
         seen["eval_checks"] = eval_checks
+        seen["agent"] = agent
         return [("claude", True, "ok")]
 
     monkeypatch.setattr(doctor_mod, "run_checks", fake_checks)
 
     assert cli.main(["doctor", "--no-eval-checks"]) == 0
     assert seen["eval_checks"] is False
+    assert seen["agent"] == "claude"
+
+
+def test_doctor_agent_codex_passthrough(monkeypatch):
+    seen = {}
+
+    def fake_checks(*, eval_checks=True, agent="claude", claude_bin="claude", codex_bin="codex"):
+        seen["agent"] = agent
+        seen["codex_bin"] = codex_bin
+        return [("codex", True, "ok"), ("codex_auth", True, "Logged in using ChatGPT")]
+
+    monkeypatch.setattr(doctor_mod, "run_checks", fake_checks)
+
+    assert cli.main(["doctor", "--agent", "codex", "--codex-bin", "/opt/codex"]) == 0
+    assert seen == {"agent": "codex", "codex_bin": "/opt/codex"}
 
 
 def test_doctor_canary_and_probe_model(monkeypatch, capsys):
@@ -744,6 +760,44 @@ def test_doctor_canary_and_probe_model(monkeypatch, capsys):
     assert cli.main(["doctor", "--canary"]) == 1
     out = capsys.readouterr().out
     assert "DIRTY" in out and "Bash" in out
+
+
+def test_doctor_codex_canary(monkeypatch, capsys):
+    monkeypatch.setattr(
+        doctor_mod,
+        "run_checks",
+        lambda **kw: [("codex", True, "ok"), ("codex_auth", True, "Logged in using ChatGPT")],
+    )
+    seen = {}
+
+    def fake_codex_canary(*, model=config.CODEX_MODEL, codex_bin="codex"):
+        seen["model"] = model
+        seen["codex_bin"] = codex_bin
+        return {
+            "result_ok": True, "error": None, "session_id": "sid",
+            "audit": {"ok": True, "tool_uses": {}, "violations": [],
+                      "exec_warnings": [], "unparseable_lines": 0, "lines": 1},
+            "clean": True,
+        }
+
+    monkeypatch.setattr(doctor_mod, "run_codex_canary", fake_codex_canary)
+
+    assert cli.main(["doctor", "--agent", "codex", "--canary", "--codex-bin", "/opt/codex"]) == 0
+    assert seen == {"model": config.CODEX_MODEL, "codex_bin": "/opt/codex"}
+    assert "canary: clean" in capsys.readouterr().out
+
+    def dirty_codex_canary(**kwargs):
+        return {
+            "result_ok": True, "error": None, "session_id": "sid",
+            "audit": {"ok": False, "tool_uses": {"mcp__x": 1}, "violations": ["mcp__x"],
+                      "exec_warnings": [], "unparseable_lines": 0, "lines": 1},
+            "clean": False,
+        }
+
+    monkeypatch.setattr(doctor_mod, "run_codex_canary", dirty_codex_canary)
+    assert cli.main(["doctor", "--agent", "codex", "--canary"]) == 1
+    out = capsys.readouterr().out
+    assert "DIRTY" in out and "mcp__x" in out
 
 
 # ---------------------------------------------------------------------------

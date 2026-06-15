@@ -59,17 +59,22 @@ the FVK materials, so `git submodule update --init` is mandatory.
 
 ```bash
 .venv/bin/python -m fvk_bench doctor --canary
+# For Codex runs:
+.venv/bin/python -m fvk_bench doctor --agent codex --canary
 ```
 
-`doctor` verifies the host: claude binary and version, git, Docker reachability, x86_64,
-Python ≥ 3.10, importability of `swebench`/`datasets`, ~120 GB free disk, no `CLAUDE.md` or
-`.claude/` anywhere above the workspace root, and warns if `ANTHROPIC_API_KEY` is set.
-`--canary` additionally runs a real (cheap) 2-turn haiku session with the exact production
-flags and audits its transcript for cleanliness: the session must advertise exactly the 5
-pinned tools and contain no skills, MCP servers, or agent listings. Optional
-`--probe-model` runs the canary with the pinned production model instead, confirming your
-subscription can access `claude-opus-4-8` before you commit to a long run. Use
-`--no-eval-checks` on a session-only machine to relax the Docker requirement to a warning.
+`doctor` verifies the host: the selected agent binary and version, git, Docker reachability,
+x86_64, Python ≥ 3.10, importability of `swebench`/`datasets`, ~120 GB free disk, no
+`CLAUDE.md` or `.claude/` anywhere above the workspace root, and warns if
+`ANTHROPIC_API_KEY` is set. For `--agent codex`, it also requires `codex login status` to
+report ChatGPT subscription auth rather than plain API-key auth. `--canary` additionally
+runs a real session with the selected agent's pinned invocation shape and audits its
+transcript for cleanliness. Claude's default canary uses the cheap 2-turn haiku model and
+must advertise exactly the 5 pinned tools with no skills, MCP servers, or agent listings;
+optional `--probe-model` runs that Claude canary with `claude-opus-4-8` instead. Codex's
+canary uses the pinned production `gpt-5.5` path because that is the subscription access
+that must be proven before a run. Use `--no-eval-checks` on a session-only machine to relax
+the Docker requirement to a warning.
 
 ## 5. Run one problem — or any selection
 
@@ -128,7 +133,8 @@ keep in mind — compare **within** an agent (baseline vs fvk vs control), only 
 - The two review arms fork the frozen baseline via `codex exec resume` plus a baseline-rollout
   snapshot/restore, rather than Claude’s `--resume --fork-session`.
 
-The Codex arm is newly added — validate it on your machine (`pytest tests/fvk_bench/` and one
+The Codex arm is newly added — validate it on your machine
+(`python -m fvk_bench doctor --agent codex --canary`, `pytest tests/fvk_bench/`, and one
 smoke instance) before committing to a full batch.
 
 ## 6. Run a batch

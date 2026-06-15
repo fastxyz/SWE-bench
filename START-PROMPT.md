@@ -42,10 +42,8 @@ Read START.md at the repo root and follow it exactly. Parameters for this run:
 
 Carry out, in order:
 1. Setup + sanity: `git submodule update --init`, create .venv and `pip install -e .`,
-   then `python -m fvk_bench doctor --canary`. Stop and show me the output if any hard
-   check fails or the canary is not clean. (The canary checks the Claude session; for
-   `{agent}` = `codex` also confirm `codex --version` and that `codex login status` shows a
-   subscription, not a plain API key.)
+   then `python -m fvk_bench doctor --agent {agent} --canary`. Stop and show me the
+   output if any hard check fails or the canary is not clean.
 2. `validate-gold` for this batch — all 9 must resolve before continuing.
 3. `run` the batch with the parameters above, passing `--agent {agent}` to the `run`
    command (default `claude`). This takes hours: run it in the background and monitor until

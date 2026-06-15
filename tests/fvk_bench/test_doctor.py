@@ -36,6 +36,20 @@ EXPECTED_CHECK_NAMES = [
     "anthropic_api_key",
 ]
 
+EXPECTED_CODEX_CHECK_NAMES = [
+    "codex",
+    "codex_auth",
+    "git",
+    "arch",
+    "python",
+    "swebench",
+    "datasets",
+    "docker",
+    "disk",
+    "workspace_ancestry",
+    "anthropic_api_key",
+]
+
 
 @pytest.fixture()
 def healthy_host(monkeypatch, tmp_path):
@@ -74,6 +88,78 @@ def test_run_checks_all_ok(healthy_host):
     assert "x86_64" in by_name["arch"][1]
     # The user-level ~/.claude in the workspace ancestry is NOT a violation
     # (it is required for subscription auth and excluded via setting-sources).
+
+
+def test_run_checks_codex_all_ok(monkeypatch, healthy_host):
+    def fake_run(argv, **kwargs):
+        if argv[0] == "docker":
+            return SimpleNamespace(returncode=0, stdout="docker info ok\n", stderr="")
+        if argv[0] == "/usr/bin/codex" and argv[1:] == ["--version"]:
+            return SimpleNamespace(
+                returncode=0,
+                stdout=f"codex-cli {config.TESTED_CODEX_VERSION}\n",
+                stderr="",
+            )
+        if argv[0] == "/usr/bin/codex" and argv[1:] == ["login", "status"]:
+            return SimpleNamespace(returncode=0, stdout="Logged in using ChatGPT\n", stderr="")
+        raise AssertionError(f"unexpected argv: {argv}")
+
+    monkeypatch.setattr(doctor.subprocess, "run", fake_run)
+
+    checks = doctor.run_checks(agent="codex")
+
+    assert [name for name, _, _ in checks] == EXPECTED_CODEX_CHECK_NAMES
+    by_name = {name: (ok, detail) for name, ok, detail in checks}
+    assert by_name["codex"][0] is True
+    assert config.TESTED_CODEX_VERSION in by_name["codex"][1]
+    assert by_name["codex_auth"] == (True, "Logged in using ChatGPT")
+    assert "claude" not in by_name
+
+
+def test_run_checks_codex_warns_on_untested_version(monkeypatch, healthy_host):
+    def fake_run(argv, **kwargs):
+        if argv[0] == "docker":
+            return SimpleNamespace(returncode=0, stdout="docker info ok\n", stderr="")
+        if argv[0] == "/usr/bin/codex" and argv[1:] == ["--version"]:
+            return SimpleNamespace(returncode=0, stdout="codex-cli 9.9.9\n", stderr="")
+        if argv[0] == "/usr/bin/codex" and argv[1:] == ["login", "status"]:
+            return SimpleNamespace(returncode=0, stdout="Logged in using ChatGPT\n", stderr="")
+        raise AssertionError(f"unexpected argv: {argv}")
+
+    monkeypatch.setattr(doctor.subprocess, "run", fake_run)
+
+    by_name = {name: (ok, detail) for name, ok, detail in doctor.run_checks(agent="codex")}
+
+    assert by_name["codex"] == (
+        None,
+        f"untested version 9.9.9 (validated against {config.TESTED_CODEX_VERSION})",
+    )
+    assert by_name["codex_auth"][0] is True
+
+
+def test_run_checks_codex_requires_chatgpt_auth(monkeypatch, healthy_host):
+    def fake_run(argv, **kwargs):
+        if argv[0] == "docker":
+            return SimpleNamespace(returncode=0, stdout="docker info ok\n", stderr="")
+        if argv[0] == "/usr/bin/codex" and argv[1:] == ["--version"]:
+            return SimpleNamespace(
+                returncode=0,
+                stdout=f"codex-cli {config.TESTED_CODEX_VERSION}\n",
+                stderr="",
+            )
+        if argv[0] == "/usr/bin/codex" and argv[1:] == ["login", "status"]:
+            return SimpleNamespace(returncode=0, stdout="Logged in using API key\n", stderr="")
+        raise AssertionError(f"unexpected argv: {argv}")
+
+    monkeypatch.setattr(doctor.subprocess, "run", fake_run)
+
+    by_name = {name: (ok, detail) for name, ok, detail in doctor.run_checks(agent="codex")}
+
+    assert by_name["codex"][0] is True
+    assert by_name["codex_auth"] == (
+        False,
+        "Logged in using API key (need ChatGPT/Codex subscription auth)",
+    )
 
 
 def test_run_checks_tested_claude_version_ok(healthy_host):
@@ -280,3 +366,84 @@ def test_run_canary_session_failure(tmp_path, canary_home):
     assert res["result_ok"] is False
     assert res["clean"] is False
     assert res["audit"] is None
+
+
+# ---------------------------------------------------------------------------
+# run_codex_canary
+# ---------------------------------------------------------------------------
+
+_CODEX_CANARY = """
+import json, os, sys
+
+scenario = os.environ.get("FAKE_CODEX_SCENARIO", "clean")
+home = os.environ["HOME"]
+sid = "019ecb24-762c-7780-a498-9977b0381b40"
+
+with open(os.path.join(home, "codex_canary_argv.json"), "w", encoding="utf-8") as fh:
+    json.dump(sys.argv, fh)
+
+if "-o" in sys.argv:
+    with open(sys.argv[sys.argv.index("-o") + 1], "w", encoding="utf-8") as fh:
+        fh.write("OK\\n")
+
+sessions = os.path.join(home, ".codex", "sessions", "2026", "06", "15")
+os.makedirs(sessions, exist_ok=True)
+rollout = os.path.join(sessions, f"rollout-canary-{sid}.jsonl")
+lines = [{"type": "session_meta", "payload": {"id": sid}}]
+if scenario == "dirty":
+    lines.append({
+        "type": "response_item",
+        "payload": {"type": "function_call", "name": "mcp__github__search"},
+    })
+with open(rollout, "w", encoding="utf-8") as fh:
+    for line in lines:
+        fh.write(json.dumps(line) + "\\n")
+
+print(json.dumps({"type": "thread.started", "thread_id": sid}))
+print(json.dumps({"type": "turn.started"}))
+print(json.dumps({"type": "item.completed", "item": {"type": "agent_message", "text": "OK"}}))
+"""
+
+
+def _codex_canary_bin(tmp_path: Path, *, scenario: str = "clean") -> Path:
+    bin_path = tmp_path / "codex_bin" / "codex"
+    bin_path.parent.mkdir(parents=True, exist_ok=True)
+    body = "#!/bin/sh\n"
+    body += f"export FAKE_CODEX_SCENARIO={scenario}\n"
+    script = tmp_path / "fake_codex.py"
+    script.write_text(_CODEX_CANARY, encoding="utf-8")
+    body += f'exec "{sys.executable}" "{script}" "$@"\n'
+    bin_path.write_text(body, encoding="utf-8")
+    bin_path.chmod(0o755)
+    return bin_path
+
+
+def test_run_codex_canary_clean(tmp_path, canary_home):
+    bin_path = _codex_canary_bin(tmp_path)
+
+    res = doctor.run_codex_canary(codex_bin=str(bin_path))
+
+    assert res["result_ok"] is True
+    assert res["clean"] is True
+    assert res["session_id"] == "019ecb24-762c-7780-a498-9977b0381b40"
+    assert res["audit"]["ok"] is True
+    assert res["audit"]["violations"] == []
+
+    argv = json.loads((canary_home / "codex_canary_argv.json").read_text(encoding="utf-8"))
+    assert argv[1] == "exec"
+    assert argv[argv.index("-m") + 1] == config.CODEX_MODEL
+    assert f"model_reasoning_effort={config.CODEX_EFFORT}" in argv
+    assert argv[argv.index("--sandbox") + 1] == config.CODEX_SANDBOX
+    assert "--ignore-user-config" in argv
+    assert "-C" in argv and "-o" in argv
+
+
+def test_run_codex_canary_dirty_config_leak(tmp_path, canary_home):
+    bin_path = _codex_canary_bin(tmp_path, scenario="dirty")
+
+    res = doctor.run_codex_canary(codex_bin=str(bin_path))
+
+    assert res["result_ok"] is True
+    assert res["clean"] is False
+    assert res["audit"]["ok"] is False
+    assert res["audit"]["violations"] == ["mcp__github__search"]

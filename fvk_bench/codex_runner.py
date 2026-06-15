@@ -96,16 +96,13 @@ def build_argv(
     """Build the pinned ``codex exec`` argv for one arm session.
 
     ``resume_id`` switches fresh (``codex exec <prompt>``) to fork
-    (``codex exec resume <id> <prompt>``). The shared option block is appended
-    after the positionals so it applies to both forms; if a probe shows that
-    ``resume`` rejects any of these flags, swap them for ``-c key=value``
-    overrides here (one place).
+    (``codex exec ... resume <id> <prompt>``). The installed CLI parses
+    ``resume`` as a subcommand with a narrower option surface, so parent
+    ``codex exec`` options such as ``--sandbox`` and ``-C`` must precede the
+    subcommand for forked sessions.
     """
     argv = [codex_bin, "exec"]
-    if resume_id is not None:
-        argv += ["resume", resume_id]
-    argv += [prompt]
-    argv += [
+    opts = [
         "-m", model,
         "-c", f"model_reasoning_effort={effort}",
         "--sandbox", sandbox,
@@ -114,9 +111,13 @@ def build_argv(
         "--json",
     ]
     if cwd is not None:
-        argv += ["-C", str(cwd)]
+        opts += ["-C", str(cwd)]
     if last_message_file is not None:
-        argv += ["-o", str(last_message_file)]
+        opts += ["-o", str(last_message_file)]
+    if resume_id is not None:
+        argv += opts + ["resume", resume_id, prompt]
+    else:
+        argv += [prompt] + opts
     return argv
 
 

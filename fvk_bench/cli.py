@@ -148,16 +148,26 @@ def _cmd_list(args) -> int:
 
 def _cmd_doctor(args) -> int:
     hard_fail = False
-    for name, verdict, detail in doctor.run_checks(eval_checks=not args.no_eval_checks):
+    for name, verdict, detail in doctor.run_checks(
+        eval_checks=not args.no_eval_checks,
+        agent=args.agent,
+        claude_bin=args.claude_bin,
+        codex_bin=args.codex_bin,
+    ):
         label = "OK" if verdict else ("WARN" if verdict is None else "FAIL")
         if verdict is False:
             hard_fail = True
         print(f"{label:<5}{name:<22}{detail}")
 
     if args.canary or args.probe_model:
-        model = config.MODEL if args.probe_model else config.CANARY_MODEL
-        print(f"\nrunning canary session (model {model})...")
-        res = doctor.run_canary(model=model)
+        if args.agent == "codex":
+            model = config.CODEX_MODEL
+            print(f"\nrunning codex canary session (model {model})...")
+            res = doctor.run_codex_canary(model=model, codex_bin=args.codex_bin)
+        else:
+            model = config.MODEL if args.probe_model else config.CANARY_MODEL
+            print(f"\nrunning canary session (model {model})...")
+            res = doctor.run_canary(model=model, claude_bin=args.claude_bin)
         if res["clean"]:
             print(f"canary: clean (session {res['session_id']})")
         else:
@@ -171,8 +181,12 @@ def _cmd_doctor(args) -> int:
             else:
                 if audit["violations"]:
                     print(f"  tool violations: {', '.join(audit['violations'])}")
-                if audit["marker_warnings"]:
+                marker_warnings = audit.get("marker_warnings") or []
+                if marker_warnings:
                     print(f"  injected-listing marker lines: {audit['marker_warnings']}")
+                exec_warnings = audit.get("exec_warnings") or []
+                if exec_warnings:
+                    print(f"  forbidden execution attempts: {exec_warnings}")
     return 1 if hard_fail else 0
 
 
@@ -453,6 +467,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=_cmd_list)
 
     p = sub.add_parser("doctor", help="preflight checks (and optional session canary)")
+    p.add_argument("--agent", choices=config.AGENTS, default=config.DEFAULT_AGENT,
+                   help=f"which agent CLI to preflight (default: {config.DEFAULT_AGENT})")
+    p.add_argument("--claude-bin", default="claude", help="claude binary to invoke")
+    p.add_argument("--codex-bin", default="codex", help="codex binary to invoke")
     p.add_argument("--canary", action="store_true",
                    help="run a cheap real session and audit its transcript")
     p.add_argument("--probe-model", action="store_true",
