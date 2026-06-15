@@ -31,6 +31,7 @@ FVK_MATERIALS_FILES: tuple[str, ...] = (
     "AGENTS.md",
     "commands/formalize.md",
     "commands/verify.md",
+    "knowledge/intent-evidence.md",
     "knowledge/k-framework.md",
     "knowledge/matching-logic.md",
     "knowledge/reachability-and-circularities.md",

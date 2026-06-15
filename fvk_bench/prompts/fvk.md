@@ -32,7 +32,8 @@ Verification Kit (FVK) methodology to audit that fix, then improve or confirm it
 <!-- SECTION: tasks -->
 ## Tasks
 1. Read the FVK docs in `fvk_materials/README.md`, `fvk_materials/AGENTS.md`,
-   `fvk_materials/commands/formalize.md`, and `fvk_materials/commands/verify.md`.
+   `fvk_materials/knowledge/intent-evidence.md`, `fvk_materials/commands/formalize.md`,
+   and `fvk_materials/commands/verify.md`.
 2. Apply the FVK methodology to the V1 fix and produce the FVK artifacts under `fvk/`:
    - `fvk/SPEC.md`
    - `fvk/FINDINGS.md`

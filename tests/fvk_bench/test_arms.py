@@ -375,7 +375,7 @@ def test_core_tree_hash_excludes(tmp_path):
 # 7. stage_fvk copies exactly the pinned materials from the real submodule
 # ---------------------------------------------------------------------------
 
-def test_stage_fvk_copies_8_files(make_ws):
+def test_stage_fvk_copies_9_files(make_ws):
     ws = make_ws()
 
     arms_mod.stage_fvk(ws)

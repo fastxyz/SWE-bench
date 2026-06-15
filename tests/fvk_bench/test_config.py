@@ -19,7 +19,8 @@ def test_tested_claude_version_pinned():
 def test_fvk_materials_copy_set():
     assert config.FVK_MATERIALS_FILES == (
         "README.md", "AGENTS.md", "commands/formalize.md", "commands/verify.md",
-        "knowledge/k-framework.md", "knowledge/matching-logic.md",
+        "knowledge/intent-evidence.md", "knowledge/k-framework.md",
+        "knowledge/matching-logic.md",
         "knowledge/reachability-and-circularities.md", "knowledge/sources.md",
     )
 
