@@ -271,7 +271,9 @@ def _cmd_run(args) -> int:
                 known[iid],
                 ws_root,
                 arms=arm_list,
+                agent=args.agent,
                 claude_bin=args.claude_bin,
+                codex_bin=args.codex_bin,
                 timeout=args.timeout,
                 retry_failed=args.retry_failed,
                 cache_dir=cache_dir,
@@ -305,7 +307,8 @@ def _cmd_run(args) -> int:
     )
     requested_arms = len(ids) * len(arm_list)
     manifest_path = harvest.write_run_manifest(
-        run_id, results_dir=results_dir, extra={"max_parallel": max_parallel}
+        run_id, results_dir=results_dir,
+        extra={"max_parallel": max_parallel, "agent": args.agent},
     )
     print(f"run manifest: {manifest_path}")
     print(
@@ -469,7 +472,10 @@ def build_parser() -> argparse.ArgumentParser:
                    help=f"comma-separated arms to run (default: {','.join(config.ARMS)})")
     p.add_argument("--retry-failed", action="store_true",
                    help="re-run arms previously marked failed")
+    p.add_argument("--agent", choices=config.AGENTS, default=config.DEFAULT_AGENT,
+                   help=f"which agent CLI drives the arms (default: {config.DEFAULT_AGENT})")
     p.add_argument("--claude-bin", default="claude", help="claude binary to invoke")
+    p.add_argument("--codex-bin", default="codex", help="codex binary to invoke (when --agent codex)")
     p.add_argument("--workspace-root", help="override the workspace root directory")
     p.add_argument("--timeout", type=int, default=config.ARM_TIMEOUT_SECONDS,
                    help="per-arm wall-clock timeout in seconds")

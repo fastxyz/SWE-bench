@@ -16,12 +16,22 @@ performs a standard careful code review — it isolates the FVK method from the 
 from the workspace and scored by the official SWE-bench Docker harness. Orchestration
 lives in `fvk_bench/`; the experiment's pinned parameters live in `fvk_bench/config.py`.
 
+The agent under test is selectable: **Claude Code** by default, or **OpenAI Codex**
+(`gpt-5.5`) via `--agent codex`. Both run the identical three arms and are scored by the
+same harness; results record their agent and live side by side. See §5 (“Choosing the
+agent”) for the Codex prerequisites and the honest cross-agent caveats.
+
 ## 2. Prerequisites
 
 - Ubuntu on **x86_64** (the pinned instances' prebuilt Docker images do not support arm64).
 - **Claude Code CLI ≥ 2.1.169**, logged in with a subscription. Check with `claude --version`;
   log in with `claude` then `/login`. Benchmark sessions run with a scrubbed environment, so
   `ANTHROPIC_API_KEY` is ignored (and removed) — subscription auth is what gets used.
+- **For `--agent codex` only:** the **Codex CLI** (check with `codex --version`), logged in
+  with a **ChatGPT/Codex subscription** (`codex login`). Subscription auth is required to
+  reach the pinned `gpt-5.5` — automated `codex exec` under plain API-key auth caps at
+  gpt-5.4. The benchmark passes `--ignore-user-config`, so any local `~/.codex/config.toml`
+  (model/provider/plugins/MCP) is ignored; only the subscription auth in `CODEX_HOME` is used.
 - **git**.
 - **Docker** — needed only for `validate-gold` and `evaluate`, with ~120 GB free disk for
   instance images. You can run sessions on a machine without Docker (`doctor --no-eval-checks`).
@@ -99,6 +109,27 @@ three commands process a single problem or the full 45 incrementally. There are 
 automatic retries — a retry is a different sample — so failed arms stay failed until you
 pass `--retry-failed` to `run`, and every attempt is recorded in the instance manifest.
 `evaluate` takes no instance selection; it scores whatever the run contains.
+
+**Choosing the agent.** `run` takes `--agent {claude,codex}` (default `claude`); the
+default reproduces the original Claude experiment exactly. `--agent codex` runs the
+identical three arms with OpenAI Codex (pinned `gpt-5.5`, reasoning effort `xhigh`, sandbox
+`workspace-write`); add `--codex-bin` to point at a non-default binary. The agent is
+recorded in `run_manifest.json` and Codex results live alongside Claude ones, so they never
+overwrite each other — give each run its own `--run-id`. `validate-gold`, `evaluate`, and
+`report` are agent-agnostic (they score patches and read manifests). Honest asymmetries to
+keep in mind — compare **within** an agent (baseline vs fvk vs control), only loosely
+**across** agents:
+
+- Codex is a shell-execution agent, so the “no execution” rule is enforced by the **prompt**,
+  not by withholding tools. Claude’s pinned 5-tool surface (no Bash) genuinely cannot run
+  anything; Codex reads/searches via shell and could in principle run tests despite the
+  instruction (the transcript audit records, but does not fail on, such attempts).
+- Codex’s top reasoning tier `xhigh` is not identical to Claude’s `--effort max`.
+- The two review arms fork the frozen baseline via `codex exec resume` plus a baseline-rollout
+  snapshot/restore, rather than Claude’s `--resume --fork-session`.
+
+The Codex arm is newly added — validate it on your machine (`pytest tests/fvk_bench/` and one
+smoke instance) before committing to a full batch.
 
 ## 6. Run a batch
 
@@ -181,7 +212,10 @@ Standardized across machines: the pinned model id `claude-opus-4-8` (not the dri
 full flag set, an env scrubbed to a small allowlist (killing `ANTHROPIC_API_KEY` and any
 `CLAUDE_*` overrides), a hermetic workspace shape, vendored byte-identical instance
 inputs, both review arms forking the same frozen baseline transcript, and the official
-dockerized harness with prebuilt images for scoring.
+dockerized harness with prebuilt images for scoring. For `--agent codex` the analogous
+pins are model `gpt-5.5`, reasoning effort `xhigh`, sandbox `workspace-write`,
+`--ignore-user-config` over the same scrubbed env, and subscription auth — but §5 lists
+where the analogy is imperfect (no-execution is prompt-enforced, not tool-enforced).
 
 Not controllable: server-side sampling. The CLI exposes no seed, so two runs of the same
 arm are two draws from the same distribution, and subscription-based runs cannot pin a

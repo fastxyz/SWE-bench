@@ -27,8 +27,9 @@ from pathlib import Path
 
 import fvk_bench
 from fvk_bench import config
-from fvk_bench import claude_runner, prompting
+from fvk_bench import prompting
 from fvk_bench.instances import Instance
+from fvk_bench.runner import get_runner
 
 
 def _utc_now_iso() -> str:
@@ -115,12 +116,13 @@ def harvest_instance(
     transcript_missing: list[str] = []
     transcripts_dir = dst / "transcripts"
     arms_state = state.get("arms", {})
+    runner = get_runner(state.get("agent") or config.DEFAULT_AGENT)
     for arm in config.ARMS:
         arm_state = arms_state.get(arm, {})
         sid = arm_state.get("session_id")
         if not sid:
             continue  # no session_id → nothing to harvest
-        transcript = claude_runner.transcript_path(ws, sid)
+        transcript = runner.transcript_path(ws, sid)
         if transcript is None or not transcript.exists():
             transcript_missing.append(arm)
             continue

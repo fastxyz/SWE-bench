@@ -59,6 +59,21 @@ SETTING_SOURCES: str = "project,local"  # value for `claude --setting-sources`; 
 CANARY_MODEL: str = "claude-haiku-4-5-20251001"  # cheap model used only by `doctor --canary` session-cleanliness probes, never for benchmark arms
 TESTED_CLAUDE_VERSION: str = "2.1.169"  # the claude-code version this infra was validated against; doctor warns on mismatch
 
+# ---------------------------------------------------------------------------
+# Agent selection (which CLI drives the arms). Claude is the original/default;
+# Codex is the second benchmark agent, run side-by-side via `--agent codex`.
+# ---------------------------------------------------------------------------
+
+AGENTS: tuple[str, ...] = ("claude", "codex")
+DEFAULT_AGENT: str = "claude"
+
+# Codex-side pinned invocation constants (mirror the Claude pins above; every
+# value is part of the experiment specification for the codex arm).
+CODEX_MODEL: str = "gpt-5.5"  # value for `codex exec -m`; reachable only under ChatGPT/Codex subscription auth (API-key auth caps at gpt-5.4)
+CODEX_EFFORT: str = "xhigh"  # `-c model_reasoning_effort=`; Codex's top reasoning tier (the analogue of Claude's `--effort max`)
+CODEX_SANDBOX: str = "workspace-write"  # value for `codex exec --sandbox`; must be able to write the fix (read-only cannot), execution is forbidden by prompt, not sandbox
+TESTED_CODEX_VERSION: str = "0.132.0"  # codex-cli version this infra was written against; doctor warns on mismatch
+
 
 # ---------------------------------------------------------------------------
 # Functions

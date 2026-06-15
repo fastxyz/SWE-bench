@@ -32,13 +32,13 @@ import json
 import os
 import shutil
 import subprocess
-import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-from fvk_bench import claude_runner, config, scaffold
+from fvk_bench import config, scaffold
 from fvk_bench.instances import Instance
 from fvk_bench.prompting import render_prompt
+from fvk_bench.runner import AgentResult, AgentRunner, get_runner
 
 #: Top-level workspace entries excluded from :func:`core_tree_hash`.
 _HASH_EXCLUDED_TOP: tuple[str, ...] = (".fvk_bench", "fvk", "fvk_materials", "review")
@@ -315,7 +315,7 @@ def _eligible(arm_state: dict, retry_failed: bool) -> bool:
     return True  # pending, skipped, or failed-being-retried
 
 
-def _record_result(arm_state: dict, result: claude_runner.ClaudeResult) -> None:
+def _record_result(arm_state: dict, result: AgentResult) -> None:
     """Book-keep one session attempt (recorded whether it succeeded or not)."""
     arm_state["attempts"] += 1
     arm_state["ended_at"] = _utc_now()
@@ -323,7 +323,9 @@ def _record_result(arm_state: dict, result: claude_runner.ClaudeResult) -> None:
     arm_state["duration_seconds"] = result.duration_seconds
 
 
-def _apply_audit(ws: Path, arm_state: dict, session_id: str | None) -> None:
+def _apply_audit(
+    ws: Path, runner: AgentRunner, arm_state: dict, session_id: str | None
+) -> None:
     """Audit the session transcript; a dirty tool surface fails the arm.
 
     Artifacts already extracted/snapshotted are deliberately kept — the audit
@@ -331,11 +333,11 @@ def _apply_audit(ws: Path, arm_state: dict, session_id: str | None) -> None:
     """
     if not session_id:
         return
-    transcript = claude_runner.transcript_path(ws, session_id)
+    transcript = runner.transcript_path(ws, session_id)
     if transcript is None:
         arm_state["audit"] = {"ok": None, "note": "transcript_not_found"}
         return
-    audit = claude_runner.audit_transcript(transcript)
+    audit = runner.audit_transcript(transcript)
     arm_state["audit"] = audit
     if audit["ok"] is False:
         arm_state["status"] = "failed"
@@ -348,8 +350,11 @@ def run_instance(
     ws_root: Path,
     *,
     arms: tuple = config.ARMS,
+    agent: str = config.DEFAULT_AGENT,
+    runner: AgentRunner | None = None,
     claude_bin: str = "claude",
-    model: str = config.MODEL,
+    codex_bin: str = "codex",
+    model: str | None = None,
     timeout: int = config.ARM_TIMEOUT_SECONDS,
     retry_failed: bool = False,
     cache_dir: Path | None = None,
@@ -367,6 +372,11 @@ def run_instance(
     if unknown:
         raise ValueError(f"unknown arms {unknown}; expected a subset of {config.ARMS}")
 
+    if runner is None:
+        runner = get_runner(
+            agent, claude_bin=claude_bin, codex_bin=codex_bin, model=model
+        )
+
     cache = (
         Path(cache_dir)
         if cache_dir is not None
@@ -376,25 +386,27 @@ def run_instance(
     ws = scaffold.create_workspace(run_id, inst, Path(ws_root), mirror)
 
     state = load_state(ws) or _fresh_state(run_id, inst)
+    state["agent"] = runner.name  # recorded so harvest can pick the right runner
     save_state(ws, state)
-
-    launch = {"timeout": timeout, "claude_bin": claude_bin, "model": model}
 
     # --- baseline: fresh session with a pre-generated, pre-recorded uuid4 ----
     baseline = state["arms"]["baseline"]
     if "baseline" in arms and _eligible(baseline, retry_failed):
-        session_id = str(uuid.uuid4())
-        state["baseline_session_id"] = session_id  # known even on crash
-        baseline["session_id"] = session_id
+        pre_id = runner.new_session_id()  # claude: chosen up front; codex: None
+        state["baseline_session_id"] = pre_id  # known even on crash (claude)
+        baseline["session_id"] = pre_id
         baseline["started_at"] = _utc_now()
         save_state(ws, state)
 
-        result = claude_runner.run_arm_session(
+        result = runner.run_fresh(
             ws, "baseline", render_prompt("baseline", inst),
-            session_id=session_id, **launch,
+            session_id=pre_id, timeout=timeout,
         )
         _record_result(baseline, result)
         if result.ok:
+            sid = result.session_id or pre_id  # authoritative post-run id
+            state["baseline_session_id"] = sid
+            baseline["session_id"] = sid
             extract_patch(ws, "baseline")
             snapshot_artifacts(ws, "baseline")
             state["core_hash_post_baseline"] = core_tree_hash(ws)
@@ -403,7 +415,7 @@ def run_instance(
         else:
             baseline["status"] = "failed"
             baseline["reason"] = result.error or "agent_error"
-        _apply_audit(ws, baseline, session_id)
+        _apply_audit(ws, runner, baseline, baseline["session_id"])
         save_state(ws, state)
 
     # Without a completed baseline there is no frozen session to fork and no
@@ -445,9 +457,9 @@ def run_instance(
         fvk["started_at"] = _utc_now()
         save_state(ws, state)
         try:
-            result = claude_runner.run_arm_session(
+            result = runner.run_fork(
                 ws, "fvk", render_prompt("fvk", inst),
-                resume_id=state["baseline_session_id"], **launch,
+                state["baseline_session_id"], timeout=timeout,
             )
             _record_result(fvk, result)
             fvk["session_id"] = result.session_id
@@ -461,7 +473,7 @@ def run_instance(
                 fvk["reason"] = result.error or "agent_error"
         finally:
             scrub_fvk(ws)
-        _apply_audit(ws, fvk, result.session_id)
+        _apply_audit(ws, runner, fvk, result.session_id)
         save_state(ws, state)
 
     # --- control: second independent fork, gated on a pristine core tree ----
@@ -485,9 +497,9 @@ def run_instance(
         (ws / "review").mkdir(exist_ok=True)
         control["started_at"] = _utc_now()
         save_state(ws, state)
-        result = claude_runner.run_arm_session(
+        result = runner.run_fork(
             ws, "control", render_prompt("control", inst),
-            resume_id=state["baseline_session_id"], **launch,
+            state["baseline_session_id"], timeout=timeout,
         )
         _record_result(control, result)
         control["session_id"] = result.session_id
@@ -499,7 +511,7 @@ def run_instance(
         else:
             control["status"] = "failed"
             control["reason"] = result.error or "agent_error"
-        _apply_audit(ws, control, result.session_id)
+        _apply_audit(ws, runner, control, result.session_id)
         save_state(ws, state)
 
     return state
