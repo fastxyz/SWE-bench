@@ -217,6 +217,41 @@ def test_harvest_eval(tmp_path):
     assert not (run_dir / "demo__demo-3" / "eval").exists()
 
 
+def test_harvest_eval_normalizes_astropy_7606_empty_param_alias(tmp_path):
+    results_dir = tmp_path / "results"
+    repo_root = tmp_path / "repo_root"
+    run_dir = results_dir / RID
+    iid = "astropy__astropy-7606"
+    (run_dir / iid).mkdir(parents=True)
+
+    model_dir = repo_root / "logs" / "run_evaluation" / f"{RID}.baseline" / f"{RID}__baseline" / iid
+    model_dir.mkdir(parents=True)
+    payload = _report_payload(iid, resolved=False, ftp=(1, 0), ptp=(241, 1))
+    entry = payload[iid]
+    ptp = entry["tests_status"]["PASS_TO_PASS"]
+    ptp["failure"] = ["astropy/units/tests/test_units.py::test_compose_roundtrip[]"]
+    (model_dir / "report.json").write_text(json.dumps(payload), encoding="utf-8")
+    (model_dir / "test_output.txt").write_text(
+        "astropy/units/tests/test_units.py::test_compose_roundtrip[unit0] PASSED\n"
+        "==================== 242 passed, 1 warnings in 1.28 seconds ====================\n",
+        encoding="utf-8",
+    )
+
+    summary = evaluate.harvest_eval(
+        RID, "baseline", results_dir=results_dir, repo_root=repo_root
+    )
+
+    assert summary[iid]["resolved"] is True
+    assert summary[iid]["ptp_pass"] == 242
+    assert summary[iid]["ptp_total"] == 242
+    copied = json.loads(
+        (run_dir / iid / "eval" / "baseline.report.json").read_text(encoding="utf-8")
+    )
+    copied_entry = copied[iid]
+    assert copied_entry["resolved"] is True
+    assert copied_entry["fvk_bench_normalizations"]
+
+
 # ---------------------------------------------------------------------------
 # 4. gold_eval: predictions_path literal "gold", dotted goldcheck run id,
 #    resolved map with None for missing reports

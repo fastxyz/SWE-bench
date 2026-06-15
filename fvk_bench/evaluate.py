@@ -47,6 +47,15 @@ _MISSING_SUMMARY = {
     "ptp_total": 0,
 }
 
+_PYTEST_ID_ALIASES: tuple[dict[str, str], ...] = (
+    {
+        "instance_id": "astropy__astropy-7606",
+        "section": "PASS_TO_PASS",
+        "expected": "astropy/units/tests/test_units.py::test_compose_roundtrip[]",
+        "emitted": "astropy/units/tests/test_units.py::test_compose_roundtrip[unit0]",
+    },
+)
+
 
 def build_predictions(run_dir: Path, arm: str) -> tuple[Path, list[str]]:
     """Write the predictions JSONL for ``arm`` from a harvested run directory.
@@ -121,6 +130,66 @@ def _relocate_aggregate(
     stray = Path(repo_root) / f"{model_name}.{harness_run_id}.json"
     if stray.is_file():
         shutil.move(str(stray), str(eval_dir / stray.name))
+
+
+def _test_output_contains_pass(report_path: Path, test_id: str) -> bool:
+    """Return True when the adjacent harness test output shows ``test_id`` passed."""
+    test_output = Path(report_path).with_name("test_output.txt")
+    try:
+        text = test_output.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return False
+    return f"{test_id} PASSED" in text
+
+
+def normalize_report(data: dict, instance_id: str, report_path: Path | None = None) -> bool:
+    """Apply narrow compatibility normalizations to a harness ``report.json``.
+
+    Returns True when ``data`` was modified. The raw harness logs remain the
+    artifact of record; harvested reports carry these corrections so scoring is
+    not distorted by known test-id spelling drift.
+    """
+    entry = data.get(instance_id)
+    if not isinstance(entry, dict):
+        return False
+    tests_status = entry.get("tests_status") or {}
+    notes: list[dict[str, str]] = []
+
+    for alias in _PYTEST_ID_ALIASES:
+        if alias["instance_id"] != instance_id:
+            continue
+        section = tests_status.get(alias["section"]) or {}
+        failures = section.get("failure") or []
+        if alias["expected"] not in failures:
+            continue
+        if report_path is None or not _test_output_contains_pass(
+            Path(report_path), alias["emitted"]
+        ):
+            continue
+
+        failures.remove(alias["expected"])
+        section["failure"] = failures
+        successes = section.setdefault("success", [])
+        if alias["expected"] not in successes:
+            successes.append(alias["expected"])
+        notes.append(
+            {
+                "reason": "pytest_param_id_alias",
+                "section": alias["section"],
+                "expected": alias["expected"],
+                "emitted": alias["emitted"],
+            }
+        )
+
+    if not notes:
+        return False
+
+    existing = entry.setdefault("fvk_bench_normalizations", [])
+    existing.extend(notes)
+    ftp_failures = (tests_status.get("FAIL_TO_PASS") or {}).get("failure") or []
+    ptp_failures = (tests_status.get("PASS_TO_PASS") or {}).get("failure") or []
+    entry["resolved"] = not ftp_failures and not ptp_failures
+    return True
 
 
 def run_official_eval(
@@ -232,17 +301,59 @@ def harvest_eval(
         if not src.is_file():
             summary[iid] = dict(_MISSING_SUMMARY)
             continue
-        dst = inst_dir / "eval" / f"{arm}.report.json"
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(src, dst)
         try:
             data = json.loads(src.read_text(encoding="utf-8"))
         except ValueError:
             # Malformed report: kept for forensics, scored as unusable.
+            dst = inst_dir / "eval" / f"{arm}.report.json"
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dst)
             summary[iid] = dict(_MISSING_SUMMARY, found=True)
             continue
+        dst = inst_dir / "eval" / f"{arm}.report.json"
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        if normalize_report(data, iid, src):
+            dst.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+        else:
+            shutil.copy2(src, dst)
         summary[iid] = summarize_report(data, iid)
     return summary
+
+
+def _update_gold_aggregate(
+    aggregate_path: Path, resolved_results: dict[str, bool | None]
+) -> None:
+    """Keep the relocated gold aggregate consistent with normalized reports."""
+    if not Path(aggregate_path).is_file():
+        return
+    try:
+        data = json.loads(Path(aggregate_path).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return
+    changed = False
+    resolved_ids = list(data.get("resolved_ids") or [])
+    unresolved_ids = list(data.get("unresolved_ids") or [])
+    for iid, resolved in resolved_results.items():
+        if resolved is not True or iid not in unresolved_ids:
+            continue
+        unresolved_ids.remove(iid)
+        if iid not in resolved_ids:
+            resolved_ids.append(iid)
+        changed = True
+    if not changed:
+        return
+    data["resolved_ids"] = sorted(resolved_ids)
+    data["unresolved_ids"] = sorted(unresolved_ids)
+    data["resolved_instances"] = len(resolved_ids)
+    data["unresolved_instances"] = len(unresolved_ids)
+    notes = data.setdefault("fvk_bench_normalizations", [])
+    notes.append(
+        {
+            "reason": "report_level_pytest_param_id_alias",
+            "instances": sorted(iid for iid, resolved in resolved_results.items() if resolved is True),
+        }
+    )
+    Path(aggregate_path).write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 
 
 def gold_eval(
@@ -288,10 +399,15 @@ def gold_eval(
         if report_path is not None:
             try:
                 data = json.loads(report_path.read_text(encoding="utf-8"))
+                if normalize_report(data, iid, report_path):
+                    report_path.with_name("report.fvk_bench_normalized.json").write_text(
+                        json.dumps(data, indent=2) + "\n", encoding="utf-8"
+                    )
                 entry = data.get(iid)
                 if isinstance(entry, dict):
                     resolved = bool(entry.get("resolved", False))
             except ValueError:
                 resolved = None
         results[iid] = resolved
+    _update_gold_aggregate(eval_dir / f"gold.{harness_run_id}.json", results)
     return results
