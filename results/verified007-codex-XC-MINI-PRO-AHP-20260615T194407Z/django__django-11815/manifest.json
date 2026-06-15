@@ -1,0 +1,75 @@
+{
+  "run_id": "verified007-codex-XC-MINI-PRO-AHP-20260615T194407Z",
+  "instance_id": "django__django-11815",
+  "baseline_session_id": "019eccd2-a823-7ab1-8123-87ea101e69e7",
+  "core_hash_post_baseline": "55fb0dc37a2b9074f91ab519505178cd9ba741534e1a111ac74c03c6aec94b6c",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019eccd2-a823-7ab1-8123-87ea101e69e7",
+      "attempts": 1,
+      "started_at": "2026-06-15T19:46:58.091607+00:00",
+      "ended_at": "2026-06-15T19:48:37.300987+00:00",
+      "num_turns": null,
+      "duration_seconds": 99.20706093398621,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "exec_command": 17,
+          "apply_patch": 2
+        },
+        "violations": [],
+        "exec_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 79
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019eccd2-a823-7ab1-8123-87ea101e69e7",
+      "attempts": 1,
+      "started_at": "2026-06-15T19:48:37.754427+00:00",
+      "ended_at": "2026-06-15T19:55:07.829584+00:00",
+      "num_turns": null,
+      "duration_seconds": 390.0707492700021,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "exec_command": 54,
+          "apply_patch": 5,
+          "update_plan": 6
+        },
+        "violations": [],
+        "exec_warnings": [
+          "{\"cmd\":\"rg -n \\\"run|ran|kprove|kompile|pytest|test\\\" fvk reports -g '*.md'\",\"workdir\":\"/home/xc/.swe-fvk-runs/verified007-codex-XC-MINI-PRO-AHP-20260615T194407Z/django__django-11815\",\"yield_time_ms\":1"
+        ],
+        "unparseable_lines": 0,
+        "lines": 248
+      }
+    },
+    "control": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    }
+  },
+  "agent": "codex",
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "b7c2dd08d551bc15b1a3f1af5beab7dbf555521a2e7047fbd2b2ef7a18b6679a",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": null,
+    "fvk": null,
+    "control": null
+  }
+}
