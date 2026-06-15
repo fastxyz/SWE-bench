@@ -1,0 +1,135 @@
+{
+  "run_id": "repro5x-XC-MINI-PRO-AHP-s3",
+  "instance_id": "pytest-dev__pytest-10356",
+  "baseline_session_id": "bf26c2cb-5f0c-4dd7-9bc4-9f45ccffea8d",
+  "core_hash_post_baseline": "a2596120266f7061f71d2dedf4cc8e5fd4692320662ccdb4ef176fa7f8b9d36d",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "bf26c2cb-5f0c-4dd7-9bc4-9f45ccffea8d",
+      "attempts": 1,
+      "started_at": "2026-06-15T02:46:49.792112+00:00",
+      "ended_at": "2026-06-15T02:52:37.395508+00:00",
+      "num_turns": 20,
+      "duration_seconds": 347.6028150789989,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 8,
+          "Glob": 2,
+          "Grep": 6,
+          "Edit": 2,
+          "Write": 1
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 77
+      }
+    },
+    "fvk": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    },
+    "control": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    }
+  },
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "285f34c0c41bb0ff1e784f2f0234b23ae0e382f96b0ba257b2bddae05a492271",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 346798,
+      "duration_api_ms": 349295,
+      "ttft_ms": 2614,
+      "ttft_stream_ms": 2606,
+      "time_to_request_ms": 57,
+      "num_turns": 20,
+      "result": "The fix is complete and verified.\n\n## Summary\n\nThe bug was in `get_unpacked_marks` in `repo/src/_pytest/mark/structures.py`, which obtained a class's markers via `getattr(obj, \"pytestmark\", [])`. Ordinary Python attribute lookup returns only the *first* `pytestmark` found in the MRO, so for `TestDings(Foo, Bar)` it stopped at `Foo.pytestmark` and silently dropped `Bar`'s marks (single-inheritance only worked because each subclass's `pytestmark` was eagerly rebuilt to include its parent's marks). I rewrote `get_unpacked_marks` so that for a class it collects the marks stored *directly* on every class in `reversed(obj.__mro__)` (base-first, preserving the existing ordering), while non-class objects keep the old `getattr` path; a new keyword-only `consider_mro=True` parameter lets callers request only directly-stored marks. I then changed `store_mark` to use `consider_mro=False`, so each class records only its own marks and `get_unpacked_marks` reconstructs the full set by walking the MRO \u2014 this keeps stored data duplicate-free (including diamond inheritance) without any extra de-duplication pass, and now correctly merges markers from all base classes in multiple inheritance. Details are documented in `reports/baseline_notes.md`.",
+      "stop_reason": "end_turn",
+      "session_id": "bf26c2cb-5f0c-4dd7-9bc4-9f45ccffea8d",
+      "total_cost_usd": 1.1745585,
+      "usage": {
+        "input_tokens": 29,
+        "cache_creation_input_tokens": 42892,
+        "cache_read_input_tokens": 374081,
+        "output_tokens": 28733,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 2590,
+          "ephemeral_5m_input_tokens": 40302
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 461,
+            "cache_read_input_tokens": 44546,
+            "cache_creation_input_tokens": 1721,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 1721,
+              "ephemeral_1h_input_tokens": 0
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 888,
+          "outputTokens": 17,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.000973,
+          "contextWindow": 200000,
+          "maxOutputTokens": 32000
+        },
+        "claude-opus-4-8": {
+          "inputTokens": 29,
+          "outputTokens": 28733,
+          "cacheReadInputTokens": 374081,
+          "cacheCreationInputTokens": 42892,
+          "webSearchRequests": 0,
+          "costUSD": 1.1735855,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "6ba81593-a0bc-418e-8162-3889eaadd6e4"
+    },
+    "fvk": null,
+    "control": null
+  }
+}

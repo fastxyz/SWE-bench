@@ -1,0 +1,135 @@
+{
+  "run_id": "repro5x-XC-MINI-PRO-AHP-s5",
+  "instance_id": "django__django-10554",
+  "baseline_session_id": "54e23f19-2d99-4d5d-aba1-781485682a9f",
+  "core_hash_post_baseline": "dfba75c682dc4277ef52b63a37935ea893d204ab4c7a1501151424856fa237da",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "54e23f19-2d99-4d5d-aba1-781485682a9f",
+      "attempts": 1,
+      "started_at": "2026-06-15T00:15:27.009946+00:00",
+      "ended_at": "2026-06-15T01:32:18.362892+00:00",
+      "num_turns": 83,
+      "duration_seconds": 4611.352341334999,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 53,
+          "Grep": 20,
+          "Glob": 5,
+          "Edit": 3,
+          "Write": 1
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 330
+      }
+    },
+    "fvk": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    },
+    "control": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    }
+  },
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "285f34c0c41bb0ff1e784f2f0234b23ae0e382f96b0ba257b2bddae05a492271",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 4610529,
+      "duration_api_ms": 4612265,
+      "ttft_ms": 2998,
+      "ttft_stream_ms": 2994,
+      "time_to_request_ms": 58,
+      "num_turns": 83,
+      "result": "Both deliverables are complete. Let me provide the final summary.\n\n## Summary\n\nThe bug is that `Query.clone()` in `django/db/models/sql/query.py` performs a shallow `obj.__dict__ = self.__dict__.copy()` and re-copies every mutable attribute that can't be shared *except* `combined_queries` \u2014 so a combinator queryset (`union()`/`intersection()`/`difference()`) and every queryset derived from it via `_chain`/`_clone`/`chain` ended up sharing the very same operand `Query` instances by reference. When a derived queryset that restricts its columns (`values()`/`values_list()`) is compiled, `SQLCompiler.get_combinator_sql()` calls `set_values()` on those operand queries to align their selected columns; because the operands were shared, that mutation leaked back into the original combinator queryset, shrinking its UNION members to the value-list columns. On re-evaluation the original still carried its ordering, which the compiler rewrites to a positional reference (e.g. `ORDER BY 4`) for combinator queries, so the database rejected it with \"ORDER BY position 4 is not in select list.\" I fixed it at the root \u2014 the sharing \u2014 by adding `obj.combined_queries = tuple(query.clone() for query in self.combined_queries)` to `Query.clone()`, so each derived query owns independent copies of its operands and compile-time mutations can no longer corrupt the original; this is a no-op for ordinary (non-combinator) queries and preserves the generated SQL for all existing combinator scenarios.",
+      "stop_reason": "end_turn",
+      "session_id": "54e23f19-2d99-4d5d-aba1-781485682a9f",
+      "total_cost_usd": 16.377718249999997,
+      "usage": {
+        "input_tokens": 151,
+        "cache_creation_input_tokens": 399733,
+        "cache_read_input_tokens": 10081536,
+        "output_tokens": 353476,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 399733,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 650,
+            "cache_read_input_tokens": 401156,
+            "cache_creation_input_tokens": 1952,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 1952
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 884,
+          "outputTokens": 16,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.000964,
+          "contextWindow": 200000,
+          "maxOutputTokens": 32000
+        },
+        "claude-opus-4-8": {
+          "inputTokens": 151,
+          "outputTokens": 353476,
+          "cacheReadInputTokens": 10081536,
+          "cacheCreationInputTokens": 399733,
+          "webSearchRequests": 0,
+          "costUSD": 16.376754249999998,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "4d65f70a-a116-4161-b399-d54fe4e7563a"
+    },
+    "fvk": null,
+    "control": null
+  }
+}

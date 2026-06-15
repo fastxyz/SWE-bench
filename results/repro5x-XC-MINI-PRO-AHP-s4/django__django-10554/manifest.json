@@ -1,0 +1,135 @@
+{
+  "run_id": "repro5x-XC-MINI-PRO-AHP-s4",
+  "instance_id": "django__django-10554",
+  "baseline_session_id": "3a4f95f6-8fa0-49f7-a7df-04dcb98ca97f",
+  "core_hash_post_baseline": "100b206534cb5e31cb578f578ae0f54648911c8d34fc189df91a627c1fa70213",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "3a4f95f6-8fa0-49f7-a7df-04dcb98ca97f",
+      "attempts": 1,
+      "started_at": "2026-06-15T00:15:26.991479+00:00",
+      "ended_at": "2026-06-15T01:07:11.164483+00:00",
+      "num_turns": 70,
+      "duration_seconds": 3104.172374541,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 41,
+          "Grep": 20,
+          "Glob": 4,
+          "Edit": 3,
+          "Write": 1
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 300
+      }
+    },
+    "fvk": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    },
+    "control": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    }
+  },
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "285f34c0c41bb0ff1e784f2f0234b23ae0e382f96b0ba257b2bddae05a492271",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 3103351,
+      "duration_api_ms": 3105573,
+      "ttft_ms": 3894,
+      "ttft_stream_ms": 3891,
+      "time_to_request_ms": 73,
+      "num_turns": 70,
+      "result": "The fix is complete and verified. All three changes are in place and consistent:\n\n1. `repo/django/db/models/sql/compiler.py` (line 8): added `F` to the imports from `django.db.models.expressions`.\n2. `repo/django/db/models/sql/compiler.py` (`SQLCompiler.get_order_by`): the combinator relabeling loop now (a) captures the unresolved `expr_src` and refuses to skip an aliased select column when the ORDER BY term is an `F('name')` matching that alias, and (b) instead of unconditionally raising when a term isn't found, only raises for aliased projections and otherwise pulls the column into the SELECT via `self.query.add_select_col(src)`, relabeling the term to the new trailing position.\n3. `repo/django/db/models/sql/query.py`: added `Query.add_select_col()`.\n\n## Summary\n\nThe issue is that ordering a *derived* combined queryset (`union()`/`intersection()`/`difference()` that has been narrowed with `values_list()`/`values()`) by a column outside the projection blew up: `SQLCompiler.get_order_by()` relabels each ORDER BY term of a compound query to the raw position of the matching SELECT column, and when the column wasn't in the (reduced) select list it unconditionally raised `DatabaseError('ORDER BY term does not match any column in the result set.')` \u2014 even though, for unaliased column selects, the column can simply be added to the SELECT (exactly what Django already does for ordinary queries). The fix makes that branch add the missing ordering column to the selected columns (new `Query.add_select_col()`, which extends both `select` and `values_select` so the column propagates to every part of the compound statement in `get_combinator_sql()`) and relabels the term to the new last position, while still raising for genuinely aliased `.values()` projections (preserving `test_order_raises_on_non_selected_column`); it also handles ordering by an `F()` expression whose name matches an aliased select column. Because `add_select_col()` only mutates the *derived* clone's query (not the shared `combined_queries`, which `get_combinator_sql()` already clones before `set_values()`), the original union queryset is left intact and remains reusable for subsequent derivations.",
+      "stop_reason": "end_turn",
+      "session_id": "3a4f95f6-8fa0-49f7-a7df-04dcb98ca97f",
+      "total_cost_usd": 12.13243375,
+      "usage": {
+        "input_tokens": 137,
+        "cache_creation_input_tokens": 309759,
+        "cache_read_input_tokens": 8261282,
+        "output_tokens": 242566,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 309759,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 881,
+            "cache_read_input_tokens": 309382,
+            "cache_creation_input_tokens": 3752,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 3752
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 884,
+          "outputTokens": 16,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.000964,
+          "contextWindow": 200000,
+          "maxOutputTokens": 32000
+        },
+        "claude-opus-4-8": {
+          "inputTokens": 137,
+          "outputTokens": 242566,
+          "cacheReadInputTokens": 8261282,
+          "cacheCreationInputTokens": 309759,
+          "webSearchRequests": 0,
+          "costUSD": 12.13146975,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "a6cf365f-20a7-4618-8819-3228ab6d9fec"
+    },
+    "fvk": null,
+    "control": null
+  }
+}

@@ -1,0 +1,135 @@
+{
+  "run_id": "repro5x-XC-MINI-PRO-AHP-s5",
+  "instance_id": "django__django-16263",
+  "baseline_session_id": "f20b3ea4-8479-4a87-8154-cf308d7dd7cf",
+  "core_hash_post_baseline": "f1deea41d56c57baaf1036adc2d65c534a99f26c33db465ae95b0366fb8fea49",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "f20b3ea4-8479-4a87-8154-cf308d7dd7cf",
+      "attempts": 1,
+      "started_at": "2026-06-15T01:49:30.758466+00:00",
+      "ended_at": "2026-06-15T02:30:32.915991+00:00",
+      "num_turns": 86,
+      "duration_seconds": 2462.156718664999,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 44,
+          "Grep": 31,
+          "Edit": 5,
+          "Write": 3,
+          "Glob": 2
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 303
+      }
+    },
+    "fvk": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    },
+    "control": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    }
+  },
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "285f34c0c41bb0ff1e784f2f0234b23ae0e382f96b0ba257b2bddae05a492271",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 2461333,
+      "duration_api_ms": 2465974,
+      "ttft_ms": 3657,
+      "ttft_stream_ms": 3605,
+      "time_to_request_ms": 73,
+      "num_turns": 86,
+      "result": "Both the code fix and `reports/baseline_notes.md` are complete. Here is my summary.\n\n## Summary\n\nThe issue is that `QuerySet.count()` (and `aggregate()`) wraps the query in a subquery with a `GROUP BY` whenever any annotation exists, even when that annotation is never referenced \u2014 so `Book.objects.annotate(Count('chapters')).count()` needlessly joins, groups, and subqueries instead of running a plain `SELECT COUNT(*) FROM book`. I fixed this entirely in `django/db/models/sql/query.py`'s `Query.get_aggregation()` by adding a stripping step (helpers `_referenced_annotation_aliases`, `_annotation_contains_join`, `_strip_unused_annotations`, `_trim_unused_aliases`): annotations not referenced by the aggregates being computed, by filters, by an explicit `GROUP BY`, or by ordering are removed \u2014 but only when removing them cannot change the row count, i.e. when the annotation is an aggregate (collapsed by the `GROUP BY` on the PK) or references no join (so it can't multiply rows); multivalued non-aggregate join annotations are kept. Removed annotations' now-unused joins are dropped by zeroing their `alias_refcount`, and the fast `SELECT COUNT(*)` path is taken only when no multivalued joins survive \u2014 otherwise the code keeps the `GROUP-BY-pk` subquery (preserved via a flag captured before stripping plus a new `group_by is True and joins_remain` subquery condition) so filtered counts over multivalued relations still count distinct main rows. Stripping is skipped for `distinct`/sliced/`combinator`/`select_for_update`/`values()`-style queries where the selected annotations participate in determining the result, ensuring no behavioral regressions; correctness was traced through the ticket's examples and existing edge-case tests (e.g. `test_aggregation_subquery_annotation_multivalued`, the `alias()`-filter tests), all of which retain their expected count values. I deliberately scoped the change to `count()`/`aggregate()` and left `exists()` untouched, as noted in the report.",
+      "stop_reason": "end_turn",
+      "session_id": "f20b3ea4-8479-4a87-8154-cf308d7dd7cf",
+      "total_cost_usd": 10.553739249999998,
+      "usage": {
+        "input_tokens": 135,
+        "cache_creation_input_tokens": 247317,
+        "cache_read_input_tokens": 8392236,
+        "output_tokens": 192410,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 247317,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 804,
+            "cache_read_input_tokens": 249721,
+            "cache_creation_input_tokens": 971,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 971
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-opus-4-8": {
+          "inputTokens": 135,
+          "outputTokens": 192410,
+          "cacheReadInputTokens": 8392236,
+          "cacheCreationInputTokens": 247317,
+          "webSearchRequests": 0,
+          "costUSD": 10.552774249999999,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        },
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 885,
+          "outputTokens": 16,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.000965,
+          "contextWindow": 200000,
+          "maxOutputTokens": 32000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "3c59f779-694c-4c21-b0ca-feb08dc85e66"
+    },
+    "fvk": null,
+    "control": null
+  }
+}

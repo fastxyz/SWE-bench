@@ -1,0 +1,28 @@
+diff --git a/django/db/models/base.py b/django/db/models/base.py
+index 8ea6c05ef9..6853efab08 100644
+--- a/django/db/models/base.py
++++ b/django/db/models/base.py
+@@ -201,10 +201,19 @@ class ModelBase(type):
+             if base != new_class and not base._meta.abstract:
+                 continue
+             # Locate OneToOneField instances.
+-            for field in base._meta.local_fields:
+-                if isinstance(field, OneToOneField):
+-                    related = resolve_relation(new_class, field.remote_field.model)
+-                    parent_links[make_model_tuple(related)] = field
++            fields = [
++                field for field in base._meta.local_fields
++                if isinstance(field, OneToOneField)
++            ]
++            # OneToOneField with parent_link=True are the canonical parent
++            # links, so they take precedence over any other OneToOneField
++            # pointing at the same model. This makes the link resolution
++            # independent of the order in which the fields are declared.
++            for field in sorted(fields, key=lambda f: f.remote_field.parent_link, reverse=True):
++                related = resolve_relation(new_class, field.remote_field.model)
++                related_key = make_model_tuple(related)
++                if related_key not in parent_links:
++                    parent_links[related_key] = field
+ 
+         # Track fields inherited from base models.
+         inherited_attributes = set()

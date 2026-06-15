@@ -1,0 +1,135 @@
+{
+  "run_id": "repro5x-XC-MINI-PRO-AHP-s5",
+  "instance_id": "django__django-13212",
+  "baseline_session_id": "9ce19e28-a318-4e28-a733-2f97744e0704",
+  "core_hash_post_baseline": "b4c6905d06320e1933090b0d82782d4df37fae5ba8cd376c08bc8b70057b0f18",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "9ce19e28-a318-4e28-a733-2f97744e0704",
+      "attempts": 1,
+      "started_at": "2026-06-15T01:41:53.226785+00:00",
+      "ended_at": "2026-06-15T01:49:16.149189+00:00",
+      "num_turns": 37,
+      "duration_seconds": 442.9218374009997,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 14,
+          "Grep": 3,
+          "Edit": 16,
+          "Glob": 2,
+          "Write": 1
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 129
+      }
+    },
+    "fvk": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    },
+    "control": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    }
+  },
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "285f34c0c41bb0ff1e784f2f0234b23ae0e382f96b0ba257b2bddae05a492271",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 442119,
+      "duration_api_ms": 442717,
+      "ttft_ms": 2650,
+      "ttft_stream_ms": 2648,
+      "time_to_request_ms": 52,
+      "num_turns": 37,
+      "result": "Both deliverables are complete.\n\n**Summary:** The issue asked that built-in validators include the offending input in their `ValidationError` so a custom message can use a `%(value)s` placeholder. The root cause was that `ValidationError` only interpolates `message %= params` when `params` is set, yet every built-in validator in `django/core/validators.py` except `BaseValidator` raised `ValidationError(self.message, code=self.code)` with no `params`, leaving `value` unavailable. I fixed this by adding `params={'value': value}` (or adding the `'value'` key to the existing `params` dict) to every `ValidationError` raised by `RegexValidator` (which transitively covers `validate_integer`, the slug validators, and the comma-separated/int-list validators), `URLValidator` (all five raise sites), `EmailValidator` (all three), `validate_ipv4_address`/`validate_ipv6_address`/`validate_ipv46_address`, `DecimalValidator` (all four, also giving its `invalid` branch the consistent `code='invalid'`), `FileExtensionValidator`, and `ProhibitNullCharactersValidator`; `BaseValidator` already supplied `value` and was left untouched. The change is safe because dict-style `%` formatting ignores unused keys, so default messages render unchanged, and the existing data-driven test only checks whether an exception is raised, not its `params`/`code`.",
+      "stop_reason": "end_turn",
+      "session_id": "9ce19e28-a318-4e28-a733-2f97744e0704",
+      "total_cost_usd": 1.8739380000000005,
+      "usage": {
+        "input_tokens": 63,
+        "cache_creation_input_tokens": 57312,
+        "cache_read_input_tokens": 1300708,
+        "output_tokens": 34565,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 57312,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 495,
+            "cache_read_input_tokens": 60126,
+            "cache_creation_input_tokens": 561,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 561
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 884,
+          "outputTokens": 12,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.0009440000000000001,
+          "contextWindow": 200000,
+          "maxOutputTokens": 32000
+        },
+        "claude-opus-4-8": {
+          "inputTokens": 63,
+          "outputTokens": 34565,
+          "cacheReadInputTokens": 1300708,
+          "cacheCreationInputTokens": 57312,
+          "webSearchRequests": 0,
+          "costUSD": 1.8729940000000005,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "08112de2-a5b4-416a-9967-63a9a46ca8cd"
+    },
+    "fvk": null,
+    "control": null
+  }
+}

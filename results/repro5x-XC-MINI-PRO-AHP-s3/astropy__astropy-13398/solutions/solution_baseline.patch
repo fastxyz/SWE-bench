@@ -1,0 +1,178 @@
+diff --git a/astropy/coordinates/builtin_frames/__init__.py b/astropy/coordinates/builtin_frames/__init__.py
+index 6fd688c285..17b524478e 100644
+--- a/astropy/coordinates/builtin_frames/__init__.py
++++ b/astropy/coordinates/builtin_frames/__init__.py
+@@ -48,6 +48,7 @@ from . import supergalactic_transforms
+ from . import icrs_cirs_transforms
+ from . import cirs_observed_transforms
+ from . import icrs_observed_transforms
++from . import itrs_observed_transforms
+ from . import intermediate_rotation_transforms
+ from . import ecliptic_transforms
+ 
+diff --git a/astropy/coordinates/builtin_frames/itrs_observed_transforms.py b/astropy/coordinates/builtin_frames/itrs_observed_transforms.py
+new file mode 100644
+index 0000000000..b337174904
+--- /dev/null
++++ b/astropy/coordinates/builtin_frames/itrs_observed_transforms.py
+@@ -0,0 +1,70 @@
++# Licensed under a 3-clause BSD style license - see LICENSE.rst
++
++import numpy as np
++
++from astropy import units as u
++from astropy.coordinates.matrix_utilities import rotation_matrix, matrix_transpose
++from astropy.coordinates.baseframe import frame_transform_graph
++from astropy.coordinates.transformations import FunctionTransformWithFiniteDifference
++from .altaz import AltAz
++from .hadec import HADec
++from .itrs import ITRS
++from .utils import PIOVER2
++
++# Origin of the alt/az and hadec frames is at the location, and the ITRS
++# positions are referred to the rotating geoid, so the transforms here are
++# simple rotations of the topocentric ITRS position vector.  This stays
++# entirely within the ITRS and merely converts between ITRS, AltAz, and HADec
++# coordinates without any aberration, nutation, etc. corrections.
++
++
++def itrs_to_observed_mat(observed_frame):
++
++    lon, lat, height = observed_frame.location.to_geodetic('WGS84')
++    elong = lon.to_value(u.radian)
++
++    if isinstance(observed_frame, AltAz):
++        # form ITRS to AltAz matrix
++        elat = lat.to_value(u.radian)
++        # AltAz frame is left handed
++        minus_x = np.eye(3)
++        minus_x[0][0] = -1.0
++        mat = (minus_x
++               @ rotation_matrix(PIOVER2 - elat, 'y', unit=u.radian)
++               @ rotation_matrix(elong, 'z', unit=u.radian))
++
++    else:
++        # form ITRS to HADec matrix
++        # HADec frame is left handed
++        minus_y = np.eye(3)
++        minus_y[1][1] = -1.0
++        mat = (minus_y
++               @ rotation_matrix(elong, 'z', unit=u.radian))
++    return mat
++
++
++@frame_transform_graph.transform(FunctionTransformWithFiniteDifference, ITRS, AltAz)
++@frame_transform_graph.transform(FunctionTransformWithFiniteDifference, ITRS, HADec)
++def itrs_to_observed(itrs_coo, observed_frame):
++    # Trying to synchronize the obstimes here makes no sense. In fact,
++    # it's a real gotcha as doing an ITRS->ITRS transform references
++    # ITRS coordinates, which should be tied to the Earth, to the SSB.
++    # Instead, we treat ITRS coordinates as time invariant here.
++
++    # form the Topocentric ITRS position
++    topocentric_itrs_repr = (itrs_coo.cartesian
++                             - observed_frame.location.get_itrs().cartesian)
++    rep = topocentric_itrs_repr.transform(itrs_to_observed_mat(observed_frame))
++    return observed_frame.realize_frame(rep)
++
++
++@frame_transform_graph.transform(FunctionTransformWithFiniteDifference, AltAz, ITRS)
++@frame_transform_graph.transform(FunctionTransformWithFiniteDifference, HADec, ITRS)
++def observed_to_itrs(observed_coo, itrs_frame):
++
++    # form the Topocentric ITRS position
++    topocentric_itrs_repr = observed_coo.cartesian.transform(matrix_transpose(
++                            itrs_to_observed_mat(observed_coo)))
++    # form the Geocentric ITRS position
++    rep = topocentric_itrs_repr + observed_coo.location.get_itrs().cartesian
++    return itrs_frame.realize_frame(rep)
+diff --git a/docs/changes/coordinates/13398.feature.rst b/docs/changes/coordinates/13398.feature.rst
+new file mode 100644
+index 0000000000..91d6358fa2
+--- /dev/null
++++ b/docs/changes/coordinates/13398.feature.rst
+@@ -0,0 +1,5 @@
++Added direct transformations between the ``ITRS`` frame and the observed
++frames ``AltAz`` and ``HADec``.  These transformations stay entirely within the
++ITRS, correctly accounting for the topocentric parallax of nearby objects (such
++as satellites) without applying stellar aberration.  They treat the ITRS
++position as time invariant, adopting the ``obstime`` of the output frame.
+diff --git a/docs/coordinates/satellites.rst b/docs/coordinates/satellites.rst
+index 85630d64c0..425ea37055 100644
+--- a/docs/coordinates/satellites.rst
++++ b/docs/coordinates/satellites.rst
+@@ -101,9 +101,70 @@ Or, if you want to find the altitude and azimuth of the satellite from a particu
+     >>> from astropy.coordinates import EarthLocation, AltAz
+     >>> siding_spring = EarthLocation.of_site('aao')  # doctest: +SKIP
+     >>> aa = teme.transform_to(AltAz(obstime=t, location=siding_spring))  # doctest: +IGNORE_WARNINGS
+-    >>> aa.alt  # doctest: +FLOAT_CMP
+-    <Latitude 10.95229446 deg>
+-    >>> aa.az  # doctest: +FLOAT_CMP
+-    <Longitude 59.30081255 deg>
++    >>> aa.alt  # doctest: +SKIP
++    >>> aa.az  # doctest: +SKIP
++
++This ``AltAz`` (and the analogous ``HADec``) result now follows the direct,
++topocentric ITRS route described in
++:ref:`astropy-coordinates-satellite-altaz` below.  It correctly accounts for the
++parallax between the geocentric and topocentric directions to the nearby
++satellite, but it does not apply stellar aberration.
+ 
+ .. EXAMPLE END
++
++.. _astropy-coordinates-satellite-altaz:
++
++A Direct Route from ITRS to Observed Frames
++===========================================
++
++When the target body is close to the observer, as is the case for satellites,
++aircraft, mountains, or neighbouring buildings, the difference between the
++*geocentric* direction to the body and the *topocentric* direction (the direction
++as seen from the observing site) is important.  ``astropy`` provides direct
++transformations between `~astropy.coordinates.ITRS` and the observed frames
++`~astropy.coordinates.AltAz` and `~astropy.coordinates.HADec` that handle this
++parallax correctly while staying entirely within the rotating Earth frame.
++
++These transformations deliberately treat the ITRS position as time invariant: the
++``obstime`` of the output frame is simply adopted, and no ``ITRS``-to-``ITRS``
++transformation between differing ``obstime`` values is performed.  This avoids a
++well-known pitfall.  A normal ``ITRS``-to-``ITRS`` transform refers the position to
++the solar-system barycenter and back, which for a nearby body would move it by up
++to the diameter of the Earth's orbit.  Outside of earthquakes and plate tectonics,
++the ITRS coordinates of a stationary object on the surface of the Earth are time
++invariant, and a position above the surface should be referred to the rotating
++Earth rather than the barycenter.
++
++The transformations are purely geometric: they do *not* apply stellar aberration
++or atmospheric refraction.  If you need stellar aberration (for example for the
++solar-system bodies tabulated by the ILRS, whose ephemerides already include it),
++use an explicit ``ITRS`` -> ``ICRS`` -> observed route instead.
++
++To observe a target whose position is known in the ITRS, transform directly to the
++desired observed frame: the transformation automatically forms the topocentric
++position by subtracting the ITRS position of the observing site.
++
++.. code-block:: python
++
++    from astropy import units as u
++    from astropy.time import Time
++    from astropy.coordinates import EarthLocation, AltAz, HADec
++
++    t = Time('J2010')
++    # The ITRS position of the target body (e.g. from an interpolated ephemeris).
++    # Here it is a point 10 km straight above the observing site.
++    obj = EarthLocation(-1*u.deg, 52*u.deg, height=10.*u.km)
++    target = obj.get_itrs(t)
++
++    # The observing site.
++    home = EarthLocation(-1*u.deg, 52*u.deg, height=0.*u.km)
++
++    # Directly to AltAz and HADec, accounting for topocentric parallax.
++    aa = target.transform_to(AltAz(obstime=t, location=home))
++    hd = target.transform_to(HADec(obstime=t, location=home))
++
++Because the target is directly above ``home``, ``aa.alt`` is 90 degrees and
++``hd.dec`` equals the latitude of the site.  The reverse transformations
++(`~astropy.coordinates.AltAz` or `~astropy.coordinates.HADec` back to
++`~astropy.coordinates.ITRS`) are also available and recover the original
++geocentric ITRS position.

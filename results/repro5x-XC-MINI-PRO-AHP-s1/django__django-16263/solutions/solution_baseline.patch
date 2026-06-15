@@ -1,0 +1,182 @@
+diff --git a/django/db/models/sql/query.py b/django/db/models/sql/query.py
+index 9735ce10c8..d3efa1cf26 100644
+--- a/django/db/models/sql/query.py
++++ b/django/db/models/sql/query.py
+@@ -435,12 +435,153 @@ class Query(BaseExpression):
+         annotation.set_source_expressions(new_exprs)
+         return annotation, col_cnt
+ 
++    @staticmethod
++    def _referenced_aliases(expr, annotation_ids):
++        """
++        Return the set of annotation aliases referenced by ``expr``.
++
++        References can be made through ``Ref`` instances (e.g. when aggregating
++        or grouping over an annotation), by embedding the annotation expression
++        itself (e.g. when filtering or annotating over another annotation), or
++        through ``OuterRef`` instances pointing back at an outer query
++        annotation. ``annotation_ids`` maps the ``id()`` of each annotation
++        expression to its alias.
++        """
++        refs = set()
++        if isinstance(expr, Query):
++            stack = [*expr.where.children, *expr.annotations.values()]
++        elif hasattr(expr, "get_source_expressions"):
++            stack = list(expr.get_source_expressions())
++        else:
++            return refs
++        seen = set()
++        while stack:
++            node = stack.pop()
++            if node is None or id(node) in seen:
++                continue
++            seen.add(id(node))
++            if isinstance(node, Ref):
++                refs.add(node.refs)
++            elif id(node) in annotation_ids:
++                refs.add(annotation_ids[id(node)])
++            elif isinstance(node, F):
++                # ResolvedOuterRef (and OuterRef) reference the outer query by
++                # name and may therefore point at an outer annotation.
++                refs.add(node.name)
++            elif isinstance(node, Query):
++                stack.extend(node.where.children)
++                stack.extend(node.annotations.values())
++            elif hasattr(node, "get_source_expressions"):
++                stack.extend(node.get_source_expressions())
++        return refs
++
++    def _prune_unused_annotations(self, preserved=()):
++        """
++        Remove selected annotations that aren't referenced by filters, other
++        annotations, ordering, or the ``preserved`` aliases (e.g. the
++        aggregations being computed). Joins left unused once such annotations
++        are removed are dropped as well so that, for example,
++        Model.objects.annotate(Count("rel")).count() doesn't trigger a needless
++        subquery / GROUP BY nor count duplicated rows.
++        """
++        if not self.annotation_select:
++            return
++        # Only attempt this for "simple" queries where dropping annotations
++        # cannot change the produced results.
++        if (
++            self.is_sliced
++            or self.distinct
++            or self.distinct_fields
++            or self.select_for_update
++            or self.combinator
++            or self.extra
++            or isinstance(self.group_by, tuple)
++        ):
++            return
++        annotation_ids = {id(expr): alias for alias, expr in self.annotations.items()}
++        referenced = set(preserved)
++        # Seed with references made from filters, ordering and the preserved
++        # (e.g. aggregated) expressions themselves.
++        pending = self._referenced_aliases(self.where, annotation_ids)
++        for alias in preserved:
++            annotation = self.annotations.get(alias)
++            if annotation is not None:
++                pending |= self._referenced_aliases(annotation, annotation_ids)
++        for item in self.order_by:
++            if isinstance(item, str):
++                if item == "?":
++                    continue
++                name = item[1:] if item.startswith("-") else item
++                pending.add(name)
++                pending.add(name.split(LOOKUP_SEP)[0])
++            else:
++                pending |= self._referenced_aliases(item, annotation_ids)
++        # Resolve references transitively.
++        while pending:
++            alias = pending.pop()
++            if alias in referenced:
++                continue
++            referenced.add(alias)
++            annotation = self.annotations.get(alias)
++            if annotation is not None:
++                pending |= self._referenced_aliases(annotation, annotation_ids)
++        unused = set(self.annotations).difference(referenced)
++        if not unused:
++            return
++        for alias in unused:
++            del self.annotations[alias]
++            if self.annotation_select_mask is not None:
++                self.annotation_select_mask.discard(alias)
++        self._annotation_select_cache = None
++        # When an aggregate annotation forced a GROUP BY, the rows produced by
++        # the removed joins were being collapsed and the joins can therefore be
++        # dropped without altering the number of resulting rows. This notably
++        # allows reaching the plain "SELECT COUNT(*) FROM table" form.
++        if self.group_by is True:
++            referenced_aliases = {
++                col.alias
++                for col in self._gen_cols(
++                    chain(
++                        self.where.children,
++                        self.annotation_select.values(),
++                        self.select,
++                    ),
++                    include_external=True,
++                )
++                if col.alias in self.alias_map
++            }
++            keep = set(referenced_aliases)
++            for alias, join in self.alias_map.items():
++                # Base tables and INNER joins can change the number of rows so
++                # they are kept regardless.
++                if join.join_type != LOUTER:
++                    keep.add(alias)
++            for alias in tuple(keep):
++                parent_alias = self.alias_map[alias].parent_alias
++                while parent_alias and parent_alias not in keep:
++                    keep.add(parent_alias)
++                    parent_alias = self.alias_map[parent_alias].parent_alias
++            for alias in self.alias_map:
++                if alias not in keep:
++                    self.alias_refcount[alias] = 0
++            # The GROUP BY is no longer required if every aggregate annotation
++            # was removed.
++            if not any(
++                annotation.contains_aggregate and not annotation.is_summary
++                for annotation in self.annotations.values()
++            ):
++                self.group_by = None
++
+     def get_aggregation(self, using, added_aggregate_names):
+         """
+         Return the dictionary with the values of the existing aggregations.
+         """
+         if not self.annotation_select:
+             return {}
++        # Strip any annotations that aren't referenced by the aggregations being
++        # computed, filters, other annotations or ordering so they don't
++        # needlessly force a subquery and GROUP BY.
++        self._prune_unused_annotations(added_aggregate_names)
+         existing_annotations = [
+             annotation
+             for alias, annotation in self.annotations.items()
+@@ -449,9 +590,9 @@ class Query(BaseExpression):
+         # Decide if we need to use a subquery.
+         #
+         # Existing annotations would cause incorrect results as get_aggregation()
+-        # must produce just one result and thus must not use GROUP BY. But we
+-        # aren't smart enough to remove the existing annotations from the
+-        # query, so those would force us to use GROUP BY.
++        # must produce just one result and thus must not use GROUP BY. Unused
++        # annotations are removed above, but those that remain (e.g. annotations
++        # referenced by filters) still force the use of GROUP BY.
+         #
+         # If the query has limit or distinct, or uses set operations, then
+         # those operations must be done in a subquery so that the query
+@@ -558,6 +699,10 @@ class Query(BaseExpression):
+ 
+     def exists(self, limit=True):
+         q = self.clone()
++        # Annotations that aren't referenced by filters, other annotations or
++        # ordering are irrelevant to whether any row exists and can be removed
++        # along with the joins and GROUP BY they would otherwise require.
++        q._prune_unused_annotations()
+         if not (q.distinct and q.is_sliced):
+             if q.group_by is True:
+                 q.add_fields(

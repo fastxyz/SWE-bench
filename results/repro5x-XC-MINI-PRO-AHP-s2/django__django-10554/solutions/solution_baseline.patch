@@ -1,0 +1,20 @@
+diff --git a/django/db/models/sql/query.py b/django/db/models/sql/query.py
+index 08d7faf194..b46acb61d1 100644
+--- a/django/db/models/sql/query.py
++++ b/django/db/models/sql/query.py
+@@ -328,6 +328,15 @@ class Query(BaseExpression):
+             obj.subq_aliases = self.subq_aliases.copy()
+         obj.used_aliases = self.used_aliases.copy()
+         obj._filtered_relations = self._filtered_relations.copy()
++        # Combined queries hold references to mutable Query objects. Cloning
++        # them here ensures that operations performed on a clone (e.g. setting
++        # the select columns for values()/values_list() at compile time) don't
++        # leak back into the original query and any other clones sharing the
++        # same combined queries.
++        if self.combined_queries:
++            obj.combined_queries = tuple(
++                query.clone() for query in self.combined_queries
++            )
+         # Clear the cached_property
+         try:
+             del obj.base_table

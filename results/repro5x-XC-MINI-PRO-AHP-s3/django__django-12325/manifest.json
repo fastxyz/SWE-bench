@@ -1,0 +1,135 @@
+{
+  "run_id": "repro5x-XC-MINI-PRO-AHP-s3",
+  "instance_id": "django__django-12325",
+  "baseline_session_id": "28f541bd-5ce7-4599-895e-402cef04060a",
+  "core_hash_post_baseline": "e4921fa8040ca606eafe465baec41ca264695ef6f7a14a0ec9b4be84fce61122",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "28f541bd-5ce7-4599-895e-402cef04060a",
+      "attempts": 1,
+      "started_at": "2026-06-15T01:32:33.619982+00:00",
+      "ended_at": "2026-06-15T01:40:28.269731+00:00",
+      "num_turns": 17,
+      "duration_seconds": 474.6491419639997,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 10,
+          "Grep": 3,
+          "Edit": 1,
+          "Glob": 1,
+          "Write": 1
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 69
+      }
+    },
+    "fvk": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    },
+    "control": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    }
+  },
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "285f34c0c41bb0ff1e784f2f0234b23ae0e382f96b0ba257b2bddae05a492271",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 473831,
+      "duration_api_ms": 474849,
+      "ttft_ms": 2703,
+      "ttft_stream_ms": 2698,
+      "time_to_request_ms": 56,
+      "num_turns": 17,
+      "result": "The fix is complete and verified.\n\n## Summary\n\nThe bug was in `ModelBase.__new__` in `django/db/models/base.py`, where parent links for multi-table inheritance are collected into a `parent_links` dict keyed only by the related model. When a child model declared multiple `OneToOneField`s targeting the same parent (e.g. an explicit `document_ptr` with `parent_link=True` plus an unrelated `origin`), they collided on the same key and the code did a blind overwrite, so the **last field in declaration order won** \u2014 meaning a regular `OneToOneField` could displace the real parent link, after which `Options._prepare` promoted the wrong field to PK and raised `ImproperlyConfigured: Add parent_link=True to ...`. I changed the collection loop so that a regular `OneToOneField` is never allowed to override an already-collected `parent_link=True` field for the same model, making parent-link selection independent of field declaration order (and robust to abstract-parent field contributions) while still preserving the existing behavior that a model whose *only* O2O to its parent lacks `parent_link=True` continues to raise the documented error (`test_missing_parent_link`). No other files needed changes, since downstream consumers (`get_ancestor_link`, the related-field descriptors) read from the now-correct `self.parents`.",
+      "stop_reason": "end_turn",
+      "session_id": "28f541bd-5ce7-4599-895e-402cef04060a",
+      "total_cost_usd": 1.5639725000000002,
+      "usage": {
+        "input_tokens": 25,
+        "cache_creation_input_tokens": 54022,
+        "cache_read_input_tokens": 364234,
+        "output_tokens": 41725,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 54022,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 435,
+            "cache_read_input_tokens": 56278,
+            "cache_creation_input_tokens": 1119,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 1119
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 883,
+          "outputTokens": 17,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.000968,
+          "contextWindow": 200000,
+          "maxOutputTokens": 32000
+        },
+        "claude-opus-4-8": {
+          "inputTokens": 25,
+          "outputTokens": 41725,
+          "cacheReadInputTokens": 364234,
+          "cacheCreationInputTokens": 54022,
+          "webSearchRequests": 0,
+          "costUSD": 1.5630045000000001,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "132e560c-1618-4765-8f12-1eab6332723e"
+    },
+    "fvk": null,
+    "control": null
+  }
+}

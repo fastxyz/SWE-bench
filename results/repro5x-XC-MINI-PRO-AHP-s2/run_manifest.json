@@ -1,0 +1,38 @@
+{
+  "run_id": "repro5x-XC-MINI-PRO-AHP-s2",
+  "created_utc": "2026-06-15T02:51:00.546293+00:00",
+  "host": {
+    "hostname": "XC-MINI-PRO-AHP",
+    "os": "Linux-6.8.0-124-generic-x86_64-with-glibc2.39",
+    "arch": "x86_64",
+    "python": "3.10.20"
+  },
+  "claude_version": "2.1.169 (Claude Code)",
+  "invocation": {
+    "model": "claude-opus-4-8",
+    "effort": "max",
+    "max_turns": {
+      "baseline": 200,
+      "fvk": 200,
+      "control": 200
+    },
+    "tools": "Read,Write,Edit,Glob,Grep",
+    "permission_mode": "bypassPermissions",
+    "setting_sources": "project,local"
+  },
+  "dataset": "princeton-nlp/SWE-bench_Verified",
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "285f34c0c41bb0ff1e784f2f0234b23ae0e382f96b0ba257b2bddae05a492271",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "fvk_bench_version": "0.1.0",
+  "git": {
+    "repo_sha": "3974309c7cb7b59109d079266228e618f68e2ef5",
+    "submodules": {
+      "third_party/formal-verification-kit": "cbce1cc008b9f245453796c829c0e1b7a7144e6a",
+      "third_party/swebench-fvk-reproducibility": "983557904cca9cc54a15425f2ab0eb6524521155"
+    }
+  },
+  "max_parallel": 1
+}

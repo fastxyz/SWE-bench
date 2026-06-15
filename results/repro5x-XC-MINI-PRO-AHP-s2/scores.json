@@ -1,0 +1,230 @@
+{
+  "run_id": "repro5x-XC-MINI-PRO-AHP-s2",
+  "instances": {
+    "astropy__astropy-13398": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "1bfaac6a-2566-4250-95e5-ee0979703c2d",
+        "num_turns": 29,
+        "duration_seconds": 360.40372390100015,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/4",
+          "ptp": "63/68"
+        }
+      },
+      "fvk": {
+        "status": "pending",
+        "reason": null,
+        "session_id": null,
+        "num_turns": null,
+        "duration_seconds": null,
+        "empty_patch": true,
+        "eval": null
+      },
+      "control": {
+        "status": "pending",
+        "reason": null,
+        "session_id": null,
+        "num_turns": null,
+        "duration_seconds": null,
+        "empty_patch": true,
+        "eval": null
+      }
+    },
+    "django__django-10554": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "bfbae856-712b-469d-8ced-41b06742ca86",
+        "num_turns": 61,
+        "duration_seconds": 2589.1484925550003,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/2",
+          "ptp": "23/23"
+        }
+      },
+      "fvk": {
+        "status": "pending",
+        "reason": null,
+        "session_id": null,
+        "num_turns": null,
+        "duration_seconds": null,
+        "empty_patch": true,
+        "eval": null
+      },
+      "control": {
+        "status": "pending",
+        "reason": null,
+        "session_id": null,
+        "num_turns": null,
+        "duration_seconds": null,
+        "empty_patch": true,
+        "eval": null
+      }
+    },
+    "django__django-12325": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "6642e264-5da3-4595-a9ff-15997b68fc6e",
+        "num_turns": 19,
+        "duration_seconds": 352.63607647500066,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/2",
+          "ptp": "201/201"
+        }
+      },
+      "fvk": {
+        "status": "pending",
+        "reason": null,
+        "session_id": null,
+        "num_turns": null,
+        "duration_seconds": null,
+        "empty_patch": true,
+        "eval": null
+      },
+      "control": {
+        "status": "pending",
+        "reason": null,
+        "session_id": null,
+        "num_turns": null,
+        "duration_seconds": null,
+        "empty_patch": true,
+        "eval": null
+      }
+    },
+    "django__django-13212": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "44d2dcc0-65b9-4d1e-9410-2c4cefbb50a0",
+        "num_turns": 36,
+        "duration_seconds": 338.79420941100034,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "3/5",
+          "ptp": "2/2"
+        }
+      },
+      "fvk": {
+        "status": "pending",
+        "reason": null,
+        "session_id": null,
+        "num_turns": null,
+        "duration_seconds": null,
+        "empty_patch": true,
+        "eval": null
+      },
+      "control": {
+        "status": "pending",
+        "reason": null,
+        "session_id": null,
+        "num_turns": null,
+        "duration_seconds": null,
+        "empty_patch": true,
+        "eval": null
+      }
+    },
+    "django__django-16263": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "327677d1-9f9a-4c92-b4b3-c24589b5d2fe",
+        "num_turns": 76,
+        "duration_seconds": 2350.095255205999,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "2/3",
+          "ptp": "99/100"
+        }
+      },
+      "fvk": {
+        "status": "pending",
+        "reason": null,
+        "session_id": null,
+        "num_turns": null,
+        "duration_seconds": null,
+        "empty_patch": true,
+        "eval": null
+      },
+      "control": {
+        "status": "pending",
+        "reason": null,
+        "session_id": null,
+        "num_turns": null,
+        "duration_seconds": null,
+        "empty_patch": true,
+        "eval": null
+      }
+    },
+    "pytest-dev__pytest-10356": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "d4ecfcec-04cb-4734-9a6c-854f22551773",
+        "num_turns": 22,
+        "duration_seconds": 250.5904792780002,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "79/79"
+        }
+      },
+      "fvk": {
+        "status": "pending",
+        "reason": null,
+        "session_id": null,
+        "num_turns": null,
+        "duration_seconds": null,
+        "empty_patch": true,
+        "eval": null
+      },
+      "control": {
+        "status": "pending",
+        "reason": null,
+        "session_id": null,
+        "num_turns": null,
+        "duration_seconds": null,
+        "empty_patch": true,
+        "eval": null
+      }
+    }
+  },
+  "aggregates": {
+    "arms": {
+      "baseline": {
+        "resolved": 0,
+        "evaluated": 6
+      },
+      "fvk": {
+        "resolved": 0,
+        "evaluated": 0
+      },
+      "control": {
+        "resolved": 0,
+        "evaluated": 0
+      }
+    },
+    "flips": {
+      "baseline_to_fvk": {
+        "up": [],
+        "down": []
+      },
+      "baseline_to_control": {
+        "up": [],
+        "down": []
+      }
+    },
+    "fvk_vs_control_delta": 0
+  }
+}

@@ -1,0 +1,135 @@
+{
+  "run_id": "repro5x-XC-MINI-PRO-AHP-s1",
+  "instance_id": "pytest-dev__pytest-10356",
+  "baseline_session_id": "49fd6c20-1eef-41ba-b09b-2ff165901518",
+  "core_hash_post_baseline": "e88889a95914fba9235355a1f04ba2845883082939a4eeaa20ec17c820364ff0",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "49fd6c20-1eef-41ba-b09b-2ff165901518",
+      "attempts": 1,
+      "started_at": "2026-06-15T02:46:49.736717+00:00",
+      "ended_at": "2026-06-15T02:53:17.200919+00:00",
+      "num_turns": 25,
+      "duration_seconds": 387.46331009499954,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 14,
+          "Glob": 2,
+          "Grep": 5,
+          "Edit": 2,
+          "Write": 1
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 104
+      }
+    },
+    "fvk": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    },
+    "control": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    }
+  },
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "285f34c0c41bb0ff1e784f2f0234b23ae0e382f96b0ba257b2bddae05a492271",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 386668,
+      "duration_api_ms": 388442,
+      "ttft_ms": 2877,
+      "ttft_stream_ms": 2876,
+      "time_to_request_ms": 58,
+      "num_turns": 25,
+      "result": "All callers remain compatible: the positional `get_unpacked_marks(self.obj)` calls use the default `consider_mro=True`, the new `consider_mro=False` call is in `store_mark`, and both `extend(...)` and `*`-unpacking work fine with the now-concrete list return type.\n\nThe fix is complete and `reports/baseline_notes.md` is written.\n\n## Summary\n\nThe bug was that pytest lost markers from all-but-the-first base class under multiple inheritance because `get_unpacked_marks()` in `src/_pytest/mark/structures.py` read `getattr(cls, \"pytestmark\")`, which Python resolves to only the **first** `pytestmark` found in the MRO. I fixed it by making `get_unpacked_marks` explicitly walk a class's MRO \u2014 collecting `cls.__dict__.get(\"pytestmark\", [])` for every class in `reversed(obj.__mro__)` so every directly-declared mark is gathered exactly once and in the same base-first order the old single-inheritance copy-down produced \u2014 gated behind a new keyword-only `consider_mro=True` parameter (non-class objects keep the previous `getattr` behavior, including non-list tolerance for module-level `pytestmark = pytest.mark.x`). The essential companion change is that `store_mark` now passes `consider_mro=False`, so a decorated class stores only its *own* marks rather than copying down inherited ones; this keeps each class's `__dict__` holding just its direct marks, letting the MRO walk gather all marks with no duplication even in diamond hierarchies. I also made `normalize_mark_list` return a concrete `List[Mark]` to match the documented contract. As a result `class C(A, B)` now carries the marks of `A`, `B`, and `C`, matching the issue's expected behavior.",
+      "stop_reason": "end_turn",
+      "session_id": "49fd6c20-1eef-41ba-b09b-2ff165901518",
+      "total_cost_usd": 1.39832525,
+      "usage": {
+        "input_tokens": 35,
+        "cache_creation_input_tokens": 49967,
+        "cache_read_input_tokens": 512397,
+        "output_tokens": 33148,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 2590,
+          "ephemeral_5m_input_tokens": 47377
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 787,
+            "cache_read_input_tokens": 51097,
+            "cache_creation_input_tokens": 2245,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 2245,
+              "ephemeral_1h_input_tokens": 0
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 888,
+          "outputTokens": 14,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.000958,
+          "contextWindow": 200000,
+          "maxOutputTokens": 32000
+        },
+        "claude-opus-4-8": {
+          "inputTokens": 35,
+          "outputTokens": 33148,
+          "cacheReadInputTokens": 512397,
+          "cacheCreationInputTokens": 49967,
+          "webSearchRequests": 0,
+          "costUSD": 1.39736725,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "9a16d4a4-7ed4-460a-9567-25eb74503750"
+    },
+    "fvk": null,
+    "control": null
+  }
+}

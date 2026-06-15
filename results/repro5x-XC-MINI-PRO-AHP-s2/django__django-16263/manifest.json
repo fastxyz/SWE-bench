@@ -1,0 +1,134 @@
+{
+  "run_id": "repro5x-XC-MINI-PRO-AHP-s2",
+  "instance_id": "django__django-16263",
+  "baseline_session_id": "327677d1-9f9a-4c92-b4b3-c24589b5d2fe",
+  "core_hash_post_baseline": "94d136473fff39fe2f37976ba02b28084ebfe968a9d6fc93daabaa125d0f96a5",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "327677d1-9f9a-4c92-b4b3-c24589b5d2fe",
+      "attempts": 1,
+      "started_at": "2026-06-15T01:49:30.744149+00:00",
+      "ended_at": "2026-06-15T02:28:40.840034+00:00",
+      "num_turns": 76,
+      "duration_seconds": 2350.095255205999,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 44,
+          "Grep": 27,
+          "Edit": 3,
+          "Write": 1
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 290
+      }
+    },
+    "fvk": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    },
+    "control": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    }
+  },
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "285f34c0c41bb0ff1e784f2f0234b23ae0e382f96b0ba257b2bddae05a492271",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 2349338,
+      "duration_api_ms": 2351796,
+      "ttft_ms": 2518,
+      "ttft_stream_ms": 2516,
+      "time_to_request_ms": 91,
+      "num_turns": 76,
+      "result": "Both the code fix and `reports/baseline_notes.md` are complete. \n\n## Summary\n\nThe fix addresses `django__django-16263` (\"Strip unused annotations from count queries\") in `django/db/models/sql/query.py`, the shared `get_aggregation()` path behind `QuerySet.count()` and `QuerySet.aggregate()`. I added a new `Query._prune_unused_annotations()` method, called at the start of `get_aggregation()`, which removes annotations that don't affect the aggregate result \u2014 i.e. those not referenced (directly or transitively) by the aggregates being computed, the `WHERE`/`HAVING` clause, the ordering, or the explicit `GROUP BY`. Because reference detection has to match how Django stores them, it looks for references by name (ordering strings / `F()`), by alias (`Ref`), and by object identity (filters and inter-annotation references hold the annotation object itself). Crucially, since the compiler emits a join purely on `alias_refcount > 0` and never prunes it, the method also releases the joins used *only* by pruned **aggregate** annotations \u2014 their `GROUP BY` collapses the (left-outer/non-filtering) join back to the base rows, so dropping annotation, grouping and join together leaves the row count unchanged \u2014 while deliberately keeping the joins of pruned non-aggregate annotations whose multiplication is part of the existing count. Shared joins are preserved via an intersection-based `removable - needed` reachability computation, and the optimization conservatively bails out for opaque constructs (set operations, `extra()`/raw `ExtraWhere`, filtered relations). The result is that `Book.objects.annotate(Count('chapters')).count()` now compiles to `SELECT COUNT(*) FROM book` \u2014 identical to `Book.objects.count()` \u2014 with no subquery, `GROUP BY`, or stray join, while filter/ordering/aggregate-referenced annotations and all existing results are preserved.",
+      "stop_reason": "end_turn",
+      "session_id": "327677d1-9f9a-4c92-b4b3-c24589b5d2fe",
+      "total_cost_usd": 8.663655249999998,
+      "usage": {
+        "input_tokens": 127,
+        "cache_creation_input_tokens": 222233,
+        "cache_read_input_tokens": 5599438,
+        "output_tokens": 178935,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 222233,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 788,
+            "cache_read_input_tokens": 219394,
+            "cache_creation_input_tokens": 6214,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 6214
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 885,
+          "outputTokens": 17,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.00097,
+          "contextWindow": 200000,
+          "maxOutputTokens": 32000
+        },
+        "claude-opus-4-8": {
+          "inputTokens": 127,
+          "outputTokens": 178935,
+          "cacheReadInputTokens": 5599438,
+          "cacheCreationInputTokens": 222233,
+          "webSearchRequests": 0,
+          "costUSD": 8.662685249999997,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "7ea22753-e623-4c96-9427-49d439ae9285"
+    },
+    "fvk": null,
+    "control": null
+  }
+}

@@ -1,0 +1,135 @@
+{
+  "run_id": "repro5x-XC-MINI-PRO-AHP-s2",
+  "instance_id": "django__django-10554",
+  "baseline_session_id": "bfbae856-712b-469d-8ced-41b06742ca86",
+  "core_hash_post_baseline": "80c686a6b398d1309a65dab933610106073c6dfad2239629233c04f4989a9daf",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "bfbae856-712b-469d-8ced-41b06742ca86",
+      "attempts": 1,
+      "started_at": "2026-06-15T00:15:26.868518+00:00",
+      "ended_at": "2026-06-15T00:58:36.017883+00:00",
+      "num_turns": 61,
+      "duration_seconds": 2589.1484925550003,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "Read": 36,
+          "Grep": 19,
+          "Glob": 3,
+          "Edit": 1,
+          "Write": 1
+        },
+        "violations": [],
+        "marker_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 237
+      }
+    },
+    "fvk": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    },
+    "control": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    }
+  },
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "285f34c0c41bb0ff1e784f2f0234b23ae0e382f96b0ba257b2bddae05a492271",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 2588377,
+      "duration_api_ms": 2590430,
+      "ttft_ms": 3519,
+      "ttft_stream_ms": 3512,
+      "time_to_request_ms": 62,
+      "num_turns": 61,
+      "result": "The fix and report are both complete.\n\n## Summary\n\nThe crash (`ORDER BY position 4 is not in select list` when re-evaluating a `union()`/`intersection()`/`difference()` queryset after deriving and evaluating another queryset from it) is caused by `Query.clone()` in `django/db/models/sql/query.py` failing to copy `combined_queries`. That method deep-copies every mutable per-query structure (`where`, `annotations`, `alias_map`, the select masks, etc.), and every *other* attribute it leaves shared is an immutable tuple that mutating methods reassign rather than edit in place \u2014 making `combined_queries`, a tuple of **live mutable `Query` objects**, the lone piece of shared mutable state surviving a clone. Because of that sharing, when a derived queryset is compiled/evaluated the inner combined queries get mutated (e.g. their select columns are narrowed to match a `values_list()` column list in `SQLCompiler.get_combinator_sql`), and the change leaks back into the original union queryset and its sibling clones; a later re-compile then emits an `ORDER BY` ordinal that no longer fits the shortened select list. The fix deep-copies `combined_queries` in `clone()` (guarded so it's a no-op for the common non-combined case and recursing naturally for nested combinators), so each derived queryset operates on its own inner queries and can no longer corrupt the original \u2014 directly addressing the hint about a `.query` change made \"without performing a prior copy()\". This is a single, minimal change with no behavioral effect on existing combinator tests.",
+      "stop_reason": "end_turn",
+      "session_id": "bfbae856-712b-469d-8ced-41b06742ca86",
+      "total_cost_usd": 9.133025750000002,
+      "usage": {
+        "input_tokens": 109,
+        "cache_creation_input_tokens": 250711,
+        "cache_read_input_tokens": 4800736,
+        "output_tokens": 206569,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 250711,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "not_available",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 523,
+            "cache_read_input_tokens": 253598,
+            "cache_creation_input_tokens": 488,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 488
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 884,
+          "outputTokens": 12,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.0009440000000000001,
+          "contextWindow": 200000,
+          "maxOutputTokens": 32000
+        },
+        "claude-opus-4-8": {
+          "inputTokens": 109,
+          "outputTokens": 206569,
+          "cacheReadInputTokens": 4800736,
+          "cacheCreationInputTokens": 250711,
+          "webSearchRequests": 0,
+          "costUSD": 9.132081750000001,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "c60351a5-4a0e-49b2-9c29-914276160820"
+    },
+    "fvk": null,
+    "control": null
+  }
+}
