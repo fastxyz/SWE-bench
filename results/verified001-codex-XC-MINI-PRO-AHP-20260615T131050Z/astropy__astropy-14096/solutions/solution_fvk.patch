@@ -1,0 +1,46 @@
+diff --git a/astropy/coordinates/sky_coordinate.py b/astropy/coordinates/sky_coordinate.py
+index ab475f7d0d..3f6cec8c75 100644
+--- a/astropy/coordinates/sky_coordinate.py
++++ b/astropy/coordinates/sky_coordinate.py
+@@ -866,11 +866,41 @@ class SkyCoord(ShapedLikeNDArray):
+             isinstance(self.frame.name, list) and string in self.frame.name
+         )
+ 
++    def _get_subclass_property_descriptor(self, attr):
++        for cls in type(self).__mro__:
++            if attr in cls.__dict__:
++                if cls not in SkyCoord.__mro__:
++                    descriptor = cls.__dict__[attr]
++                    if isinstance(descriptor, property):
++                        return descriptor
++                break
++
++    def __getattribute__(self, attr):
++        try:
++            return super().__getattribute__(attr)
++        except AttributeError as exc:
++            descriptor = SkyCoord._get_subclass_property_descriptor(self, attr)
++            if descriptor is not None:
++                # __getattr__ is about to be called for the property name.
++                # Preserve the original error raised from inside the property.
++                object.__setattr__(
++                    self, "_skycoord_subclass_property_attribute_error", (attr, exc)
++                )
++            raise
++
+     def __getattr__(self, attr):
+         """
+         Overrides getattr to return coordinates that this can be transformed
+         to, based on the alias attr in the primary transform graph.
+         """
++        previous_error = self.__dict__.pop(
++            "_skycoord_subclass_property_attribute_error", None
++        )
++        if previous_error is not None:
++            previous_attr, exc = previous_error
++            if previous_attr == attr:
++                raise exc
++
+         if "_sky_coord_frame" in self.__dict__:
+             if self._is_name(attr):
+                 return self  # Should this be a deepcopy of self?
