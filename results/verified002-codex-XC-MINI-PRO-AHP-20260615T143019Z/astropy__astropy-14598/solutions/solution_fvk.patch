@@ -1,0 +1,19 @@
+diff --git a/astropy/io/fits/card.py b/astropy/io/fits/card.py
+index 1b3285ddce..c812c97e36 100644
+--- a/astropy/io/fits/card.py
++++ b/astropy/io/fits/card.py
+@@ -854,12 +854,12 @@ class Card(_Verify):
+ 
+                 # Should match a string followed by a comment; if not it
+                 # might be an invalid Card, so we just take it verbatim
+-                m = self._strg_comment_RE.match(vc)
++                m = self._strg_comment_RE.fullmatch(vc)
+                 if not m:
+                     return kw, vc
+ 
+                 value = m.group("strg") or ""
+-                value = value.rstrip().replace("''", "'")
++                value = value.rstrip()
+                 if value and value[-1] == "&":
+                     value = value[:-1]
+                 values.append(value)

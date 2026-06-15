@@ -1,0 +1,42 @@
+diff --git a/astropy/io/fits/diff.py b/astropy/io/fits/diff.py
+index 100cdf1b8c..0f5ac30ca7 100644
+--- a/astropy/io/fits/diff.py
++++ b/astropy/io/fits/diff.py
+@@ -55,6 +55,22 @@ _COL_ATTRS = [
+ ]
+ 
+ 
++def _vla_values_differ(a, b, rtol=0.0, atol=0.0):
++    a = np.asanyarray(a)
++    b = np.asanyarray(b)
++
++    if a.shape != b.shape:
++        return True
++
++    if np.issubdtype(a.dtype, np.floating) and np.issubdtype(b.dtype, np.floating):
++        return len(where_not_allclose(a, b, rtol=rtol, atol=atol)[0]) > 0
++
++    if np.issubdtype(a.dtype, np.number) and np.issubdtype(b.dtype, np.number):
++        return not np.allclose(a, b, rtol=rtol, atol=atol)
++
++    return bool(np.any(a != b))
++
++
+ class _BaseDiff:
+     """
+     Base class for all FITS diff objects.
+@@ -1449,12 +1465,12 @@ class TableDataDiff(_BaseDiff):
+                 arrb.dtype, np.floating
+             ):
+                 diffs = where_not_allclose(arra, arrb, rtol=self.rtol, atol=self.atol)
+-            elif "P" in col.format:
++            elif col.format.format in ("P", "Q"):
+                 diffs = (
+                     [
+                         idx
+                         for idx in range(len(arra))
+-                        if not np.allclose(
++                        if _vla_values_differ(
+                             arra[idx], arrb[idx], rtol=self.rtol, atol=self.atol
+                         )
+                     ],

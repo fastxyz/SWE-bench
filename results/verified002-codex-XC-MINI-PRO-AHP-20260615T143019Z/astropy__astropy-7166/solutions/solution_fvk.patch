@@ -1,0 +1,52 @@
+diff --git a/astropy/utils/misc.py b/astropy/utils/misc.py
+index de3fb01d18..45cd5d8815 100644
+--- a/astropy/utils/misc.py
++++ b/astropy/utils/misc.py
+@@ -496,15 +496,15 @@ def did_you_mean(s, candidates, n=3, cutoff=0.8, fix=None):
+ 
+ class InheritDocstrings(type):
+     """
+-    This metaclass makes methods of a class automatically have their
+-    docstrings filled in from the methods they override in the base
+-    class.
++    This metaclass makes methods and properties of a class automatically
++    have their docstrings filled in from the members they override in the
++    base class.
+ 
+     If the class uses multiple inheritance, the docstring will be
+     chosen from the first class in the bases list, in the same way as
+     methods are normally resolved in Python.  If this results in
+     selecting the wrong docstring, the docstring will need to be
+-    explicitly included on the method.
++    explicitly included on the member.
+ 
+     For example::
+ 
+@@ -527,14 +527,24 @@ class InheritDocstrings(type):
+                  and len(key) > 4) or
+                 not key.startswith('_'))
+ 
++        def is_inheritable_member(val):
++            return inspect.isfunction(val) or inspect.isdatadescriptor(val)
++
+         for key, val in dct.items():
+-            if (inspect.isfunction(val) and
++            if (is_inheritable_member(val) and
+                 is_public_member(key) and
+                 val.__doc__ is None):
+                 for base in cls.__mro__[1:]:
+-                    super_method = getattr(base, key, None)
++                    if inspect.isdatadescriptor(val):
++                        super_method = inspect.getattr_static(base, key, None)
++                    else:
++                        super_method = getattr(base, key, None)
+                     if super_method is not None:
+-                        val.__doc__ = super_method.__doc__
++                        try:
++                            val.__doc__ = super_method.__doc__
++                        except (AttributeError, TypeError):
++                            # Some descriptors expose a read-only __doc__.
++                            pass
+                         break
+ 
+         super().__init__(name, bases, dct)

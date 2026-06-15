@@ -1,0 +1,70 @@
+diff --git a/astropy/units/format/cds.py b/astropy/units/format/cds.py
+index 307e987ed6..ae798ba4c0 100644
+--- a/astropy/units/format/cds.py
++++ b/astropy/units/format/cds.py
+@@ -23,6 +23,12 @@ from . import core, utils
+ from .base import Base
+ 
+ 
++class _CDSUnit:
++    def __init__(self, unit, division_tail=None):
++        self.unit = unit
++        self.division_tail = unit if division_tail is None else division_tail
++
++
+ class CDS(Base):
+     """
+     Support the `Centre de Données astronomiques de Strasbourg
+@@ -156,9 +162,11 @@ class CDS(Base):
+             from astropy.units.core import Unit
+ 
+             if len(p) == 3:
+-                p[0] = Unit(p[1] * p[2])
++                p[0] = Unit(p[1] * p[2].unit)
+             elif len(p) == 4:
+-                p[0] = dex(p[2])
++                p[0] = dex(p[2].unit if isinstance(p[2], _CDSUnit) else p[2])
++            elif isinstance(p[1], _CDSUnit):
++                p[0] = Unit(p[1].unit)
+             else:
+                 p[0] = Unit(p[1])
+ 
+@@ -175,7 +183,10 @@ class CDS(Base):
+                              | unit_expression
+             """
+             if len(p) == 4:
+-                p[0] = p[1] * p[3]
++                p[0] = _CDSUnit(
++                    p[1].unit * p[3].unit,
++                    p[1].division_tail * p[3].division_tail,
++                )
+             else:
+                 p[0] = p[1]
+ 
+@@ -185,9 +196,12 @@ class CDS(Base):
+                               | unit_expression DIVISION combined_units
+             """
+             if len(p) == 3:
+-                p[0] = p[2] ** -1
++                p[0] = _CDSUnit(p[2].unit ** -1, p[2].division_tail)
+             else:
+-                p[0] = p[1] / p[3]
++                p[0] = _CDSUnit(
++                    p[1].unit / p[3].division_tail,
++                    p[1].division_tail * p[3].division_tail,
++                )
+ 
+         def p_unit_expression(p):
+             """
+@@ -195,9 +209,9 @@ class CDS(Base):
+                             | OPEN_PAREN combined_units CLOSE_PAREN
+             """
+             if len(p) == 2:
+-                p[0] = p[1]
++                p[0] = _CDSUnit(p[1])
+             else:
+-                p[0] = p[2]
++                p[0] = _CDSUnit(p[2].unit)
+ 
+         def p_factor(p):
+             """

@@ -1,0 +1,307 @@
+{
+  "run_id": "verified002-codex-XC-MINI-PRO-AHP-20260615T143019Z",
+  "arms": [
+    "baseline",
+    "fvk"
+  ],
+  "instances": {
+    "astropy__astropy-14365": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecbb5-39fc-71b1-ab46-92f261480026",
+        "num_turns": null,
+        "duration_seconds": 117.73812714099768,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "8/8"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecbb5-39fc-71b1-ab46-92f261480026",
+        "num_turns": null,
+        "duration_seconds": 497.17494240299857,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "8/8"
+        }
+      }
+    },
+    "astropy__astropy-14369": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecbb5-3a02-71a2-bddd-feddce7d3dc2",
+        "num_turns": null,
+        "duration_seconds": 300.9604809730008,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "2/3",
+          "ptp": "732/732"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecbb5-3a02-71a2-bddd-feddce7d3dc2",
+        "num_turns": null,
+        "duration_seconds": 361.55459504300234,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "2/3",
+          "ptp": "732/732"
+        }
+      }
+    },
+    "astropy__astropy-14508": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecbb5-3a13-7a33-9cff-c7bbe43a896e",
+        "num_turns": null,
+        "duration_seconds": 274.4546515300026,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "174/174"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecbb5-3a13-7a33-9cff-c7bbe43a896e",
+        "num_turns": null,
+        "duration_seconds": 394.29092445200513,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "174/174"
+        }
+      }
+    },
+    "astropy__astropy-14539": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecbbe-b755-73d3-94ae-523d6b701589",
+        "num_turns": null,
+        "duration_seconds": 171.2913670009948,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "46/46"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecbbe-b755-73d3-94ae-523d6b701589",
+        "num_turns": null,
+        "duration_seconds": 566.7222809509985,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "46/46"
+        }
+      }
+    },
+    "astropy__astropy-14598": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecbbf-7101-7261-9551-de0c3578c852",
+        "num_turns": null,
+        "duration_seconds": 324.4930852940015,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "175/175"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecbbf-7101-7261-9551-de0c3578c852",
+        "num_turns": null,
+        "duration_seconds": 656.9966876140024,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "175/175"
+        }
+      }
+    },
+    "astropy__astropy-14995": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecbbf-897b-7042-80de-1467ab723dcb",
+        "num_turns": null,
+        "duration_seconds": 95.8751615259971,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "179/179"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecbbf-897b-7042-80de-1467ab723dcb",
+        "num_turns": null,
+        "duration_seconds": 399.84302369699435,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "179/179"
+        }
+      }
+    },
+    "astropy__astropy-7166": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecbc7-3279-7881-ad34-8d3d4f517ac3",
+        "num_turns": null,
+        "duration_seconds": 314.12892797800305,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "6/6"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecbc7-3279-7881-ad34-8d3d4f517ac3",
+        "num_turns": null,
+        "duration_seconds": 460.7126135300059,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "6/6"
+        }
+      }
+    },
+    "astropy__astropy-7336": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecbca-1333-7702-ad1e-9161196c7e93",
+        "num_turns": null,
+        "duration_seconds": 138.04552333799802,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "339/339"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecbca-1333-7702-ad1e-9161196c7e93",
+        "num_turns": null,
+        "duration_seconds": 359.4769593699966,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "339/339"
+        }
+      }
+    },
+    "astropy__astropy-7606": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecbce-83d9-7282-bc4b-7b9b505dec11",
+        "num_turns": null,
+        "duration_seconds": 119.19784023200191,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "241/241"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecbce-83d9-7282-bc4b-7b9b505dec11",
+        "num_turns": null,
+        "duration_seconds": 430.4856683100006,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "241/241"
+        }
+      }
+    },
+    "astropy__astropy-7671": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecbd1-c2cb-73d3-82e6-65a634290c0c",
+        "num_turns": null,
+        "duration_seconds": 230.97389919700072,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "3/3"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecbd1-c2cb-73d3-82e6-65a634290c0c",
+        "num_turns": null,
+        "duration_seconds": 382.8064063589991,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "3/3"
+        }
+      }
+    }
+  },
+  "aggregates": {
+    "arms": {
+      "baseline": {
+        "resolved": 8,
+        "evaluated": 10
+      },
+      "fvk": {
+        "resolved": 8,
+        "evaluated": 10
+      }
+    },
+    "flips": {
+      "baseline_to_fvk": {
+        "up": [],
+        "down": []
+      }
+    }
+  }
+}
