@@ -228,6 +228,24 @@ def _session_meta_id(rollout: Path) -> str | None:
     return None
 
 
+def _event_thread_id(events: list[dict]) -> str | None:
+    """Return the Codex ``thread.started`` id from stdout events, if present."""
+    for event in events:
+        if event.get("type") == "thread.started":
+            sid = event.get("thread_id")
+            if isinstance(sid, str) and sid:
+                return sid
+    return None
+
+
+def _find_rollout_by_id(session_id: str) -> Path | None:
+    """Find the live rollout file whose name contains ``session_id``."""
+    sessions = _codex_home() / "sessions"
+    if not sessions.is_dir():
+        return None
+    return next((p for p in sessions.rglob(f"rollout-*{session_id}*.jsonl")), None)
+
+
 def _discover_rollout(start_wall: float, resume_id: str | None) -> tuple[str | None, Path | None]:
     """Find the rollout this run produced and its session id.
 
@@ -303,8 +321,16 @@ class CodexRunner:
                 duration_seconds=duration, raw_json=None, error=stderr.strip(),
             )
         events = _parse_events(stdout)
-        # Session id + transcript: prefer the on-disk rollout (authoritative).
-        session_id, rollout = _discover_rollout(time.time() - duration, resume_id)
+        # Session id: stdout's thread.started event belongs to this exact
+        # process. Falling back to rollout mtime is only safe when stdout lacks
+        # that id; concurrent sessions can otherwise race and all select the
+        # newest rollout.
+        event_session_id = _event_thread_id(events)
+        if event_session_id:
+            session_id = event_session_id
+            rollout = _find_rollout_by_id(event_session_id)
+        else:
+            session_id, rollout = _discover_rollout(time.time() - duration, resume_id)
         if session_id:
             _save_transcript(ws, session_id, rollout)
         num_turns = sum(

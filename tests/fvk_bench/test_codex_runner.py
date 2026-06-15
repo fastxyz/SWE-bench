@@ -153,6 +153,46 @@ def test_transcript_path_prefers_saved_copy(tmp_path, monkeypatch):
     assert runner.transcript_path(ws, "") is None
 
 
+def test_result_prefers_stdout_thread_id_over_newest_rollout(tmp_path, monkeypatch):
+    """Parallel Codex runs can finish close together; stdout owns the session id."""
+    home = tmp_path / "codex_home"
+    sessions = home / "sessions" / "2026" / "06" / "15"
+    sessions.mkdir(parents=True)
+    sid_a = "019ecb60-1e74-7960-8575-83474e101605"
+    sid_b = "019ecb60-1e7c-7a62-a3c5-97f11d421c7d"
+    rollout_a = sessions / f"rollout-2026-06-15T13-02-14-{sid_a}.jsonl"
+    rollout_b = sessions / f"rollout-2026-06-15T13-02-14-{sid_b}.jsonl"
+    rollout_a.write_text(
+        json.dumps({"type": "session_meta", "payload": {"id": sid_a}}) + "\n",
+        encoding="utf-8",
+    )
+    rollout_b.write_text(
+        json.dumps({"type": "session_meta", "payload": {"id": sid_b}}) + "\n",
+        encoding="utf-8",
+    )
+    # Make B newest to reproduce the old race-prone discovery behavior.
+    rollout_a.touch()
+    rollout_b.touch()
+    monkeypatch.setenv("CODEX_HOME", str(home))
+
+    ws = tmp_path / "ws"
+    ws.mkdir()
+    stdout = "\n".join([
+        json.dumps({"type": "thread.started", "thread_id": sid_a}),
+        json.dumps({"type": "turn.started"}),
+        json.dumps({"type": "turn.completed"}),
+    ])
+
+    result = codex_runner.CodexRunner()._result(
+        ws, "baseline", stdout, "", 0, False, 1.0, None
+    )
+
+    assert result.session_id == sid_a
+    saved = ws / ".fvk_bench" / "codex" / f"{sid_a}.rollout.jsonl"
+    assert saved.read_text(encoding="utf-8") == rollout_a.read_text(encoding="utf-8")
+    assert not (ws / ".fvk_bench" / "codex" / f"{sid_b}.rollout.jsonl").exists()
+
+
 # ---------------------------------------------------------------------------
 # 4. get_runner dispatch
 # ---------------------------------------------------------------------------
