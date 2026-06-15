@@ -207,20 +207,28 @@ def write_run_manifest(
         "python": platform.python_version(),
     }
 
-    # claude version
-    claude_bin = os.environ.get("FVK_BENCH_CLAUDE_BIN", "claude")
-    claude_version: str | None = None
+    extra = dict(extra or {})
+    agent = extra.get("agent") or config.DEFAULT_AGENT
+
+    # selected agent version
+    version_key = f"{agent}_version"
+    version_bin = (
+        extra.get("codex_bin")
+        if agent == "codex"
+        else extra.get("claude_bin") or os.environ.get("FVK_BENCH_CLAUDE_BIN", "claude")
+    )
+    agent_version: str | None = None
     try:
         proc = subprocess.run(
-            [claude_bin, "--version"],
+            [version_bin, "--version"],
             capture_output=True,
             text=True,
             timeout=15,
         )
         if proc.returncode == 0:
-            claude_version = proc.stdout.strip() or None
+            agent_version = proc.stdout.strip() or None
     except Exception:
-        claude_version = None
+        agent_version = None
 
     # git repo sha
     repo_sha: str | None = None
@@ -263,19 +271,30 @@ def write_run_manifest(
     except Exception:
         submodules = None
 
-    manifest = {
-        "run_id": run_id,
-        "created_utc": _utc_now_iso(),
-        "host": host,
-        "claude_version": claude_version,
-        "invocation": {
+    if agent == "codex":
+        invocation = {
+            "model": config.CODEX_MODEL,
+            "effort": config.CODEX_EFFORT,
+            "sandbox": config.CODEX_SANDBOX,
+            "max_turns": config.MAX_TURNS,
+        }
+    else:
+        invocation = {
             "model": config.MODEL,
             "effort": config.EFFORT,
             "max_turns": config.MAX_TURNS,
             "tools": config.TOOLS,
             "permission_mode": config.PERMISSION_MODE,
             "setting_sources": config.SETTING_SOURCES,
-        },
+        }
+
+    manifest = {
+        "run_id": run_id,
+        "created_utc": _utc_now_iso(),
+        "host": host,
+        "agent": agent,
+        version_key: agent_version,
+        "invocation": invocation,
         "dataset": config.DATASET_NAME,
         "template_hashes": prompting.template_hashes(),
         "fvk_bench_version": fvk_bench.__version__,
@@ -284,7 +303,7 @@ def write_run_manifest(
             "submodules": submodules,
         },
     }
-    manifest.update(extra or {})
+    manifest.update(extra)
 
     out_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     return out_path

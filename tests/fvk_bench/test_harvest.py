@@ -379,6 +379,37 @@ def test_run_manifest_fields(tmp_path, monkeypatch):
     assert "third_party/formal-verification-kit" in submodules
 
 
+def test_run_manifest_codex_fields(tmp_path, monkeypatch):
+    """Codex manifests record the Codex invocation, not Claude's."""
+    results_dir = tmp_path / "results"
+    original_run = subprocess.run
+
+    def fake_run(cmd, *args, **kwargs):
+        if isinstance(cmd, (list, tuple)) and cmd[:2] == ["/opt/codex", "--version"]:
+            import subprocess as sp
+            return sp.CompletedProcess(cmd, 0, stdout="codex-cli 0.140.0-alpha.2\n", stderr="")
+        return original_run(cmd, *args, **kwargs)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    p = harvest.write_run_manifest(
+        RUN_ID,
+        results_dir,
+        extra={"agent": "codex", "codex_bin": "/opt/codex", "max_parallel": 2},
+    )
+
+    m = json.loads(p.read_text(encoding="utf-8"))
+    assert m["agent"] == "codex"
+    assert m["codex_version"] == "codex-cli 0.140.0-alpha.2"
+    assert "claude_version" not in m
+    assert m["invocation"] == {
+        "model": config.CODEX_MODEL,
+        "effort": config.CODEX_EFFORT,
+        "sandbox": config.CODEX_SANDBOX,
+        "max_turns": config.MAX_TURNS,
+    }
+
+
 # ---------------------------------------------------------------------------
 # Test 5: harvested files not gitignored in the real results dir
 # ---------------------------------------------------------------------------

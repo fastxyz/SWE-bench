@@ -180,14 +180,25 @@ def render_scores_md(scores: dict, run_manifest: dict | None) -> str:
     lines = [f"# Scores — run {scores['run_id']}", ""]
     if run_manifest:
         host = (run_manifest.get("host") or {}).get("hostname") or "unknown"
-        model = (run_manifest.get("invocation") or {}).get("model") or "unknown"
-        lines += [
+        invocation = run_manifest.get("invocation") or {}
+        agent = run_manifest.get("agent") or config.DEFAULT_AGENT
+        model = invocation.get("model") or "unknown"
+        effort = invocation.get("effort")
+        header = [
             f"- host: {host}",
+            f"- agent: {agent}",
             f"- model: {model}",
-            f"- claude version: {run_manifest.get('claude_version') or 'unknown'}",
+        ]
+        if effort:
+            header.append(f"- effort: {effort}")
+        version_key = f"{agent}_version"
+        version_label = version_key.replace("_", " ")
+        header += [
+            f"- {version_label}: {run_manifest.get(version_key) or 'unknown'}",
             f"- created: {run_manifest.get('created_utc') or 'unknown'}",
             "",
         ]
+        lines += header
 
     header = ["instance"]
     for arm in config.ARMS:

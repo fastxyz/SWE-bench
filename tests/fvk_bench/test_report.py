@@ -269,6 +269,26 @@ def test_render_scores_md(fake_run):
     assert "- fvk vs control resolved delta: +0" in md
 
 
+def test_render_scores_md_codex_header(fake_run):
+    scores = report_mod.collect_scores(RID, results_dir=fake_run)
+    run_manifest = {
+        "run_id": RID,
+        "created_utc": "2026-06-13T02:00:00+00:00",
+        "host": {"hostname": "testhost"},
+        "agent": "codex",
+        "codex_version": "codex-cli 0.140.0-alpha.2",
+        "invocation": {"model": config.CODEX_MODEL, "effort": config.CODEX_EFFORT},
+    }
+
+    md = report_mod.render_scores_md(scores, run_manifest)
+
+    assert "- agent: codex" in md
+    assert f"- model: {config.CODEX_MODEL}" in md
+    assert "- effort: xhigh" in md
+    assert "- codex version: codex-cli 0.140.0-alpha.2" in md
+    assert "claude version" not in md
+
+
 def test_render_scores_md_without_manifest(fake_run):
     scores = report_mod.collect_scores(RID, results_dir=fake_run)
 
