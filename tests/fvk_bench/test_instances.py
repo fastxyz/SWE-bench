@@ -77,6 +77,49 @@ def test_load_instances_id_mismatch_raises(monkeypatch):
     )
 
 
+def test_load_verified500_accepts_exact_500_without_submodule_check(tmp_path, monkeypatch):
+    """The full Verified set is validated by count, not by the 45-prompt submodule."""
+    import fvk_bench.instances as mod
+
+    rows = [
+        {
+            "instance_id": f"repo__repo-{i:03d}",
+            "repo": "repo/repo",
+            "base_commit": "abc123",
+            "version": "1.0",
+            "problem_statement": "Fix it.",
+            "hints_text": "",
+            "fail_to_pass_count": 1,
+            "pass_to_pass_count": 2,
+        }
+        for i in range(500)
+    ]
+    path = tmp_path / "verified.json"
+    path.write_text(json.dumps(rows), encoding="utf-8")
+    monkeypatch.setattr(
+        mod,
+        "submodule_instance_ids",
+        lambda: pytest.fail("verified500 must not read prompt submodule ids"),
+    )
+
+    loaded = mod.load_instances(path, instance_set="verified500")
+
+    assert len(loaded) == 500
+    assert "repo__repo-499" in loaded
+
+
+def test_load_verified500_rejects_non_500_file(tmp_path):
+    import fvk_bench.instances as mod
+
+    path = tmp_path / "too-small.json"
+    path.write_text("[]", encoding="utf-8")
+
+    with pytest.raises(RuntimeError) as exc_info:
+        mod.load_instances(path, instance_set="verified500")
+
+    assert "Expected exactly 500" in str(exc_info.value)
+
+
 # ---------------------------------------------------------------------------
 # 3. submodule_instance_ids — real submodule, no monkeypatching
 # ---------------------------------------------------------------------------
@@ -193,3 +236,42 @@ def test_vendor_never_leaks_hidden_fields(monkeypatch, tmp_path):
     assert [r["instance_id"] for r in reparsed] == sorted(
         r["instance_id"] for r in reparsed
     ), "output must be sorted by instance_id"
+
+
+def test_vendor_verified500_writes_all_dataset_rows(monkeypatch, tmp_path):
+    """verified500 vendoring uses the whole Verified test split, still hiding patches."""
+    import fvk_bench.instances as mod
+
+    monkeypatch.setattr(
+        mod,
+        "submodule_instance_ids",
+        lambda: pytest.fail("verified500 vendoring must not use the 45-prompt ids"),
+    )
+    fake_rows = [
+        {
+            "instance_id": f"repo__repo-{i:03d}",
+            "repo": "repo/repo",
+            "base_commit": "abc123",
+            "version": "1.0",
+            "problem_statement": "Fix it.",
+            "hints_text": None,
+            "FAIL_TO_PASS": ["f"],
+            "PASS_TO_PASS": ["p1", "p2"],
+            "patch": "secret",
+            "test_patch": "secret-test",
+        }
+        for i in range(500)
+    ]
+    fake_datasets = types.ModuleType("datasets")
+    fake_datasets.load_dataset = lambda name, split: fake_rows  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "datasets", fake_datasets)
+
+    out_path = tmp_path / "verified.json"
+    count = mod.vendor_instances(out_path, instance_set="verified500")
+
+    assert count == 500
+    text = out_path.read_text(encoding="utf-8")
+    assert "secret" not in text
+    written = json.loads(text)
+    assert written[0]["instance_id"] == "repo__repo-000"
+    assert written[-1]["instance_id"] == "repo__repo-499"

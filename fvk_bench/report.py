@@ -5,14 +5,14 @@ patches, copied eval reports) — never workspaces or harness logs — so report
 can be regenerated from a results tree alone on any machine.
 
 Reporting discipline (from the design spec): every instance in the run × every
-arm appears in the table; failed or skipped arms show their status and reason
-explicitly, empty patches are flagged explicitly, and per-arm resolved counts
-are stated over the evaluated instances — those with eval reports plus
-completed arms whose empty patch scores unresolved without ever reaching the
-harness (producing nothing IS that arm's answer). Cross-machine
+requested arm appears in the table; failed or skipped arms show their status
+and reason explicitly, empty patches are flagged explicitly, and per-arm
+resolved counts are stated over the evaluated instances — those with eval
+reports plus completed arms whose empty patch scores unresolved without ever
+reaching the harness (producing nothing IS that arm's answer). Cross-machine
 comparisons belong at the aggregate level (resolved counts, flip counts), so
-the aggregates section carries baseline→fvk / baseline→control flips with
-direction and the fvk-vs-control delta.
+the aggregates section carries the flips/deltas available for the requested
+arms.
 """
 
 import json
@@ -45,7 +45,17 @@ def _eval_summary(inst_dir: Path, arm: str) -> dict | None:
     }
 
 
-def _aggregates(instances: dict) -> dict:
+def _requested_arms(run_manifest: dict | None) -> tuple[str, ...]:
+    """Return valid requested arms from a run manifest, falling back to all arms."""
+    raw = (run_manifest or {}).get("arms")
+    if isinstance(raw, list):
+        arms = tuple(a for a in raw if a in config.ARMS)
+        if arms:
+            return arms
+    return config.ARMS
+
+
+def _aggregates(instances: dict, arms: tuple[str, ...]) -> dict:
     """Per-arm resolved counts, directional flips, and the fvk/control delta.
 
     Counts are over evaluated instances for that arm: those with an eval
@@ -56,7 +66,7 @@ def _aggregates(instances: dict) -> dict:
     evaluated (an unevaluated arm can neither gain nor lose an instance).
     """
     arms_agg: dict = {}
-    for arm in config.ARMS:
+    for arm in arms:
         evaluated = resolved = 0
         for per_arm in instances.values():
             ev = (per_arm.get(arm) or {}).get("eval")
@@ -83,19 +93,23 @@ def _aggregates(instances: dict) -> dict:
                 down.append(iid)
         return {"up": up, "down": down}
 
-    return {
-        "arms": arms_agg,
-        "flips": {
-            "baseline_to_fvk": flips("baseline", "fvk"),
-            "baseline_to_control": flips("baseline", "control"),
-        },
-        "fvk_vs_control_delta": (
+    out = {"arms": arms_agg, "flips": {}}
+    if "baseline" in arms and "fvk" in arms:
+        out["flips"]["baseline_to_fvk"] = flips("baseline", "fvk")
+    if "baseline" in arms and "control" in arms:
+        out["flips"]["baseline_to_control"] = flips("baseline", "control")
+    if "fvk" in arms and "control" in arms:
+        out["fvk_vs_control_delta"] = (
             arms_agg["fvk"]["resolved"] - arms_agg["control"]["resolved"]
-        ),
-    }
+        )
+    return out
 
 
-def collect_scores(run_id: str, results_dir: Path = config.RESULTS_DIR) -> dict:
+def collect_scores(
+    run_id: str,
+    results_dir: Path = config.RESULTS_DIR,
+    arms: tuple[str, ...] | None = None,
+) -> dict:
     """Collect per-instance × per-arm scores from a harvested run directory.
 
     Every directory under ``results/<run_id>/`` containing a ``manifest.json``
@@ -112,6 +126,7 @@ def collect_scores(run_id: str, results_dir: Path = config.RESULTS_DIR) -> dict:
     other report-less arms (failed/skipped, or completed with a patch whose
     eval has not run / errored) keep ``eval=None`` (not evaluated).
     """
+    arms = tuple(arms or config.ARMS)
     run_dir = Path(results_dir) / run_id
     instances: dict = {}
     if run_dir.is_dir():
@@ -121,7 +136,7 @@ def collect_scores(run_id: str, results_dir: Path = config.RESULTS_DIR) -> dict:
                 continue
             arms_state = manifest.get("arms") or {}
             per_arm: dict = {}
-            for arm in config.ARMS:
+            for arm in arms:
                 state = arms_state.get(arm) or {}
                 patch = inst_dir / "solutions" / f"solution_{arm}.patch"
                 empty_patch = not patch.is_file() or patch.stat().st_size == 0
@@ -145,8 +160,9 @@ def collect_scores(run_id: str, results_dir: Path = config.RESULTS_DIR) -> dict:
             instances[inst_dir.name] = per_arm
     return {
         "run_id": run_id,
+        "arms": list(arms),
         "instances": instances,
-        "aggregates": _aggregates(instances),
+        "aggregates": _aggregates(instances, arms),
     }
 
 
@@ -177,6 +193,7 @@ def render_scores_md(scores: dict, run_manifest: dict | None) -> str:
     group per arm — failed or skipped arms appear as their status, never
     omitted) followed by the aggregates section.
     """
+    arms = tuple(scores.get("arms") or config.ARMS)
     lines = [f"# Scores — run {scores['run_id']}", ""]
     if run_manifest:
         host = (run_manifest.get("host") or {}).get("hostname") or "unknown"
@@ -201,14 +218,14 @@ def render_scores_md(scores: dict, run_manifest: dict | None) -> str:
         lines += header
 
     header = ["instance"]
-    for arm in config.ARMS:
+    for arm in arms:
         header += [f"{arm} status", f"{arm} resolved", f"{arm} FTP", f"{arm} PTP"]
     lines.append("| " + " | ".join(header) + " |")
     lines.append("|" + "---|" * len(header))
     instances = scores.get("instances") or {}
     for iid in sorted(instances):
         row = [iid]
-        for arm in config.ARMS:
+        for arm in arms:
             arm_scores = instances[iid].get(arm) or {}
             ev = arm_scores.get("eval")
             row.append(_status_cell(arm_scores))
@@ -220,7 +237,7 @@ def render_scores_md(scores: dict, run_manifest: dict | None) -> str:
 
     agg = scores["aggregates"]
     lines += ["", "## Aggregates", ""]
-    for arm in config.ARMS:
+    for arm in arms:
         counts = agg["arms"][arm]
         lines.append(
             f"- {arm} resolved: {counts['resolved']}/{counts['evaluated']}"
@@ -230,14 +247,17 @@ def render_scores_md(scores: dict, run_manifest: dict | None) -> str:
         ("baseline_to_fvk", "baseline→fvk"),
         ("baseline_to_control", "baseline→control"),
     ):
-        fl = agg["flips"][key]
+        fl = agg["flips"].get(key)
+        if fl is None:
+            continue
         up = ", ".join(fl["up"]) or "none"
         down = ", ".join(fl["down"]) or "none"
         lines.append(
             f"- flips {label}: +{len(fl['up'])}/-{len(fl['down'])}"
             f" (up: {up}; down: {down})"
         )
-    lines.append(f"- fvk vs control resolved delta: {agg['fvk_vs_control_delta']:+d}")
+    if "fvk_vs_control_delta" in agg:
+        lines.append(f"- fvk vs control resolved delta: {agg['fvk_vs_control_delta']:+d}")
     return "\n".join(lines) + "\n"
 
 
@@ -252,8 +272,9 @@ def write_reports(
     results_dir = Path(results_dir)
     run_dir = results_dir / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
-    scores = collect_scores(run_id, results_dir=results_dir)
     run_manifest = _load_json(run_dir / "run_manifest.json")
+    arms = _requested_arms(run_manifest)
+    scores = collect_scores(run_id, results_dir=results_dir, arms=arms)
     json_path = run_dir / "scores.json"
     md_path = run_dir / "scores.md"
     json_path.write_text(json.dumps(scores, indent=2) + "\n", encoding="utf-8")

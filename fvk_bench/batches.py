@@ -1,8 +1,12 @@
-"""Owner-specified division of the 45 benchmark instances into five batches.
+"""Owner-specified and generated benchmark batch definitions.
 
-The division (2026-06-13) is a contract: exactly five batches of nine,
-pairwise disjoint, whose union is the 45 submodule-derived instance ids
+The 45-instance division (2026-06-13) is a contract: exactly five batches of
+nine, pairwise disjoint, whose union is the 45 submodule-derived instance ids
 (invariants are test-enforced). Membership is the contract.
+
+For the full SWE-bench Verified set, batches are generated from the sorted
+500-instance metadata file as ``verified001`` ... ``verified050`` with ten
+instances each.
 """
 
 BATCHES: dict[str, tuple[str, ...]] = {
@@ -24,15 +28,45 @@ BATCHES: dict[str, tuple[str, ...]] = {
 }
 
 
-def batch_instances(name: str) -> tuple[str, ...]:
+VERIFIED_BATCH_SIZE = 10
+VERIFIED_BATCH_COUNT = 50
+
+
+def verified_batch_names() -> tuple[str, ...]:
+    """Return generated full-Verified batch names in order."""
+    return tuple(f"verified{i:03d}" for i in range(1, VERIFIED_BATCH_COUNT + 1))
+
+
+def batch_instances(
+    name: str, *, instance_ids: tuple[str, ...] | None = None
+) -> tuple[str, ...]:
     """Return the instance ids of batch ``name`` in the owner's listed order.
+
+    The fixed ``batch1`` ... ``batch5`` names ignore ``instance_ids``. The
+    generated ``verifiedNNN`` names require the caller to pass the ordered full
+    Verified 500-id sequence, because their membership is defined by that
+    vendored metadata order.
 
     Raises:
         KeyError: naming the valid batches, if ``name`` is not one of them.
     """
-    try:
+    if name in BATCHES:
         return BATCHES[name]
-    except KeyError:
-        raise KeyError(
-            f"unknown batch {name!r}; valid: {', '.join(sorted(BATCHES))}"
-        ) from None
+
+    verified_names = verified_batch_names()
+    if name in verified_names:
+        ids = tuple(instance_ids or ())
+        required = VERIFIED_BATCH_SIZE * VERIFIED_BATCH_COUNT
+        if len(ids) != required:
+            raise KeyError(
+                f"{name} requires exactly {required} ordered verified500 instance ids; "
+                f"got {len(ids)}"
+            )
+        idx = int(name.removeprefix("verified")) - 1
+        start = idx * VERIFIED_BATCH_SIZE
+        return ids[start:start + VERIFIED_BATCH_SIZE]
+
+    raise KeyError(
+        f"unknown batch {name!r}; valid: {', '.join(sorted(BATCHES))} "
+        f"or verified001..verified050"
+    )

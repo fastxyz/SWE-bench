@@ -289,6 +289,24 @@ def test_render_scores_md_codex_header(fake_run):
     assert "claude version" not in md
 
 
+def test_write_reports_respects_manifest_arms(fake_run):
+    run_dir = fake_run / RID
+    manifest = json.loads((run_dir / "run_manifest.json").read_text(encoding="utf-8"))
+    manifest["arms"] = ["baseline", "fvk"]
+    (run_dir / "run_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+
+    scores_json, scores_md = report_mod.write_reports(RID, results_dir=fake_run)
+
+    scores = json.loads(scores_json.read_text(encoding="utf-8"))
+    assert scores["arms"] == ["baseline", "fvk"]
+    assert set(scores["aggregates"]["arms"]) == {"baseline", "fvk"}
+    for per_instance in scores["instances"].values():
+        assert set(per_instance) == {"baseline", "fvk"}
+    md = scores_md.read_text(encoding="utf-8")
+    assert "control status" not in md
+    assert "- control resolved" not in md
+
+
 def test_render_scores_md_without_manifest(fake_run):
     scores = report_mod.collect_scores(RID, results_dir=fake_run)
 

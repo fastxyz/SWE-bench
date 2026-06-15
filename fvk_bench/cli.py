@@ -1,4 +1,4 @@
-"""Command-line interface for the fvk 3-arm benchmark.
+"""Command-line interface for the fvk benchmark.
 
 This is the ONLY fvk_bench module that prints. Every subcommand returns an
 exit code: 0 = full success, 1 = failure, 2 = partial success (some but not
@@ -13,7 +13,8 @@ The happy path for one problem is exactly::
     python -m fvk_bench report --run-id X
 
 Reusing a run id resumes it (completed arms are skipped by the arm state
-machine), so a single problem or all 45 can be processed incrementally.
+machine), so a single problem, one batch, or a selected full set can be
+processed incrementally.
 """
 
 import argparse
@@ -47,13 +48,32 @@ def _parse_arms(spec: str) -> tuple[str, ...] | None:
     return requested
 
 
+def _manifest_arms(run_dir: Path) -> tuple[str, ...]:
+    """Return requested arms recorded for a run, falling back to all arms."""
+    manifest_path = run_dir / "run_manifest.json"
+    if not manifest_path.is_file():
+        return config.ARMS
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (ValueError, OSError):
+        return config.ARMS
+    raw = manifest.get("arms")
+    if isinstance(raw, list):
+        arms = tuple(a for a in raw if a in config.ARMS)
+        if arms:
+            return arms
+    return config.ARMS
+
+
 def _resolve_selection(args, known: dict) -> list[str] | None:
     """Resolve the --instances|--all|--batch selection against the loaded set."""
     if args.all:
         return sorted(known)
     if args.batch:
         try:
-            ids = list(batches.batch_instances(args.batch))
+            ids = list(
+                batches.batch_instances(args.batch, instance_ids=tuple(sorted(known)))
+            )
         except KeyError as exc:
             print(f"error: {exc.args[0]}")
             return None
@@ -62,17 +82,25 @@ def _resolve_selection(args, known: dict) -> list[str] | None:
     unknown = [iid for iid in ids if iid not in known]
     if unknown:
         print("error: unknown instance ids: " + ", ".join(unknown))
-        print("hint: `python -m fvk_bench list` shows the 45 benchmark instances")
+        instance_set = getattr(args, "instance_set", config.DEFAULT_INSTANCE_SET)
+        print(
+            "hint: "
+            f"`python -m fvk_bench list --instance-set {instance_set}` "
+            "shows the available benchmark instances"
+        )
         return None
     return ids
 
 
-def _load_instances_or_explain() -> dict | None:
+def _load_instances_or_explain(instance_set: str = config.DEFAULT_INSTANCE_SET) -> dict | None:
     try:
-        return instances.load_instances()
+        return instances.load_instances(instance_set=instance_set)
     except (RuntimeError, OSError) as exc:
         print(f"error: cannot load instance metadata: {exc}")
-        print("hint: run `python -m fvk_bench vendor-instances` first")
+        print(
+            "hint: run "
+            f"`python -m fvk_bench vendor-instances --instance-set {instance_set}` first"
+        )
         return None
 
 
@@ -88,14 +116,24 @@ def _arm_label(arm_state: dict) -> str:
 # ---------------------------------------------------------------------------
 
 def _cmd_list(args) -> int:
-    try:
-        ids = instances.submodule_instance_ids()
-    except RuntimeError as exc:
-        print(f"error: {exc}")
-        return 1
+    all_ids: list[str]
+    if args.instance_set == "fvk45":
+        try:
+            all_ids = instances.submodule_instance_ids()
+        except RuntimeError as exc:
+            print(f"error: {exc}")
+            return 1
+    else:
+        known = _load_instances_or_explain(args.instance_set)
+        if known is None:
+            return 1
+        all_ids = sorted(known)
+    ids = list(all_ids)
     if args.batch:
         try:
-            members = set(batches.batch_instances(args.batch))
+            members = set(
+                batches.batch_instances(args.batch, instance_ids=tuple(all_ids))
+            )
         except KeyError as exc:
             print(f"error: {exc.args[0]}")
             return 1
@@ -106,12 +144,24 @@ def _cmd_list(args) -> int:
         groups.setdefault(iid.rsplit("-", 1)[0], []).append(iid)
     print(f"{len(ids)} instances across {len(groups)} repos")
 
-    batch_of = {
-        iid: name for name, batch_ids in batches.BATCHES.items() for iid in batch_ids
-    }
+    batch_of = {}
+    if args.instance_set == "fvk45":
+        batch_of = {
+            iid: name for name, batch_ids in batches.BATCHES.items() for iid in batch_ids
+        }
+    else:
+        ordered_ids = tuple(all_ids)
+        for name in batches.verified_batch_names():
+            try:
+                for iid in batches.batch_instances(name, instance_ids=ordered_ids):
+                    batch_of[iid] = name
+            except KeyError:
+                pass
     annotations: dict[str, str] = {}
+    annotation_arms = config.ARMS
     if args.run_id:
         run_dir = config.RESULTS_DIR / args.run_id
+        annotation_arms = _manifest_arms(run_dir)
         for iid in ids:
             manifest_path = run_dir / iid / "manifest.json"
             if not manifest_path.is_file():
@@ -124,7 +174,7 @@ def _cmd_list(args) -> int:
                 continue
             arms_state = manifest.get("arms") or {}
             annotations[iid] = " ".join(
-                f"{arm}={_arm_label(arms_state.get(arm) or {})}" for arm in config.ARMS
+                f"{arm}={_arm_label(arms_state.get(arm) or {})}" for arm in annotation_arms
             )
 
     for prefix in sorted(groups):
@@ -196,11 +246,16 @@ def _cmd_doctor(args) -> int:
 
 def _cmd_vendor_instances(args) -> int:
     try:
-        count = instances.vendor_instances()
+        count = instances.vendor_instances(instance_set=args.instance_set)
     except Exception as exc:  # noqa: BLE001 — network/datasets errors are arbitrary
         print(f"error: vendoring failed: {exc}")
         return 1
-    print(f"vendored {count} instances -> {config.INSTANCES_JSON}")
+    out_path = (
+        config.INSTANCES_JSON
+        if args.instance_set == "fvk45"
+        else config.VERIFIED_INSTANCES_JSON
+    )
+    print(f"vendored {count} instances -> {out_path}")
     return 0
 
 
@@ -240,7 +295,7 @@ def _write_stub_manifest(
 
 
 def _cmd_run(args) -> int:
-    known = _load_instances_or_explain()
+    known = _load_instances_or_explain(args.instance_set)
     if known is None:
         return 1
     ids = _resolve_selection(args, known)
@@ -322,7 +377,15 @@ def _cmd_run(args) -> int:
     requested_arms = len(ids) * len(arm_list)
     manifest_path = harvest.write_run_manifest(
         run_id, results_dir=results_dir,
-        extra={"max_parallel": max_parallel, "agent": args.agent},
+        extra={
+            "max_parallel": max_parallel,
+            "agent": args.agent,
+            "arms": list(arm_list),
+            "instance_set": args.instance_set,
+            "instances": ids,
+            "claude_bin": args.claude_bin,
+            "codex_bin": args.codex_bin,
+        },
     )
     print(f"run manifest: {manifest_path}")
     print(
@@ -338,7 +401,7 @@ def _cmd_run(args) -> int:
 # ---------------------------------------------------------------------------
 
 def _cmd_validate_gold(args) -> int:
-    known = _load_instances_or_explain()
+    known = _load_instances_or_explain(args.instance_set)
     if known is None:
         return 1
     ids = _resolve_selection(args, known)
@@ -377,9 +440,12 @@ def _cmd_evaluate(args) -> int:
     if not run_dir.is_dir():
         print(f"error: no results for run {args.run_id} under {results_dir}")
         return 1
-    arm_list = _parse_arms(args.arms)
-    if arm_list is None:
-        return 1
+    if args.arms is None:
+        arm_list = _manifest_arms(run_dir)
+    else:
+        arm_list = _parse_arms(args.arms)
+        if arm_list is None:
+            return 1
 
     successes = failures = 0
     for arm in arm_list:
@@ -445,25 +511,35 @@ def _add_instance_selection(sub: argparse.ArgumentParser) -> None:
         help="exact instance ids to process",
     )
     group.add_argument(
-        "--all", action="store_true", help="process all 45 benchmark instances"
+        "--all", action="store_true", help="process every instance in --instance-set"
     )
     group.add_argument(
         "--batch", metavar="NAME",
-        help=f"process one fixed batch ({', '.join(sorted(batches.BATCHES))})",
+        help=f"process one batch ({', '.join(sorted(batches.BATCHES))}, or verified001..verified050)",
+    )
+
+
+def _add_instance_set(sub: argparse.ArgumentParser) -> None:
+    sub.add_argument(
+        "--instance-set",
+        choices=config.INSTANCE_SETS,
+        default=config.DEFAULT_INSTANCE_SET,
+        help=f"which vendored instance set to use (default: {config.DEFAULT_INSTANCE_SET})",
     )
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="fvk_bench",
-        description="3-arm (baseline/fvk/control) Claude Code benchmark over SWE-bench Verified",
+        description="baseline/fvk/control benchmark over SWE-bench Verified",
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
-    p = sub.add_parser("list", help="list the 45 instance ids grouped by repo")
+    p = sub.add_parser("list", help="list instance ids grouped by repo")
+    _add_instance_set(p)
     p.add_argument("--run-id", help="annotate each instance with its arm statuses from this run")
     p.add_argument("--batch", metavar="NAME",
-                   help=f"only list one fixed batch ({', '.join(sorted(batches.BATCHES))})")
+                   help=f"only list one batch ({', '.join(sorted(batches.BATCHES))}, or verified001..verified050)")
     p.set_defaults(func=_cmd_list)
 
     p = sub.add_parser("doctor", help="preflight checks (and optional session canary)")
@@ -481,9 +557,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser("vendor-instances",
                        help="download and vendor instance metadata (network + datasets)")
+    _add_instance_set(p)
     p.set_defaults(func=_cmd_vendor_instances)
 
     p = sub.add_parser("run", help="run benchmark arms for selected instances")
+    _add_instance_set(p)
     _add_instance_selection(p)
     p.add_argument("--run-id", help="run identifier (default: <utc-timestamp>-<hostname>); reuse to resume")
     p.add_argument("--arms", default=",".join(config.ARMS),
@@ -505,14 +583,15 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("validate-gold",
                        help="verify the eval environment resolves the official gold patches")
     p.add_argument("--run-id", required=True)
+    _add_instance_set(p)
     _add_instance_selection(p)
     p.add_argument("--max-workers", type=int, default=4)
     p.set_defaults(func=_cmd_validate_gold)
 
     p = sub.add_parser("evaluate", help="score harvested patches with the official harness")
     p.add_argument("--run-id", required=True)
-    p.add_argument("--arms", default=",".join(config.ARMS),
-                   help="comma-separated arms to evaluate")
+    p.add_argument("--arms", default=None,
+                   help="comma-separated arms to evaluate (default: run manifest arms)")
     p.add_argument("--max-workers", type=int, default=4)
     p.set_defaults(func=_cmd_evaluate)
 

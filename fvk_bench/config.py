@@ -19,6 +19,8 @@ TOOLS: str = "Read,Write,Edit,Glob,Grep"  # passed verbatim to `claude --tools`;
 ARMS: tuple[str, ...] = ("baseline", "fvk", "control")
 ARM_TIMEOUT_SECONDS: int = 4 * 3600
 DATASET_NAME: str = "princeton-nlp/SWE-bench_Verified"
+INSTANCE_SETS: tuple[str, ...] = ("fvk45", "verified500")
+DEFAULT_INSTANCE_SET: str = "fvk45"
 
 assert set(MAX_TURNS) == set(ARMS), "MAX_TURNS keys must match ARMS"
 
@@ -46,6 +48,7 @@ REPO_ROOT: Path = Path(__file__).resolve().parent.parent
 PACKAGE_DIR: Path = Path(__file__).resolve().parent
 PROMPTS_DIR: Path = PACKAGE_DIR / "prompts"
 INSTANCES_JSON: Path = PACKAGE_DIR / "data" / "instances.json"
+VERIFIED_INSTANCES_JSON: Path = PACKAGE_DIR / "data" / "instances_verified500.json"
 REPRO_SUBMODULE: Path = REPO_ROOT / "third_party" / "swebench-fvk-reproducibility"
 FVK_SUBMODULE: Path = REPO_ROOT / "third_party" / "formal-verification-kit"
 RESULTS_DIR: Path = REPO_ROOT / "results"

@@ -5,7 +5,8 @@ This module provides three public functions:
 - ``submodule_instance_ids``: read the 45 instance ids from the reproducibility
   submodule prompt files (no network required).
 - ``load_instances``: load the vendored JSON file into a dict of frozen
-  :class:`Instance` dataclasses, cross-checking against the submodule ids.
+  :class:`Instance` dataclasses, cross-checking the 45-instance set against
+  the submodule ids and exact-count checking the full Verified set.
 - ``vendor_instances``: download fresh metadata from HuggingFace and write the
   vendored JSON file (requires network and the ``datasets`` package).
 
@@ -57,11 +58,58 @@ def submodule_instance_ids() -> list[str]:
     return ids
 
 
-def load_instances(path: Path = config.INSTANCES_JSON) -> dict[str, "Instance"]:
+def _instance_set_path(instance_set: str) -> Path:
+    if instance_set == "fvk45":
+        return config.INSTANCES_JSON
+    if instance_set == "verified500":
+        return config.VERIFIED_INSTANCES_JSON
+    raise RuntimeError(
+        f"unknown instance set {instance_set!r}; choose from {', '.join(config.INSTANCE_SETS)}"
+    )
+
+
+def _expected_count(instance_set: str) -> int:
+    if instance_set == "fvk45":
+        return 45
+    if instance_set == "verified500":
+        return 500
+    raise RuntimeError(
+        f"unknown instance set {instance_set!r}; choose from {', '.join(config.INSTANCE_SETS)}"
+    )
+
+
+def _visible_row(row: dict) -> dict:
+    # Resolve FAIL_TO_PASS/PASS_TO_PASS: dataset stores these as JSON-encoded
+    # strings or real lists depending on version/cache.
+    ftp = row["FAIL_TO_PASS"]
+    if isinstance(ftp, str):
+        ftp = json.loads(ftp)
+
+    ptp = row["PASS_TO_PASS"]
+    if isinstance(ptp, str):
+        ptp = json.loads(ptp)
+
+    return {
+        "instance_id": row["instance_id"],
+        "repo": row["repo"],
+        "base_commit": row["base_commit"],
+        "version": row["version"],
+        "problem_statement": row["problem_statement"],
+        "hints_text": row["hints_text"] or "",
+        "fail_to_pass_count": len(ftp),
+        "pass_to_pass_count": len(ptp),
+    }
+
+
+def load_instances(
+    path: Path | None = None, *, instance_set: str = config.DEFAULT_INSTANCE_SET
+) -> dict[str, "Instance"]:
     """Load instances from a vendored JSON file.
 
     Args:
-        path: Path to the JSON file (list of instance dicts).
+        path: Path to the JSON file (list of instance dicts). Defaults to the
+            pinned file for ``instance_set``.
+        instance_set: ``fvk45`` or ``verified500``.
 
     Returns:
         Mapping of ``instance_id`` → :class:`Instance`.
@@ -69,9 +117,14 @@ def load_instances(path: Path = config.INSTANCES_JSON) -> dict[str, "Instance"]:
     Raises:
         RuntimeError: if the JSON cannot be parsed, if a required field is
             missing or has the wrong type, or if the set of ids in the file
-            does not exactly match the set returned by
-            :func:`submodule_instance_ids`.
+            does not satisfy the selected instance-set invariants.
     """
+    if instance_set not in config.INSTANCE_SETS:
+        raise RuntimeError(
+            f"unknown instance set {instance_set!r}; choose from {', '.join(config.INSTANCE_SETS)}"
+        )
+    if path is None:
+        path = _instance_set_path(instance_set)
     path = Path(path)
     try:
         raw: list[dict] = json.loads(path.read_text(encoding="utf-8"))
@@ -100,6 +153,15 @@ def load_instances(path: Path = config.INSTANCES_JSON) -> dict[str, "Instance"]:
             f"Invalid field type in {path}: {exc}"
         ) from exc
 
+    if instance_set == "verified500":
+        expected_count = _expected_count(instance_set)
+        if len(instances) != expected_count:
+            raise RuntimeError(
+                f"Expected exactly {expected_count} instances in {path} "
+                f"for {instance_set}, found {len(instances)}."
+            )
+        return instances
+
     submodule_ids = set(submodule_instance_ids())
     json_ids = set(instances.keys())
 
@@ -124,58 +186,59 @@ def load_instances(path: Path = config.INSTANCES_JSON) -> dict[str, "Instance"]:
     return instances
 
 
-def vendor_instances(out_path: Path = config.INSTANCES_JSON) -> int:
+def vendor_instances(
+    out_path: Path | None = None, *, instance_set: str = config.DEFAULT_INSTANCE_SET
+) -> int:
     """Download instance metadata from HuggingFace and write vendored JSON.
 
     This function requires network access and the ``datasets`` package.
 
     Args:
-        out_path: Destination path for the JSON file.
+        out_path: Destination path for the JSON file. Defaults to the pinned
+            file for ``instance_set``.
+        instance_set: ``fvk45`` vendors only the submodule-backed 45 ids;
+            ``verified500`` vendors the entire SWE-bench Verified test split.
 
     Returns:
         Number of instances written.
 
     Raises:
-        RuntimeError: if any submodule instance id is absent from the dataset.
+        RuntimeError: if the selected dataset invariant is not satisfied.
     """
+    if instance_set not in config.INSTANCE_SETS:
+        raise RuntimeError(
+            f"unknown instance set {instance_set!r}; choose from {', '.join(config.INSTANCE_SETS)}"
+        )
     import datasets  # noqa: PLC0415 — intentional late import; avoids hard dep at module level
 
+    if out_path is None:
+        out_path = _instance_set_path(instance_set)
     out_path = Path(out_path)
-    target_ids = set(submodule_instance_ids())
+    target_ids = set(submodule_instance_ids()) if instance_set == "fvk45" else None
 
     ds = datasets.load_dataset(config.DATASET_NAME, split="test")
 
     rows = []
     for row in ds:
-        if row["instance_id"] not in target_ids:
+        if target_ids is not None and row["instance_id"] not in target_ids:
             continue
 
-        # Resolve FAIL_TO_PASS — dataset stores these as JSON-encoded strings or real lists
-        ftp = row["FAIL_TO_PASS"]
-        if isinstance(ftp, str):
-            ftp = json.loads(ftp)
-
-        ptp = row["PASS_TO_PASS"]
-        if isinstance(ptp, str):
-            ptp = json.loads(ptp)
-
-        rows.append({
-            "instance_id": row["instance_id"],
-            "repo": row["repo"],
-            "base_commit": row["base_commit"],
-            "version": row["version"],
-            "problem_statement": row["problem_statement"],
-            "hints_text": row["hints_text"] or "",
-            "fail_to_pass_count": len(ftp),
-            "pass_to_pass_count": len(ptp),
-        })
+        rows.append(_visible_row(row))
 
     written_ids = {r["instance_id"] for r in rows}
-    absent = target_ids - written_ids
-    if absent:
-        listed = ", ".join(sorted(absent))
+    if target_ids is not None:
+        absent = target_ids - written_ids
+        if absent:
+            listed = ", ".join(sorted(absent))
+            raise RuntimeError(
+                f"The following submodule instance ids were not found in the dataset: {listed}"
+            )
+
+    expected_count = len(target_ids) if target_ids is not None else _expected_count(instance_set)
+    if len(written_ids) != expected_count:
         raise RuntimeError(
-            f"The following submodule instance ids were not found in the dataset: {listed}"
+            f"Expected exactly {expected_count} instances for {instance_set}, "
+            f"dataset produced {len(written_ids)}."
         )
 
     rows.sort(key=lambda r: r["instance_id"])

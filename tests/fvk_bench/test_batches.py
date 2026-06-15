@@ -22,3 +22,31 @@ def test_batch_instances_accessor():
         assert False, "expected KeyError"
     except KeyError as e:
         assert "batch1" in str(e)
+
+
+def test_verified500_batches_are_50_groups_of_10():
+    ids = tuple(f"repo__repo-{i:03d}" for i in range(500))
+
+    assert batches.verified_batch_names()[:2] == ("verified001", "verified002")
+    assert batches.verified_batch_names()[-1] == "verified050"
+    assert batches.batch_instances("verified001", instance_ids=ids) == ids[:10]
+    assert batches.batch_instances("verified050", instance_ids=ids) == ids[490:500]
+
+    all_batched = [
+        iid
+        for name in batches.verified_batch_names()
+        for iid in batches.batch_instances(name, instance_ids=ids)
+    ]
+    assert len(all_batched) == 500
+    assert len(set(all_batched)) == 500
+    assert tuple(all_batched) == ids
+    for name in batches.verified_batch_names():
+        assert len(batches.batch_instances(name, instance_ids=ids)) == 10
+
+
+def test_verified500_batch_rejects_non_500_input():
+    try:
+        batches.batch_instances("verified001", instance_ids=("one", "two"))
+        assert False, "expected KeyError"
+    except KeyError as e:
+        assert "requires exactly 500" in str(e)

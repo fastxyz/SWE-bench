@@ -1,4 +1,4 @@
-# START — the 3-arm FVK benchmark
+# START — the baseline/fvk/control FVK benchmark
 
 This is the single onboarding document for running the `fvk_bench` benchmark on a fresh
 Ubuntu machine, whether you are a human or a Claude session. Everything below is verified
@@ -6,9 +6,11 @@ against the actual CLI; commands are copy-pasteable.
 
 ## 1. What this is
 
-A controlled benchmark of Claude Code on 45 SWE-bench Verified instances, with three arms
-per instance. **baseline**: a fresh Claude Code session reads a real GitHub issue and fixes
-the checked-out repo. **fvk**: a second session resumes the frozen baseline transcript
+A controlled benchmark on SWE-bench Verified instances. The default instance set is the
+original 45-problem FVK subset; the full 500-problem Verified set is available with
+`--instance-set verified500`. Each run may request any subset of the three arms.
+**baseline**: a fresh agent session reads a real GitHub issue and fixes the checked-out
+repo. **fvk**: a second session resumes the frozen baseline transcript
 (`--resume --fork-session`) and audits the fix using the Formal Verification Kit
 methodology. **control**: an independent fork of the same frozen baseline transcript
 performs a standard careful code review — it isolates the FVK method from the generic
@@ -49,11 +51,12 @@ python -m venv .venv
 
 That single `pip install -e .` is sufficient: it installs the `swebench` package (the
 evaluation harness) and all dependencies, including `datasets`. You do not need HuggingFace
-access to run sessions — the 45 instances' public metadata is already committed at
-`fvk_bench/data/instances.json`; the `datasets` library is only exercised if you ever
-re-vendor that file (`vendor-instances`) or when the eval harness fetches the dataset at
-evaluation time. The two submodules under `third_party/` provide the 45-problem list and
-the FVK materials, so `git submodule update --init` is mandatory.
+access to run sessions — the 45 instances' public metadata is committed at
+`fvk_bench/data/instances.json`, and the full 500-instance metadata is committed at
+`fvk_bench/data/instances_verified500.json`. The `datasets` library is only exercised if
+you re-vendor either file (`vendor-instances`) or when the eval harness fetches the
+dataset at evaluation time. The two submodules under `third_party/` provide the
+45-problem list and the FVK materials, so `git submodule update --init` is mandatory.
 
 ## 4. Sanity check
 
@@ -91,33 +94,36 @@ The happy path, on a new machine, in order:
   environment; it must resolve, or real scores from this machine are uninterpretable. The
   first invocation pulls the instance's prebuilt Docker image — expect minutes (longer on a
   slow connection).
-- `run` executes the three arms sequentially in one hermetic workspace: a fresh baseline
-  session, then two forks of its frozen transcript. Each arm is a 200-turn
+- `run` executes the requested arms in one hermetic workspace: a fresh baseline session,
+  then any requested review forks of its frozen transcript. Each arm is a 200-turn
   `claude-opus-4-8` session at max effort with a 4-hour timeout — budget possibly hours
   for one instance.
-- `evaluate` runs every harvested patch through the official dockerized test harness —
-  minutes per instance once images are cached.
+- `evaluate` runs every harvested patch for the arms recorded in `run_manifest.json`
+  through the official dockerized test harness — minutes per instance once images are
+  cached. Pass `--arms baseline,fvk` only when intentionally overriding an older manifest.
 - `report` writes `scores.json`/`scores.md` for the run and refreshes `results/INDEX.md` —
   seconds.
 
 Replace `--instances sympy__sympy-12489` with more IDs (`--instances ID ID ...`), with
-`--batch batchN` to pick a fixed batch (see §6), or with `--all` (both `run` and
-`validate-gold` accept any of these). Browse the instance list with:
+`--batch batchN` or `--batch verifiedNNN` to pick a batch (see §6), or with `--all`.
+Both `run` and `validate-gold` accept any of these. Browse the instance list with:
 
 ```bash
 .venv/bin/python -m fvk_bench list                  # the 45 IDs, grouped by repo, with batch
 .venv/bin/python -m fvk_bench list --run-id myrun   # annotated with per-arm statuses
+.venv/bin/python -m fvk_bench list --instance-set verified500 --batch verified001
 ```
 
 Reusing a `--run-id` resumes an interrupted run: completed arms are skipped, so the same
-three commands process a single problem or the full 45 incrementally. There are no silent
-automatic retries — a retry is a different sample — so failed arms stay failed until you
-pass `--retry-failed` to `run`, and every attempt is recorded in the instance manifest.
-`evaluate` takes no instance selection; it scores whatever the run contains.
+three commands process a single problem, a 45-set batch, or a full-Verified batch
+incrementally. There are no silent automatic retries — a retry is a different sample — so
+failed arms stay failed until you pass `--retry-failed` to `run`, and every attempt is
+recorded in the instance manifest. `evaluate` takes no instance selection; it scores
+whatever the run contains for the run's recorded arms.
 
 **Choosing the agent.** `run` takes `--agent {claude,codex}` (default `claude`); the
 default reproduces the original Claude experiment exactly. `--agent codex` runs the
-identical three arms with OpenAI Codex (pinned `gpt-5.5`, reasoning effort `xhigh`, sandbox
+same requested arms with OpenAI Codex (pinned `gpt-5.5`, reasoning effort `xhigh`, sandbox
 `workspace-write`); add `--codex-bin` to point at a non-default binary. The agent is
 recorded in `run_manifest.json` and Codex results live alongside Claude ones, so they never
 overwrite each other — give each run its own `--run-id`. `validate-gold`, `evaluate`, and
@@ -139,8 +145,10 @@ smoke instance) before committing to a full batch.
 
 ## 6. Run a batch
 
-The 45 instances are divided into five fixed 9-problem batches, each sized to finish in one
-session; membership is the contract.
+### FVK 45 batches
+
+The default 45-instance set is divided into five fixed 9-problem batches, each sized to
+finish in one session; membership is the contract.
 
 | batch  | instances |
 |--------|-----------|
@@ -183,7 +191,55 @@ rerun only when you add `--retry-failed` (every attempt is recorded in the insta
 
 **Letting a Claude session drive a batch.** If you'd rather hand the whole flow to your own
 Claude Code session, use the ready-made prompt in [START-PROMPT.md](START-PROMPT.md) — fill
-in the batch number (1–5) and the parallelism cap (1–9) and paste it.
+in the instance set, batch name, arms, and parallelism cap and paste it.
+
+### Full Verified 500 overnight batches
+
+The full SWE-bench Verified set is exposed as `--instance-set verified500` and divided by
+sorted instance id into fifty generated 10-instance batches: `verified001` through
+`verified050`. For the planned overnight two-arm run, use `--arms baseline,fvk` and
+`--max-parallel 3`; that runs up to three instances concurrently, so each 10-instance batch
+finishes in roughly four rolling slots, subject to model rate limits and hard instances.
+
+First verify the metadata and inspect a batch:
+
+```bash
+.venv/bin/python -m fvk_bench list --instance-set verified500 --batch verified001
+```
+
+Then run each batch with its own run id, commit, and push immediately after `report`, so a
+crash or interrupted overnight test loses at most the active batch. Do not use
+`--all` for this safety-oriented run; the 10-instance batch is the recovery boundary. The
+loop below is sequential across batches, and because it runs with `set -euo pipefail`, a
+failed validation, run, evaluation, commit, or push stops the loop before the next batch
+starts:
+
+```bash
+set -euo pipefail
+
+for n in $(seq -f "%03g" 1 50); do
+  batch="verified${n}"
+  run_id="${batch}-codex-$(hostname)-$(date +%y%m%d%H%M%S)"
+
+  .venv/bin/python -m fvk_bench validate-gold \
+    --instance-set verified500 --run-id "$run_id" --batch "$batch"
+  .venv/bin/python -m fvk_bench run \
+    --instance-set verified500 --run-id "$run_id" --batch "$batch" \
+    --agent codex --arms baseline,fvk --max-parallel 3
+  .venv/bin/python -m fvk_bench evaluate --run-id "$run_id"
+  .venv/bin/python -m fvk_bench report --run-id "$run_id"
+
+  git add "results/$run_id" results/INDEX.md
+  git commit -m "results: ${batch} codex baseline fvk"
+  git push
+done
+```
+
+This produces 50 separate `results/<run-id>/` directories, 50 commits, and 50 pushes.
+Because the run manifest records `arms: ["baseline", "fvk"]`, `evaluate` and `report` do
+not expect or show the skipped `control` arm. The aggregate report for these runs includes
+baseline→fvk flips; baseline→control flips and fvk-vs-control delta are intentionally
+absent.
 
 ## 7. What gets recorded
 
@@ -197,8 +253,8 @@ results/<run_id>/
   <instance_id>/
     manifest.json          # session ids, arm statuses, attempt counts, timings, usage
     prompts/               # the exact rendered prompts per arm
-    solutions/             # solution_{baseline,fvk,control}.patch
-    reports/               # the sessions' {baseline,fvk,control}_notes.md
+    solutions/             # solution_<arm>.patch for requested/completed arms
+    reports/               # the sessions' <arm>_notes.md for requested/completed arms
     fvk/                   # the fvk arm's 5 artifacts
     review/                # the control arm's FINDINGS.md
     transcripts/           # full session transcripts, {arm}.jsonl.gz

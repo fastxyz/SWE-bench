@@ -400,6 +400,30 @@ def test_run_max_parallel_records_manifest(
     assert manifest["max_parallel"] == 3
 
 
+def test_run_records_requested_arms_and_instance_set(
+    cli_env, fixture_instance, monkeypatch, tmp_path
+):
+    monkeypatch.setattr(arms_mod, "run_instance", lambda *a, **k: _completed_state())
+    monkeypatch.setattr(harvest_mod, "harvest_instance", lambda *a, **k: None)
+
+    rc = cli.main([
+        "run",
+        "--instances", fixture_instance.instance_id,
+        "--run-id", "t",
+        "--workspace-root", str(tmp_path / "wsroot"),
+        "--arms", "baseline,fvk",
+        "--max-parallel", "3",
+    ])
+
+    assert rc == 0
+    manifest = json.loads(
+        (cli_env / "t" / "run_manifest.json").read_text(encoding="utf-8")
+    )
+    assert manifest["arms"] == ["baseline", "fvk"]
+    assert manifest["instance_set"] == "fvk45"
+    assert manifest["max_parallel"] == 3
+
+
 def test_run_prewarms_mirrors_once(cli_env, fixture_instance, monkeypatch, tmp_path):
     """One sequential ensure_mirror per unique repo, before any run_instance."""
     insts = {
@@ -434,6 +458,38 @@ def test_run_prewarms_mirrors_once(cli_env, fixture_instance, monkeypatch, tmp_p
     assert mirror_events == [("mirror", "demo/demo", ws_root / "cache" / "repos")]
     assert events[0] == mirror_events[0], "pre-warm must precede every run_instance"
     assert sorted(e[1] for e in events if e[0] == "run") == sorted(insts)
+
+
+def test_run_verified500_batch_selection(cli_env, fixture_instance, monkeypatch, tmp_path):
+    insts = {
+        f"repo__repo-{i:03d}": dataclasses.replace(
+            fixture_instance,
+            instance_id=f"repo__repo-{i:03d}",
+            repo="repo/repo",
+        )
+        for i in range(500)
+    }
+    monkeypatch.setattr(instances_mod, "load_instances", lambda *a, **k: insts)
+    dispatched: list[str] = []
+
+    def fake_run_instance(run_id, inst, ws_root, **kwargs):
+        dispatched.append(inst.instance_id)
+        return _completed_state()
+
+    monkeypatch.setattr(arms_mod, "run_instance", fake_run_instance)
+    monkeypatch.setattr(harvest_mod, "harvest_instance", lambda *a, **k: None)
+
+    rc = cli.main([
+        "run",
+        "--instance-set", "verified500",
+        "--batch", "verified001",
+        "--run-id", "t",
+        "--workspace-root", str(tmp_path / "wsroot"),
+        "--arms", "baseline,fvk",
+    ])
+
+    assert rc == 0
+    assert dispatched == [f"repo__repo-{i:03d}" for i in range(10)]
 
 
 # ---------------------------------------------------------------------------
@@ -571,6 +627,42 @@ def test_evaluate_happy(monkeypatch, tmp_path, capsys):
     assert "t" in (results_dir / "INDEX.md").read_text(encoding="utf-8")
     out = capsys.readouterr().out
     assert "scores" in out
+
+
+def test_evaluate_defaults_to_manifest_arms(monkeypatch, tmp_path):
+    results_dir = tmp_path / "results"
+    monkeypatch.setattr(config, "RESULTS_DIR", results_dir)
+    _seed_run(results_dir, "t")
+    run_dir = results_dir / "t"
+    manifest = json.loads((run_dir / "run_manifest.json").read_text(encoding="utf-8"))
+    manifest["arms"] = ["baseline", "fvk"]
+    (run_dir / "run_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    (run_dir / "demo__demo-1" / "solutions" / "solution_fvk.patch").write_text(
+        "diff --git a/lib.py b/lib.py\n+y\n",
+        encoding="utf-8",
+    )
+    calls = []
+
+    def fake_run_official_eval(rid, arm, ids, **kwargs):
+        calls.append(("run", arm, tuple(ids)))
+        return 0
+
+    def fake_harvest_eval(rid, arm, **kwargs):
+        calls.append(("harvest", arm))
+        return {"demo__demo-1": {"resolved": False, "found": True,
+                                 "ftp_pass": 0, "ftp_total": 1,
+                                 "ptp_pass": 1, "ptp_total": 1}}
+
+    monkeypatch.setattr(evaluate_mod, "run_official_eval", fake_run_official_eval)
+    monkeypatch.setattr(evaluate_mod, "harvest_eval", fake_harvest_eval)
+
+    rc = cli.main(["evaluate", "--run-id", "t"])
+
+    assert rc == 0
+    assert calls == [
+        ("run", "baseline", ("demo__demo-1",)), ("harvest", "baseline"),
+        ("run", "fvk", ("demo__demo-1",)), ("harvest", "fvk"),
+    ]
 
 
 def test_evaluate_harness_failure_exits_nonzero(monkeypatch, tmp_path, capsys):
@@ -805,7 +897,7 @@ def test_doctor_codex_canary(monkeypatch, capsys):
 # ---------------------------------------------------------------------------
 
 def test_vendor_instances(monkeypatch, capsys):
-    monkeypatch.setattr(instances_mod, "vendor_instances", lambda: 45)
+    monkeypatch.setattr(instances_mod, "vendor_instances", lambda **kw: 45)
 
     rc = cli.main(["vendor-instances"])
 
@@ -815,7 +907,7 @@ def test_vendor_instances(monkeypatch, capsys):
 
 
 def test_vendor_instances_failure(monkeypatch, capsys):
-    def boom():
+    def boom(**kwargs):
         raise RuntimeError("no network")
 
     monkeypatch.setattr(instances_mod, "vendor_instances", boom)
