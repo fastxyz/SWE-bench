@@ -1,0 +1,32 @@
+diff --git a/src/_pytest/python.py b/src/_pytest/python.py
+index 306e5f217..3fc4f7661 100644
+--- a/src/_pytest/python.py
++++ b/src/_pytest/python.py
+@@ -444,11 +444,19 @@ class Module(nodes.File, PyCollector):
+         return self._importtestmodule()
+ 
+     def collect(self):
++        self._mount_package_parents()
+         self._inject_setup_module_fixture()
+         self._inject_setup_function_fixture()
+         self.session._fixturemanager.parsefactories(self)
+         return super().collect()
+ 
++    def _mount_package_parents(self):
++        # Package __init__.py files can define marks which apply to child
++        # modules, but importing them eagerly would collect unrelated packages.
++        for node in reversed(self.listchain()):
++            if isinstance(node, Package):
++                node._mount_obj_if_needed()
++
+     def _inject_setup_module_fixture(self):
+         """Injects a hidden autouse, module scoped fixture into the collected module object
+         that invokes setUpModule/tearDownModule if either or both are available.
+@@ -639,7 +647,6 @@ class Package(Module):
+         return path in self.session._initialpaths
+ 
+     def collect(self):
+-        self._mount_obj_if_needed()
+         this_path = self.fspath.dirpath()
+         init_module = this_path.join("__init__.py")
+         if init_module.check(file=1) and path_matches_patterns(

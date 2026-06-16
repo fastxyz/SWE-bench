@@ -1,0 +1,51 @@
+{
+    "total_instances": 10,
+    "submitted_instances": 10,
+    "completed_instances": 10,
+    "resolved_instances": 7,
+    "unresolved_instances": 3,
+    "empty_patch_instances": 0,
+    "error_instances": 0,
+    "completed_ids": [
+        "pytest-dev__pytest-10051",
+        "pytest-dev__pytest-10081",
+        "pytest-dev__pytest-10356",
+        "pytest-dev__pytest-5262",
+        "pytest-dev__pytest-5631",
+        "pytest-dev__pytest-5787",
+        "pytest-dev__pytest-5809",
+        "pytest-dev__pytest-5840",
+        "pytest-dev__pytest-6197",
+        "pytest-dev__pytest-6202"
+    ],
+    "incomplete_ids": [],
+    "empty_patch_ids": [],
+    "submitted_ids": [
+        "pytest-dev__pytest-10051",
+        "pytest-dev__pytest-10081",
+        "pytest-dev__pytest-10356",
+        "pytest-dev__pytest-5262",
+        "pytest-dev__pytest-5631",
+        "pytest-dev__pytest-5787",
+        "pytest-dev__pytest-5809",
+        "pytest-dev__pytest-5840",
+        "pytest-dev__pytest-6197",
+        "pytest-dev__pytest-6202"
+    ],
+    "resolved_ids": [
+        "pytest-dev__pytest-10051",
+        "pytest-dev__pytest-10081",
+        "pytest-dev__pytest-5262",
+        "pytest-dev__pytest-5631",
+        "pytest-dev__pytest-5809",
+        "pytest-dev__pytest-6197",
+        "pytest-dev__pytest-6202"
+    ],
+    "unresolved_ids": [
+        "pytest-dev__pytest-10356",
+        "pytest-dev__pytest-5787",
+        "pytest-dev__pytest-5840"
+    ],
+    "error_ids": [],
+    "schema_version": 2
+}

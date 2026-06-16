@@ -1,0 +1,57 @@
+{
+  "run_id": "verified034-codex-archlinux-20260616T163816Z",
+  "created_utc": "2026-06-16T17:15:58.727104+00:00",
+  "host": {
+    "hostname": "archlinux",
+    "os": "Linux-7.0.11-arch1-1-x86_64-with-glibc2.43",
+    "arch": "x86_64",
+    "python": "3.14.5"
+  },
+  "agent": "codex",
+  "codex_version": "codex-cli 0.138.0",
+  "invocation": {
+    "model": "gpt-5.5",
+    "effort": "xhigh",
+    "sandbox": "workspace-write",
+    "max_turns": {
+      "baseline": 200,
+      "fvk": 200,
+      "control": 200
+    }
+  },
+  "dataset": "princeton-nlp/SWE-bench_Verified",
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "b7c2dd08d551bc15b1a3f1af5beab7dbf555521a2e7047fbd2b2ef7a18b6679a",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "fvk_bench_version": "0.1.0",
+  "git": {
+    "repo_sha": "f566b9c4a6c3a6e3726be8d002cbe835ae9b7296",
+    "submodules": {
+      "third_party/formal-verification-kit": "fef0123cd40a0205c03751ab42126c03b9a2c6ad",
+      "third_party/swe-bench-multilingual": "f08240bde99473837fbd4c87d7f5153efa01b32b",
+      "third_party/swebench-fvk-reproducibility": "983557904cca9cc54a15425f2ab0eb6524521155"
+    }
+  },
+  "max_parallel": 3,
+  "arms": [
+    "baseline",
+    "fvk"
+  ],
+  "instance_set": "verified500",
+  "instances": [
+    "pytest-dev__pytest-10051",
+    "pytest-dev__pytest-10081",
+    "pytest-dev__pytest-10356",
+    "pytest-dev__pytest-5262",
+    "pytest-dev__pytest-5631",
+    "pytest-dev__pytest-5787",
+    "pytest-dev__pytest-5809",
+    "pytest-dev__pytest-5840",
+    "pytest-dev__pytest-6197",
+    "pytest-dev__pytest-6202"
+  ],
+  "claude_bin": "claude",
+  "codex_bin": "codex"
+}
