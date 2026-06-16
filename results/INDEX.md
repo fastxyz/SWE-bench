@@ -38,10 +38,12 @@
 | verified017-codex-XC-MINI-PRO-AHP-20260616T052940Z | XC-MINI-PRO-AHP | gpt-5.5 | 10 | 10/10 | 10/10 | — | 2026-06-16T06:08:06.835676+00:00 |
 | verified018-codex-XC-MINI-PRO-AHP-20260616T062203Z | XC-MINI-PRO-AHP | gpt-5.5 | 10 | 8/10 | 8/10 | — | 2026-06-16T07:16:16.570492+00:00 |
 | verified019-codex-XC-MINI-PRO-AHP-20260616T072953Z | XC-MINI-PRO-AHP | gpt-5.5 | 10 | 10/10 | 10/10 | — | 2026-06-16T08:23:09.731066+00:00 |
+| verified020-codex-XC-MINI-PRO-AHP-20260616T083309Z | XC-MINI-PRO-AHP | gpt-5.5 | 10 | 9/10 | 10/10 | — | 2026-06-16T09:22:04.806158+00:00 |
 | verified021-codex-archlinux-20260616T035839Z | archlinux | gpt-5.5 | 10 | 8/10 | 8/10 | — | 2026-06-16T04:36:47.275043+00:00 |
 | verified022-codex-archlinux-20260616T044014Z | archlinux | gpt-5.5 | 10 | 10/10 | 10/10 | — | 2026-06-16T05:18:22.897580+00:00 |
 | verified023-codex-archlinux-20260616T052232Z | archlinux | gpt-5.5 | 10 | 9/10 | 9/10 | — | 2026-06-16T05:59:48.416058+00:00 |
 | verified024-codex-archlinux-20260616T060351Z | archlinux | gpt-5.5 | 10 | 9/10 | 9/10 | — | 2026-06-16T06:43:16.145030+00:00 |
+| verified025-codex-archlinux-20260616T064857Z | archlinux | gpt-5.5 | 10 | 9/10 | 9/10 | — | 2026-06-16T07:35:50.594647+00:00 |
 | verified036-codex-wsl-ubuntu-260615212520 | wsl-ubuntu | gpt-5.5 | 10 | 10/10 | 10/10 | — | 2026-06-16T03:02:44.210426+00:00 |
 | verified037-codex-wsl-ubuntu-260615221107 | wsl-ubuntu | gpt-5.5 | 10 | 10/10 | 10/10 | — | 2026-06-16T03:46:30.031039+00:00 |
 | verified038-codex-wsl-ubuntu-260615221107 | wsl-ubuntu | gpt-5.5 | 10 | 10/10 | 10/10 | — | 2026-06-16T04:31:58.941765+00:00 |

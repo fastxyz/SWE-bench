@@ -1,0 +1,72 @@
+diff --git a/django/db/models/sql/compiler.py b/django/db/models/sql/compiler.py
+index 59a5d6abbb..f7e9e739f6 100644
+--- a/django/db/models/sql/compiler.py
++++ b/django/db/models/sql/compiler.py
+@@ -1730,6 +1730,14 @@ class SQLDeleteCompiler(SQLCompiler):
+ 
+ 
+ class SQLUpdateCompiler(SQLCompiler):
++    def _get_update_related_id_lookup(self, model):
++        path = self.query.get_meta().get_path_to_parent(model)
++        if not path:
++            return model._meta.pk.name
++        parts = [path_info.join_field.name for path_info in path]
++        parts[-1] = path[-1].join_field.attname
++        return LOOKUP_SEP.join(parts)
++
+     def as_sql(self):
+         """
+         Create the SQL for this query. Return the SQL string and list of
+@@ -1836,7 +1844,12 @@ class SQLUpdateCompiler(SQLCompiler):
+         query.clear_ordering(force=True)
+         query.extra = {}
+         query.select = []
+-        query.add_fields([query.get_meta().pk.name])
++        fields = [query.get_meta().pk.name]
++        related_ids_index = {}
++        for model in self.query.related_updates:
++            related_ids_index[model] = len(fields)
++            fields.append(self._get_update_related_id_lookup(model))
++        query.add_fields(fields)
+         super().pre_sql_setup()
+ 
+         must_pre_select = (
+@@ -1851,10 +1864,14 @@ class SQLUpdateCompiler(SQLCompiler):
+             # don't want them to change), or the db backend doesn't support
+             # selecting from the updating table (e.g. MySQL).
+             idents = []
++            related_ids = {model: [] for model in related_ids_index}
+             for rows in query.get_compiler(self.using).execute_sql(MULTI):
+-                idents.extend(r[0] for r in rows)
++                for row in rows:
++                    idents.append(row[0])
++                    for model, index in related_ids_index.items():
++                        related_ids[model].append(row[index])
+             self.query.add_filter("pk__in", idents)
+-            self.query.related_ids = idents
++            self.query.related_ids = related_ids
+         else:
+             # The fast path. Filters and updates in one query.
+             self.query.add_filter("pk__in", query)
+diff --git a/django/db/models/sql/subqueries.py b/django/db/models/sql/subqueries.py
+index 04063f73bc..e0cb27a508 100644
+--- a/django/db/models/sql/subqueries.py
++++ b/django/db/models/sql/subqueries.py
+@@ -65,6 +65,8 @@ class UpdateQuery(Query):
+ 
+     def clone(self):
+         obj = super().clone()
++        if self.related_ids is not None:
++            obj.related_ids = self.related_ids.copy()
+         obj.related_updates = self.related_updates.copy()
+         return obj
+ 
+@@ -134,7 +136,7 @@ class UpdateQuery(Query):
+             query = UpdateQuery(model)
+             query.values = values
+             if self.related_ids is not None:
+-                query.add_filter("pk__in", self.related_ids)
++                query.add_filter("pk__in", self.related_ids[model])
+             result.append(query)
+         return result
+ 

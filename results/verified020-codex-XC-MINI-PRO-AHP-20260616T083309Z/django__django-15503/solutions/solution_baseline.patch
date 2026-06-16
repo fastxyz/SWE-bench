@@ -1,0 +1,30 @@
+diff --git a/django/db/models/fields/json.py b/django/db/models/fields/json.py
+index fdca700c9d..070e44bd3f 100644
+--- a/django/db/models/fields/json.py
++++ b/django/db/models/fields/json.py
+@@ -139,6 +139,14 @@ def compile_json_path(key_transforms, include_root=True):
+     return "".join(path)
+ 
+ 
++def compile_json_path_final_key(key_transforms, include_root=True):
++    return (
++        compile_json_path(key_transforms[:-1], include_root)
++        + "."
++        + json.dumps(str(key_transforms[-1]))
++    )
++
++
+ class DataContains(PostgresOperatorLookup):
+     lookup_name = "contains"
+     postgres_operator = "@>"
+@@ -197,7 +205,9 @@ class HasKeyLookup(PostgresOperatorLookup):
+                 "%s%s"
+                 % (
+                     lhs_json_path,
+-                    compile_json_path(rhs_key_transforms, include_root=False),
++                    compile_json_path_final_key(
++                        rhs_key_transforms, include_root=False
++                    ),
+                 )
+             )
+         # Add condition for each key.
