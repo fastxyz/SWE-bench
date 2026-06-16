@@ -1,0 +1,56 @@
+{
+  "run_id": "verified036-codex-wsl-ubuntu-260615212520",
+  "created_utc": "2026-06-16T03:02:44.210426+00:00",
+  "host": {
+    "hostname": "wsl-ubuntu",
+    "os": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "arch": "x86_64",
+    "python": "3.12.3"
+  },
+  "agent": "codex",
+  "codex_version": "codex-cli 0.140.0",
+  "invocation": {
+    "model": "gpt-5.5",
+    "effort": "xhigh",
+    "sandbox": "workspace-write",
+    "max_turns": {
+      "baseline": 200,
+      "fvk": 200,
+      "control": 200
+    }
+  },
+  "dataset": "princeton-nlp/SWE-bench_Verified",
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "b7c2dd08d551bc15b1a3f1af5beab7dbf555521a2e7047fbd2b2ef7a18b6679a",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "fvk_bench_version": "0.1.0",
+  "git": {
+    "repo_sha": "aa03e16b534a6d2a45e200f07a51899f15db7c4a",
+    "submodules": {
+      "third_party/formal-verification-kit": "fef0123cd40a0205c03751ab42126c03b9a2c6ad",
+      "third_party/swebench-fvk-reproducibility": "983557904cca9cc54a15425f2ab0eb6524521155"
+    }
+  },
+  "max_parallel": 3,
+  "arms": [
+    "baseline",
+    "fvk"
+  ],
+  "instance_set": "verified500",
+  "instances": [
+    "scikit-learn__scikit-learn-10844",
+    "scikit-learn__scikit-learn-10908",
+    "scikit-learn__scikit-learn-11310",
+    "scikit-learn__scikit-learn-11578",
+    "scikit-learn__scikit-learn-12585",
+    "scikit-learn__scikit-learn-12682",
+    "scikit-learn__scikit-learn-12973",
+    "scikit-learn__scikit-learn-13124",
+    "scikit-learn__scikit-learn-13135",
+    "scikit-learn__scikit-learn-13142"
+  ],
+  "claude_bin": "claude",
+  "codex_bin": "codex"
+}

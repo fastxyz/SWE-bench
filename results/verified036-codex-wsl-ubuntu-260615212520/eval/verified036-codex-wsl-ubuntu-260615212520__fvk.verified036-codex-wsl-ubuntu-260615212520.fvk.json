@@ -1,0 +1,50 @@
+{
+    "total_instances": 10,
+    "submitted_instances": 10,
+    "completed_instances": 10,
+    "resolved_instances": 10,
+    "unresolved_instances": 0,
+    "empty_patch_instances": 0,
+    "error_instances": 0,
+    "completed_ids": [
+        "scikit-learn__scikit-learn-10844",
+        "scikit-learn__scikit-learn-10908",
+        "scikit-learn__scikit-learn-11310",
+        "scikit-learn__scikit-learn-11578",
+        "scikit-learn__scikit-learn-12585",
+        "scikit-learn__scikit-learn-12682",
+        "scikit-learn__scikit-learn-12973",
+        "scikit-learn__scikit-learn-13124",
+        "scikit-learn__scikit-learn-13135",
+        "scikit-learn__scikit-learn-13142"
+    ],
+    "incomplete_ids": [],
+    "empty_patch_ids": [],
+    "submitted_ids": [
+        "scikit-learn__scikit-learn-10844",
+        "scikit-learn__scikit-learn-10908",
+        "scikit-learn__scikit-learn-11310",
+        "scikit-learn__scikit-learn-11578",
+        "scikit-learn__scikit-learn-12585",
+        "scikit-learn__scikit-learn-12682",
+        "scikit-learn__scikit-learn-12973",
+        "scikit-learn__scikit-learn-13124",
+        "scikit-learn__scikit-learn-13135",
+        "scikit-learn__scikit-learn-13142"
+    ],
+    "resolved_ids": [
+        "scikit-learn__scikit-learn-10844",
+        "scikit-learn__scikit-learn-10908",
+        "scikit-learn__scikit-learn-11310",
+        "scikit-learn__scikit-learn-11578",
+        "scikit-learn__scikit-learn-12585",
+        "scikit-learn__scikit-learn-12682",
+        "scikit-learn__scikit-learn-12973",
+        "scikit-learn__scikit-learn-13124",
+        "scikit-learn__scikit-learn-13135",
+        "scikit-learn__scikit-learn-13142"
+    ],
+    "unresolved_ids": [],
+    "error_ids": [],
+    "schema_version": 2
+}
