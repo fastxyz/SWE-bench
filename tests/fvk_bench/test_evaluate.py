@@ -124,7 +124,7 @@ def test_run_official_eval_golden_argv(tmp_path, capture_popen):
 
     rc = evaluate.run_official_eval(
         RID, "fvk", ["sympy__sympy-1", "astropy__astropy-2"],
-        dataset=config.DATASET_NAME,
+        dataset=config.dataset_identity("verified500"),
         results_dir=results_dir, max_workers=2,
     )
 
@@ -132,7 +132,7 @@ def test_run_official_eval_golden_argv(tmp_path, capture_popen):
     eval_dir = (results_dir / RID / "eval").resolve()
     assert capture_popen[0]["argv"] == [
         sys.executable, "-m", "swebench.harness.run_evaluation",
-        "--dataset_name", config.DATASET_NAME,
+        "--dataset_name", config.dataset_identity("verified500"),
         "--predictions_path", str(eval_dir / "predictions_fvk.jsonl"),
         "--run_id", f"{RID}.fvk",
         "--instance_ids", "sympy__sympy-1", "astropy__astropy-2",
@@ -150,7 +150,7 @@ def test_run_official_eval_golden_argv(tmp_path, capture_popen):
 def test_run_official_eval_namespace_none_and_timeout(tmp_path, capture_popen):
     rc = evaluate.run_official_eval(
         RID, "baseline", ["i1"],
-        dataset=config.DATASET_NAME,
+        dataset=config.dataset_identity("verified500"),
         results_dir=tmp_path / "results", namespace=None, timeout=900,
     )
 
@@ -167,7 +167,7 @@ def test_run_official_eval_nonzero_exit_not_raised(tmp_path, monkeypatch):
 
     monkeypatch.setattr(evaluate.subprocess, "Popen", fake_popen)
 
-    rc = evaluate.run_official_eval(RID, "fvk", ["i1"], dataset=config.DATASET_NAME, results_dir=tmp_path / "r")
+    rc = evaluate.run_official_eval(RID, "fvk", ["i1"], dataset=config.dataset_identity("verified500"), results_dir=tmp_path / "r")
 
     assert rc == 3
 
@@ -251,7 +251,7 @@ def test_run_official_eval_retries_missing_nonempty_reports_locally(
         RID,
         "baseline",
         ["demo__demo-1", "demo__demo-2", "demo__demo-3"],
-        dataset=config.DATASET_NAME,
+        dataset=config.dataset_identity("verified500"),
         results_dir=results_dir,
     )
 
@@ -372,7 +372,7 @@ def test_gold_eval(tmp_path, capture_popen):
 
     res = evaluate.gold_eval(
         RID, ["demo__demo-1", "demo__demo-2"],
-        dataset=config.DATASET_NAME,
+        dataset=config.dataset_identity("verified500"),
         max_workers=3, results_dir=results_dir, repo_root=repo_root,
     )
 
@@ -425,7 +425,7 @@ def test_gold_eval_retries_missing_reports_with_local_images(
     res = evaluate.gold_eval(
         RID,
         ["demo__demo-1", "demo__demo-2"],
-        dataset=config.DATASET_NAME,
+        dataset=config.dataset_identity("verified500"),
         max_workers=2,
         results_dir=results_dir,
         repo_root=repo_root,

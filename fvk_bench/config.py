@@ -103,10 +103,6 @@ REGISTRY: dict[str, "InstanceSet"] = {
 INSTANCE_SETS: tuple[str, ...] = tuple(REGISTRY)
 DEFAULT_INSTANCE_SET: str = "fvk45"
 
-# TEMPORARY backward-compat alias — removed in Task 6 once all consumers migrate.
-DATASET_NAME: str = REGISTRY[DEFAULT_INSTANCE_SET].dataset_identity
-
-
 def resolve_dataset(instance_set: str) -> str:
     """Return the dataset arg for the harness/loader for ``instance_set``.
 

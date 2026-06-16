@@ -167,7 +167,8 @@ def _cmd_list(args) -> int:
         }
     else:
         ordered_ids = tuple(all_ids)
-        for name in batches.verified_batch_names():
+        scheme = config.REGISTRY[args.instance_set].batch_scheme
+        for name in batches.batch_names_for_scheme(scheme):
             try:
                 for iid in batches.batch_instances(name, instance_ids=ordered_ids):
                     batch_of[iid] = name
@@ -535,7 +536,7 @@ def _add_instance_selection(sub: argparse.ArgumentParser) -> None:
     )
     group.add_argument(
         "--batch", metavar="NAME",
-        help=f"process one batch ({', '.join(sorted(batches.BATCHES))}, or verified001..verified050)",
+        help=f"process one batch ({', '.join(sorted(batches.BATCHES))}, verified001..verified050, or multilingual001..multilingual030)",
     )
 
 
@@ -559,7 +560,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_instance_set(p)
     p.add_argument("--run-id", help="annotate each instance with its arm statuses from this run")
     p.add_argument("--batch", metavar="NAME",
-                   help=f"only list one batch ({', '.join(sorted(batches.BATCHES))}, or verified001..verified050)")
+                   help=f"only list one batch ({', '.join(sorted(batches.BATCHES))}, verified001..verified050, or multilingual001..multilingual030)")
     p.set_defaults(func=_cmd_list)
 
     p = sub.add_parser("doctor", help="preflight checks (and optional session canary)")

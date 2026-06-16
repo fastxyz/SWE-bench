@@ -292,7 +292,7 @@ def write_run_manifest(
     dataset_value = (
         config.dataset_identity(instance_set)
         if instance_set in config.REGISTRY
-        else config.DATASET_NAME
+        else config.dataset_identity(config.DEFAULT_INSTANCE_SET)
     )
 
     manifest = {

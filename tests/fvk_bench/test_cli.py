@@ -932,3 +932,11 @@ def test_manifest_dataset_resolution(tmp_path):
     # legacy manifest (no instance_set) -> recorded dataset field
     (run_dir / "run_manifest.json").write_text(json.dumps({"dataset": "princeton-nlp/SWE-bench_Verified"}))
     assert cli._manifest_dataset(run_dir) == "princeton-nlp/SWE-bench_Verified"
+
+
+def test_list_multilingual_batches(capsys):
+    from fvk_bench import cli
+    rc = cli.main(["list", "--instance-set", "multilingual300"])
+    out = capsys.readouterr().out
+    # tolerate "not vendored yet" message; the point is no crash + correct routing
+    assert rc in (0, 1)

@@ -10,7 +10,7 @@ def test_pinned_invocation_constants():
     assert config.TOOLS == "Read,Write,Edit,Glob,Grep"
     assert config.ARMS == ("baseline", "fvk", "control")
     assert config.ARM_TIMEOUT_SECONDS == 4 * 3600
-    assert config.DATASET_NAME == "princeton-nlp/SWE-bench_Verified"
+    assert config.dataset_identity("verified500") == "princeton-nlp/SWE-bench_Verified"
 
 def test_tested_claude_version_pinned():
     # The version this infra was validated against; doctor warns on mismatch.

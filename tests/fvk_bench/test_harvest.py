@@ -359,7 +359,7 @@ def test_run_manifest_fields(tmp_path, monkeypatch):
     assert inv["permission_mode"] == config.PERMISSION_MODE
     assert inv["setting_sources"] == config.SETTING_SOURCES
 
-    assert m["dataset"] == config.DATASET_NAME
+    assert m["dataset"] == config.dataset_identity("verified500")
 
     th = m["template_hashes"]
     assert set(th.keys()) == {"baseline", "fvk", "control"}
