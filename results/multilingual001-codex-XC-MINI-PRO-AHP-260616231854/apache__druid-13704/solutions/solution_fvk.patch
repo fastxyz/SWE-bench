@@ -1,0 +1,26 @@
+diff --git a/processing/src/main/java/org/apache/druid/query/aggregation/post/ArithmeticPostAggregator.java b/processing/src/main/java/org/apache/druid/query/aggregation/post/ArithmeticPostAggregator.java
+index d79682dbff..2e70f29bf1 100644
+--- a/processing/src/main/java/org/apache/druid/query/aggregation/post/ArithmeticPostAggregator.java
++++ b/processing/src/main/java/org/apache/druid/query/aggregation/post/ArithmeticPostAggregator.java
+@@ -204,6 +204,7 @@ public class ArithmeticPostAggregator implements PostAggregator
+       case MINUS:
+       case DIV:
+       case QUOTIENT:
++      case POW:
+         return true;
+       default:
+         throw new IAE(op.fn);
+@@ -246,6 +247,13 @@ public class ArithmeticPostAggregator implements PostAggregator
+       {
+         return lhs / rhs;
+       }
++    },
++    POW("pow") {
++      @Override
++      public double compute(double lhs, double rhs)
++      {
++        return Math.pow(lhs, rhs);
++      }
+     };
+ 
+     private static final Map<String, Ops> LOOKUP_MAP = new HashMap<>();

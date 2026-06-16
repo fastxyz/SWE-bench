@@ -1,0 +1,16 @@
+diff --git a/lucene/queryparser/src/java/org/apache/lucene/queryparser/classic/MultiFieldQueryParser.java b/lucene/queryparser/src/java/org/apache/lucene/queryparser/classic/MultiFieldQueryParser.java
+index a269901bb42..dc7523900cf 100644
+--- a/lucene/queryparser/src/java/org/apache/lucene/queryparser/classic/MultiFieldQueryParser.java
++++ b/lucene/queryparser/src/java/org/apache/lucene/queryparser/classic/MultiFieldQueryParser.java
+@@ -108,7 +108,10 @@ public class MultiFieldQueryParser extends QueryParser {
+   }
+ 
+   private Query applySlop(Query q, int slop) {
+-    if (q instanceof PhraseQuery) {
++    if (q instanceof BoostQuery) {
++      BoostQuery bq = (BoostQuery) q;
++      q = new BoostQuery(applySlop(bq.getQuery(), slop), bq.getBoost());
++    } else if (q instanceof PhraseQuery) {
+       PhraseQuery.Builder builder = new PhraseQuery.Builder();
+       builder.setSlop(slop);
+       PhraseQuery pq = (PhraseQuery) q;

@@ -1,0 +1,39 @@
+{
+    "apache__lucene-12212": {
+        "patch_is_None": false,
+        "patch_exists": true,
+        "patch_successfully_applied": true,
+        "resolved": true,
+        "tests_status": {
+            "FAIL_TO_PASS": {
+                "success": [
+                    "org.apache.lucene.facet.TestDrillSideways > testDrillSidewaysSearchUseCorrectIterator"
+                ],
+                "failure": []
+            },
+            "PASS_TO_PASS": {
+                "success": [
+                    "org.apache.lucene.facet.TestDrillSideways > testSometimesInvalidDrillDown",
+                    "org.apache.lucene.facet.TestDrillSideways > testScorer",
+                    "org.apache.lucene.facet.TestDrillSideways > testBasicWithCollectorManager",
+                    "org.apache.lucene.facet.TestDrillSideways > testNoCaching",
+                    "org.apache.lucene.facet.TestDrillSideways > testMultipleRequestsPerDim",
+                    "org.apache.lucene.facet.TestDrillSideways > testExtendedDrillSidewaysResult",
+                    "org.apache.lucene.facet.TestDrillSideways > testRandom",
+                    "org.apache.lucene.facet.TestDrillSideways > testBasic",
+                    "org.apache.lucene.facet.TestDrillSideways > testNoDrillDownFacetCollection",
+                    "org.apache.lucene.facet.TestDrillSideways > testEmptyIndex"
+                ],
+                "failure": []
+            },
+            "FAIL_TO_FAIL": {
+                "success": [],
+                "failure": []
+            },
+            "PASS_TO_FAIL": {
+                "success": [],
+                "failure": []
+            }
+        }
+    }
+}

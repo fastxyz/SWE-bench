@@ -1,0 +1,26 @@
+diff --git a/processing/src/main/java/org/apache/druid/timeline/VersionedIntervalTimeline.java b/processing/src/main/java/org/apache/druid/timeline/VersionedIntervalTimeline.java
+index dc7c2520c3..1212379f22 100644
+--- a/processing/src/main/java/org/apache/druid/timeline/VersionedIntervalTimeline.java
++++ b/processing/src/main/java/org/apache/druid/timeline/VersionedIntervalTimeline.java
+@@ -752,9 +752,10 @@ public class VersionedIntervalTimeline<VersionType, ObjectType extends Overshado
+       return retVal;
+     }
+ 
++    // Entries in retVal were selected by timelineInterval.overlaps(interval). Do not gate clipping on
++    // interval.overlaps(timelineInterval), since zero-length lookup intervals can fail that check.
+     TimelineObjectHolder<VersionType, ObjectType> firstEntry = retVal.get(0);
+-    if (interval.overlaps(firstEntry.getInterval()) &&
+-        interval.getStart().isAfter(firstEntry.getInterval().getStart())) {
++    if (interval.getStart().isAfter(firstEntry.getInterval().getStart())) {
+       retVal.set(
+           0,
+           new TimelineObjectHolder<>(
+@@ -767,7 +768,7 @@ public class VersionedIntervalTimeline<VersionType, ObjectType extends Overshado
+     }
+ 
+     TimelineObjectHolder<VersionType, ObjectType> lastEntry = retVal.get(retVal.size() - 1);
+-    if (interval.overlaps(lastEntry.getInterval()) && interval.getEnd().isBefore(lastEntry.getInterval().getEnd())) {
++    if (interval.getEnd().isBefore(lastEntry.getInterval().getEnd())) {
+       retVal.set(
+           retVal.size() - 1,
+           new TimelineObjectHolder<>(

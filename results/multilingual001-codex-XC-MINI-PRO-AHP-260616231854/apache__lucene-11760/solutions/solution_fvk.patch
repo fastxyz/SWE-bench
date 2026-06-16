@@ -1,0 +1,34 @@
+diff --git a/lucene/queries/src/java/org/apache/lucene/queries/intervals/IntervalBuilder.java b/lucene/queries/src/java/org/apache/lucene/queries/intervals/IntervalBuilder.java
+index b6e1727616c..722ac1f82ac 100644
+--- a/lucene/queries/src/java/org/apache/lucene/queries/intervals/IntervalBuilder.java
++++ b/lucene/queries/src/java/org/apache/lucene/queries/intervals/IntervalBuilder.java
+@@ -242,6 +242,8 @@ final class IntervalBuilder {
+         @Override
+         public IntervalIterator intervals(String field, LeafReaderContext ctx) {
+           return new IntervalIterator() {
++            private int doc = -1;
++
+             @Override
+             public int start() {
+               return NO_MORE_INTERVALS;
+@@ -269,17 +271,17 @@ final class IntervalBuilder {
+ 
+             @Override
+             public int docID() {
+-              return NO_MORE_DOCS;
++              return doc;
+             }
+ 
+             @Override
+             public int nextDoc() {
+-              return NO_MORE_DOCS;
++              return doc = NO_MORE_DOCS;
+             }
+ 
+             @Override
+             public int advance(int target) {
+-              return NO_MORE_DOCS;
++              return doc = NO_MORE_DOCS;
+             }
+ 
+             @Override

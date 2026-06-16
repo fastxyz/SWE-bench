@@ -1,0 +1,189 @@
+diff --git a/server/src/main/java/org/apache/druid/discovery/DruidLeaderClient.java b/server/src/main/java/org/apache/druid/discovery/DruidLeaderClient.java
+index 0679ac39e4..ecb93f24ce 100644
+--- a/server/src/main/java/org/apache/druid/discovery/DruidLeaderClient.java
++++ b/server/src/main/java/org/apache/druid/discovery/DruidLeaderClient.java
+@@ -21,6 +21,7 @@ package org.apache.druid.discovery;
+ 
+ import com.google.common.base.Preconditions;
+ import com.google.common.base.Throwables;
++import com.google.common.collect.ImmutableSet;
+ import org.apache.druid.concurrent.LifecycleLock;
+ import org.apache.druid.java.util.common.IOE;
+ import org.apache.druid.java.util.common.ISE;
+@@ -45,6 +46,7 @@ import java.net.MalformedURLException;
+ import java.net.URL;
+ import java.nio.charset.StandardCharsets;
+ import java.util.Iterator;
++import java.util.Set;
+ import java.util.concurrent.ExecutionException;
+ import java.util.concurrent.TimeUnit;
+ import java.util.concurrent.atomic.AtomicReference;
+@@ -62,6 +64,9 @@ public class DruidLeaderClient
+   private final Logger log = new Logger(DruidLeaderClient.class);
+ 
+   private static final int MAX_RETRIES = 5;
++  private static final Set<HttpResponseStatus> DEFAULT_HANDLED_RESPONSE_STATUSES = ImmutableSet.of(
++      HttpResponseStatus.OK
++  );
+ 
+   private final HttpClient httpClient;
+   private final DruidNodeDiscoveryProvider druidNodeDiscoveryProvider;
+@@ -124,14 +129,49 @@ public class DruidLeaderClient
+ 
+   public StringFullResponseHolder go(Request request) throws IOException, InterruptedException
+   {
+-    return go(request, new StringFullResponseHandler(StandardCharsets.UTF_8));
++    return go(request, DEFAULT_HANDLED_RESPONSE_STATUSES);
++  }
++
++  public StringFullResponseHolder go(Request request, HttpResponseStatus... responseStatusesToHandle)
++      throws IOException, InterruptedException
++  {
++    return go(request, ImmutableSet.copyOf(responseStatusesToHandle));
++  }
++
++  public StringFullResponseHolder go(Request request, Set<HttpResponseStatus> responseStatusesToHandle)
++      throws IOException, InterruptedException
++  {
++    return go(request, new StringFullResponseHandler(StandardCharsets.UTF_8), responseStatusesToHandle);
+   }
+ 
+   /**
+    * Executes a Request object aimed at the leader. Throws IOException if the leader cannot be located.
++   * By default, only HTTP 200 OK is returned directly. Other response statuses trigger a leader refresh and retry.
+    */
+   public <T, H extends FullResponseHolder<T>> H go(Request request, HttpResponseHandler<H, H> responseHandler)
+       throws IOException, InterruptedException
++  {
++    return go(request, responseHandler, DEFAULT_HANDLED_RESPONSE_STATUSES);
++  }
++
++  public <T, H extends FullResponseHolder<T>> H go(
++      Request request,
++      HttpResponseHandler<H, H> responseHandler,
++      HttpResponseStatus... responseStatusesToHandle
++  ) throws IOException, InterruptedException
++  {
++    return go(request, responseHandler, ImmutableSet.copyOf(responseStatusesToHandle));
++  }
++
++  /**
++   * Executes a Request object aimed at the leader. Throws IOException if the leader cannot be located.
++   * Response statuses not in responseStatusesToHandle trigger a leader refresh and retry.
++   */
++  public <T, H extends FullResponseHolder<T>> H go(
++      Request request,
++      HttpResponseHandler<H, H> responseHandler,
++      Set<HttpResponseStatus> responseStatusesToHandle
++  ) throws IOException, InterruptedException
+   {
+     Preconditions.checkState(lifecycleLock.awaitStarted(1, TimeUnit.MILLISECONDS));
+     for (int counter = 0; counter < MAX_RETRIES; counter++) {
+@@ -153,37 +193,12 @@ public class DruidLeaderClient
+         // can happen if the node is stopped.
+         log.warn(ex, "Request[%s] failed.", request.getUrl());
+ 
+-        try {
+-          if (request.getUrl().getQuery() == null) {
+-            request = withUrl(
+-                request,
+-                new URL(StringUtils.format("%s%s", getCurrentKnownLeader(false), request.getUrl().getPath()))
+-            );
+-          } else {
+-            request = withUrl(
+-                request,
+-                new URL(StringUtils.format(
+-                    "%s%s?%s",
+-                    getCurrentKnownLeader(false),
+-                    request.getUrl().getPath(),
+-                    request.getUrl().getQuery()
+-                ))
+-            );
+-          }
+-          continue;
+-        }
+-        catch (MalformedURLException e) {
+-          // Not an IOException; this is our own fault.
+-          throw new ISE(
+-              e,
+-              "failed to build url with path[%] and query string [%s].",
+-              request.getUrl().getPath(),
+-              request.getUrl().getQuery()
+-          );
+-        }
++        request = withCurrentKnownLeader(request);
++        continue;
+       }
+ 
+-      if (HttpResponseStatus.TEMPORARY_REDIRECT.equals(fullResponseHolder.getResponse().getStatus())) {
++      final HttpResponseStatus responseStatus = fullResponseHolder.getResponse().getStatus();
++      if (HttpResponseStatus.TEMPORARY_REDIRECT.equals(responseStatus)) {
+         String redirectUrlStr = fullResponseHolder.getResponse().headers().get("Location");
+         if (redirectUrlStr == null) {
+           throw new IOE("No redirect location is found in response from url[%s].", request.getUrl());
+@@ -213,8 +228,26 @@ public class DruidLeaderClient
+         ));
+ 
+         request = withUrl(request, redirectUrl);
+-      } else {
++      } else if (responseStatusesToHandle.contains(responseStatus)) {
+         return fullResponseHolder;
++      } else {
++        log.warn(
++            "Request[%s] received unhandled response status[%s].",
++            request.getUrl(),
++            responseStatus
++        );
++
++        if (counter == MAX_RETRIES - 1) {
++          return fullResponseHolder;
++        }
++
++        try {
++          request = withCurrentKnownLeader(request);
++        }
++        catch (IOException e) {
++          log.warn(e, "Unable to refresh leader for request[%s].", request.getUrl());
++          return fullResponseHolder;
++        }
+       }
+     }
+ 
+@@ -286,6 +319,37 @@ public class DruidLeaderClient
+     return null;
+   }
+ 
++  private Request withCurrentKnownLeader(Request request) throws IOException
++  {
++    try {
++      if (request.getUrl().getQuery() == null) {
++        return withUrl(
++            request,
++            new URL(StringUtils.format("%s%s", getCurrentKnownLeader(false), request.getUrl().getPath()))
++        );
++      } else {
++        return withUrl(
++            request,
++            new URL(StringUtils.format(
++                "%s%s?%s",
++                getCurrentKnownLeader(false),
++                request.getUrl().getPath(),
++                request.getUrl().getQuery()
++            ))
++        );
++      }
++    }
++    catch (MalformedURLException e) {
++      // Not an IOException; this is our own fault.
++      throw new ISE(
++          e,
++          "failed to build url with path[%s] and query string [%s].",
++          request.getUrl().getPath(),
++          request.getUrl().getQuery()
++      );
++    }
++  }
++
+   private Request withUrl(Request old, URL url)
+   {
+     Request req = new Request(old.getMethod(), url);

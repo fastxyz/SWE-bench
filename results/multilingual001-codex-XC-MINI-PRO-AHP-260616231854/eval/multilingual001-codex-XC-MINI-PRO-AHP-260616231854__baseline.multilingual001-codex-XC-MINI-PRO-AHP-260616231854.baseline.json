@@ -1,0 +1,51 @@
+{
+    "total_instances": 10,
+    "submitted_instances": 10,
+    "completed_instances": 10,
+    "resolved_instances": 8,
+    "unresolved_instances": 2,
+    "empty_patch_instances": 0,
+    "error_instances": 0,
+    "completed_ids": [
+        "apache__druid-13704",
+        "apache__druid-14092",
+        "apache__druid-14136",
+        "apache__druid-15402",
+        "apache__druid-16875",
+        "apache__lucene-11760",
+        "apache__lucene-12022",
+        "apache__lucene-12196",
+        "apache__lucene-12212",
+        "apache__lucene-12626"
+    ],
+    "incomplete_ids": [],
+    "empty_patch_ids": [],
+    "submitted_ids": [
+        "apache__druid-13704",
+        "apache__druid-14092",
+        "apache__druid-14136",
+        "apache__druid-15402",
+        "apache__druid-16875",
+        "apache__lucene-11760",
+        "apache__lucene-12022",
+        "apache__lucene-12196",
+        "apache__lucene-12212",
+        "apache__lucene-12626"
+    ],
+    "resolved_ids": [
+        "apache__druid-13704",
+        "apache__druid-14092",
+        "apache__druid-15402",
+        "apache__druid-16875",
+        "apache__lucene-11760",
+        "apache__lucene-12196",
+        "apache__lucene-12212",
+        "apache__lucene-12626"
+    ],
+    "unresolved_ids": [
+        "apache__druid-14136",
+        "apache__lucene-12022"
+    ],
+    "error_ids": [],
+    "schema_version": 2
+}
