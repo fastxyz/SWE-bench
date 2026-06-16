@@ -1,0 +1,7 @@
+# FVK Notes
+
+The FVK audit split the issue into entry preservation and summation completion. `fvk/FINDINGS.md` F1 and `fvk/PROOF_OBLIGATIONS.md` PO1-PO3 confirm that the V1 change in `repo/sympy/matrices/expressions/matexpr.py` was correct: `Identity._entry` must return `KroneckerDelta(i, j)` so symbolic equality is not prematurely treated as off-diagonal.
+
+The audit also found that V1 did not fully satisfy the original nested `.doit()` output form. `fvk/FINDINGS.md` F2 and `fvk/PROOF_OBLIGATIONS.md` PO4-PO6 trace the remaining gap: `deltasummation` can produce a `Piecewise` whose condition is exactly the active summation interval, but the previous `eval_sum` only folded Piecewise expressions whose conditions were independent of the summation variable. I changed `repo/sympy/concrete/summations.py` to collapse only the exact two-branch form `Piecewise((expr, Interval(a, b).as_relational(i)), (0, True))` when summing over exactly `(i, a, b)` and when the interval width is known nonnegative.
+
+I did not broaden the summation change to arbitrary logically equivalent Piecewise conditions. `fvk/FINDINGS.md` F4 and `fvk/PROOF_OBLIGATIONS.md` PO7 justify that boundary: a general implication-based Piecewise simplifier is outside the identity-matrix issue and would need its own specification. I also did not run tests, Python, or K tooling and did not edit tests, as recorded in F5 and PO8.

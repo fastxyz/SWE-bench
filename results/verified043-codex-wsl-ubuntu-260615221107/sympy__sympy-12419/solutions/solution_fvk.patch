@@ -1,0 +1,33 @@
+diff --git a/sympy/concrete/summations.py b/sympy/concrete/summations.py
+index 372487664c..cfa03c3407 100644
+--- a/sympy/concrete/summations.py
++++ b/sympy/concrete/summations.py
+@@ -855,6 +855,11 @@ def eval_sum(f, limits):
+     if a == b:
+         return f.subs(i, a)
+     if isinstance(f, Piecewise):
++        if len(f.args) == 2 and f.args[1].cond == True and \
++                f.args[1].expr == S.Zero and dif.is_nonnegative:
++            from sympy import Interval
++            if f.args[0].cond == Interval(a, b).as_relational(i):
++                return eval_sum(f.args[0].expr, limits)
+         if not any(i in arg.args[1].free_symbols for arg in f.args):
+             # Piecewise conditions do not depend on the dummy summation variable,
+             # therefore we can fold:     Sum(Piecewise((e, c), ...), limits)
+diff --git a/sympy/matrices/expressions/matexpr.py b/sympy/matrices/expressions/matexpr.py
+index b4d759836e..cd6770d69b 100644
+--- a/sympy/matrices/expressions/matexpr.py
++++ b/sympy/matrices/expressions/matexpr.py
+@@ -476,10 +476,8 @@ def conjugate(self):
+         return self
+ 
+     def _entry(self, i, j):
+-        if i == j:
+-            return S.One
+-        else:
+-            return S.Zero
++        from sympy import KroneckerDelta
++        return KroneckerDelta(i, j)
+ 
+     def _eval_determinant(self):
+         return S.One

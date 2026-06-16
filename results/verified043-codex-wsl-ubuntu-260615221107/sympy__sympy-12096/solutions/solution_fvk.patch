@@ -1,0 +1,23 @@
+diff --git a/sympy/core/function.py b/sympy/core/function.py
+index 1b8005e1d2..6afb134d81 100644
+--- a/sympy/core/function.py
++++ b/sympy/core/function.py
+@@ -507,7 +507,17 @@ def _eval_evalf(self, prec):
+             func = getattr(mpmath, fname)
+         except (AttributeError, KeyError):
+             try:
+-                return Float(self._imp_(*self.args), prec)
++                imp_result = self._imp_(*self.args)
++                try:
++                    result = sympify(imp_result)
++                except (AttributeError, TypeError, ValueError):
++                    pass
++                else:
++                    if getattr(result, 'is_number', False):
++                        result = result._evalf(prec)
++                        if result is not None and not result.has(AppliedUndef):
++                            return result
++                return Float(imp_result, mlib.libmpf.prec_to_dps(prec))
+             except (AttributeError, TypeError, ValueError):
+                 return
+ 

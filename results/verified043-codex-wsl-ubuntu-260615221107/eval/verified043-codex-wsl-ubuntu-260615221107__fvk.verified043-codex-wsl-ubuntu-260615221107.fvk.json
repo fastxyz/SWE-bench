@@ -1,0 +1,51 @@
+{
+    "total_instances": 10,
+    "submitted_instances": 10,
+    "completed_instances": 10,
+    "resolved_instances": 9,
+    "unresolved_instances": 1,
+    "empty_patch_instances": 0,
+    "error_instances": 0,
+    "completed_ids": [
+        "sphinx-doc__sphinx-9602",
+        "sphinx-doc__sphinx-9658",
+        "sphinx-doc__sphinx-9673",
+        "sphinx-doc__sphinx-9698",
+        "sphinx-doc__sphinx-9711",
+        "sympy__sympy-11618",
+        "sympy__sympy-12096",
+        "sympy__sympy-12419",
+        "sympy__sympy-12481",
+        "sympy__sympy-12489"
+    ],
+    "incomplete_ids": [],
+    "empty_patch_ids": [],
+    "submitted_ids": [
+        "sphinx-doc__sphinx-9602",
+        "sphinx-doc__sphinx-9658",
+        "sphinx-doc__sphinx-9673",
+        "sphinx-doc__sphinx-9698",
+        "sphinx-doc__sphinx-9711",
+        "sympy__sympy-11618",
+        "sympy__sympy-12096",
+        "sympy__sympy-12419",
+        "sympy__sympy-12481",
+        "sympy__sympy-12489"
+    ],
+    "resolved_ids": [
+        "sphinx-doc__sphinx-9602",
+        "sphinx-doc__sphinx-9658",
+        "sphinx-doc__sphinx-9673",
+        "sphinx-doc__sphinx-9698",
+        "sphinx-doc__sphinx-9711",
+        "sympy__sympy-11618",
+        "sympy__sympy-12096",
+        "sympy__sympy-12481",
+        "sympy__sympy-12489"
+    ],
+    "unresolved_ids": [
+        "sympy__sympy-12419"
+    ],
+    "error_ids": [],
+    "schema_version": 2
+}
