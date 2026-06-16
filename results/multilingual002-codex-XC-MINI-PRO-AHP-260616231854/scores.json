@@ -1,0 +1,311 @@
+{
+  "run_id": "multilingual002-codex-XC-MINI-PRO-AHP-260616231854",
+  "arms": [
+    "baseline",
+    "fvk"
+  ],
+  "instances": {
+    "apache__lucene-13170": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed236-9173-72a0-be5a-fdcb09a85d98",
+        "num_turns": null,
+        "duration_seconds": 119.62820606102468,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "8/8"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed236-9173-72a0-be5a-fdcb09a85d98",
+        "num_turns": null,
+        "duration_seconds": 405.397253956995,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "8/8"
+        }
+      }
+    },
+    "apache__lucene-13301": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed236-9119-7ea3-9c63-25b13f8ccd68",
+        "num_turns": null,
+        "duration_seconds": 238.07156906000455,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "0/0"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed236-9119-7ea3-9c63-25b13f8ccd68",
+        "num_turns": null,
+        "duration_seconds": 420.49189715701505,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "0/0"
+        }
+      }
+    },
+    "apache__lucene-13494": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed236-913d-75d2-a781-c58a30d97814",
+        "num_turns": null,
+        "duration_seconds": 236.2672717560199,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "0/8"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed236-913d-75d2-a781-c58a30d97814",
+        "num_turns": null,
+        "duration_seconds": 377.78285896999296,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "8/8"
+        }
+      }
+    },
+    "apache__lucene-13704": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed23e-e45e-79c1-a6f3-c4e6826a25e7",
+        "num_turns": null,
+        "duration_seconds": 344.8942485860025,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "39/39"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed23e-e45e-79c1-a6f3-c4e6826a25e7",
+        "num_turns": null,
+        "duration_seconds": 394.30088373299805,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "38/39"
+        }
+      }
+    },
+    "astral-sh__ruff-15309": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed240-0a0f-7af3-b895-c2b6d8c9bbfe",
+        "num_turns": null,
+        "duration_seconds": 264.98656718598795,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "4/4"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed240-0a0f-7af3-b895-c2b6d8c9bbfe",
+        "num_turns": null,
+        "duration_seconds": 418.3231741639902,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "4/4"
+        }
+      }
+    },
+    "astral-sh__ruff-15330": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed240-b7bc-7981-820c-d660c625ffa9",
+        "num_turns": null,
+        "duration_seconds": 223.21144501600065,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "12/12"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed240-b7bc-7981-820c-d660c625ffa9",
+        "num_turns": null,
+        "duration_seconds": 327.5982291130058,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "12/12"
+        }
+      }
+    },
+    "astral-sh__ruff-15356": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed249-3e7d-7b42-b525-a9e62ea67911",
+        "num_turns": null,
+        "duration_seconds": 228.78251004900085,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "133/133"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed249-3e7d-7b42-b525-a9e62ea67911",
+        "num_turns": null,
+        "duration_seconds": 399.2771561620175,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "133/133"
+        }
+      }
+    },
+    "astral-sh__ruff-15394": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed24a-4b6f-75d0-82d8-1bc3a8b435b0",
+        "num_turns": null,
+        "duration_seconds": 338.04026535898447,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "8/8"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed24a-4b6f-75d0-82d8-1bc3a8b435b0",
+        "num_turns": null,
+        "duration_seconds": 570.0428414669877,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "8/8"
+        }
+      }
+    },
+    "astral-sh__ruff-15443": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed24a-9637-7632-8e78-4223b5918937",
+        "num_turns": null,
+        "duration_seconds": 111.64281281101285,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "58/58"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed24a-9637-7632-8e78-4223b5918937",
+        "num_turns": null,
+        "duration_seconds": 327.9127799879934,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "58/58"
+        }
+      }
+    },
+    "astral-sh__ruff-15543": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed251-6a7b-7e23-b554-15c4240c0db2",
+        "num_turns": null,
+        "duration_seconds": 201.00715247099288,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "124/124"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed251-6a7b-7e23-b554-15c4240c0db2",
+        "num_turns": null,
+        "duration_seconds": 261.37101618599263,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "124/124"
+        }
+      }
+    }
+  },
+  "aggregates": {
+    "arms": {
+      "baseline": {
+        "resolved": 7,
+        "evaluated": 10
+      },
+      "fvk": {
+        "resolved": 7,
+        "evaluated": 10
+      }
+    },
+    "flips": {
+      "baseline_to_fvk": {
+        "up": [
+          "apache__lucene-13494"
+        ],
+        "down": [
+          "apache__lucene-13170"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,51 @@
+diff --git a/lucene/facet/src/java/org/apache/lucene/facet/StringValueFacetCounts.java b/lucene/facet/src/java/org/apache/lucene/facet/StringValueFacetCounts.java
+index 67ce953067f..5b0d1e8e925 100644
+--- a/lucene/facet/src/java/org/apache/lucene/facet/StringValueFacetCounts.java
++++ b/lucene/facet/src/java/org/apache/lucene/facet/StringValueFacetCounts.java
+@@ -146,6 +146,10 @@ public class StringValueFacetCounts extends Facets {
+   public FacetResult getAllChildren(String dim, String... path) throws IOException {
+     validateDimAndPathForGetChildren(dim, path);
+ 
++    if (hasCountStorage() == false) {
++      return emptyResult();
++    }
++
+     List<LabelAndValue> labelValues = new ArrayList<>();
+ 
+     if (sparseCounts != null) {
+@@ -177,6 +181,10 @@ public class StringValueFacetCounts extends Facets {
+     validateTopN(topN);
+     validateDimAndPathForGetChildren(dim, path);
+ 
++    if (hasCountStorage() == false) {
++      return emptyResult();
++    }
++
+     topN = Math.min(topN, cardinality);
+     TopOrdAndIntQueue q = null;
+     TopOrdAndIntQueue.OrdAndInt reuse = null;
+@@ -255,6 +263,10 @@ public class StringValueFacetCounts extends Facets {
+     if (ord < 0) {
+       return -1;
+     }
++    if (hasCountStorage() == false) {
++      assert totalDocCount == 0;
++      return 0;
++    }
+ 
+     return sparseCounts != null ? sparseCounts.get(ord) : denseCounts[ord];
+   }
+@@ -612,4 +624,13 @@ public class StringValueFacetCounts extends Facets {
+       throw new IllegalArgumentException("path.length should be 0");
+     }
+   }
++
++  private boolean hasCountStorage() {
++    return sparseCounts != null || denseCounts != null;
++  }
++
++  private FacetResult emptyResult() {
++    assert totalDocCount == 0;
++    return new FacetResult(field, new String[0], totalDocCount, new LabelAndValue[0], 0);
++  }
+ }

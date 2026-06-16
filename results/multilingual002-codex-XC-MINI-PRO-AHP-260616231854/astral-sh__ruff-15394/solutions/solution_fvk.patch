@@ -1,0 +1,207 @@
+diff --git a/crates/ruff_linter/src/rules/flake8_pie/rules/unnecessary_spread.rs b/crates/ruff_linter/src/rules/flake8_pie/rules/unnecessary_spread.rs
+index 15dd9b883b..92497f4675 100644
+--- a/crates/ruff_linter/src/rules/flake8_pie/rules/unnecessary_spread.rs
++++ b/crates/ruff_linter/src/rules/flake8_pie/rules/unnecessary_spread.rs
+@@ -2,7 +2,7 @@ use ruff_diagnostics::{Diagnostic, Edit, Fix, FixAvailability, Violation};
+ use ruff_macros::{derive_message_formats, ViolationMetadata};
+ use ruff_python_ast::{self as ast, Expr};
+ use ruff_python_trivia::{SimpleTokenKind, SimpleTokenizer};
+-use ruff_text_size::{Ranged, TextSize};
++use ruff_text_size::{Ranged, TextRange, TextSize};
+ 
+ use crate::checkers::ast::Checker;
+ use crate::Locator;
+@@ -48,13 +48,19 @@ impl Violation for UnnecessarySpread {
+ pub(crate) fn unnecessary_spread(checker: &mut Checker, dict: &ast::ExprDict) {
+     // The first "end" is the start of the dictionary, immediately following the open bracket.
+     let mut prev_end = dict.start() + TextSize::from(1);
+-    for ast::DictItem { key, value } in dict {
++    for (index, ast::DictItem { key, value }) in dict.iter().enumerate() {
+         if key.is_none() {
+             // We only care about when the key is None which indicates a spread `**`
+             // inside a dict.
+             if let Expr::Dict(inner) = value {
+                 let mut diagnostic = Diagnostic::new(UnnecessarySpread, value.range());
+-                if let Some(fix) = unnecessary_spread_fix(inner, prev_end, checker.locator()) {
++                if let Some(fix) = unnecessary_spread_fix(
++                    inner,
++                    prev_end,
++                    index == 0,
++                    index + 1 == dict.len(),
++                    checker.locator(),
++                ) {
+                     diagnostic.set_fix(fix);
+                 }
+                 checker.diagnostics.push(diagnostic);
+@@ -68,38 +74,152 @@ pub(crate) fn unnecessary_spread(checker: &mut Checker, dict: &ast::ExprDict) {
+ fn unnecessary_spread_fix(
+     dict: &ast::ExprDict,
+     prev_end: TextSize,
++    is_first: bool,
++    is_last: bool,
+     locator: &Locator,
+ ) -> Option<Fix> {
+     // Find the `**` token preceding the spread.
+     let doublestar = SimpleTokenizer::starts_at(prev_end, locator.contents())
+         .find(|tok| matches!(tok.kind(), SimpleTokenKind::DoubleStar))?;
+ 
+-    if let Some(last) = dict.iter_values().last() {
++    let opening_brace = SimpleTokenizer::new(
++        locator.contents(),
++        TextRange::new(doublestar.end(), dict.end()),
++    )
++    .skip_trivia()
++    .find(|tok| matches!(tok.kind(), SimpleTokenKind::LBrace))?;
++    let opening_parentheses = SimpleTokenizer::new(
++        locator.contents(),
++        TextRange::new(doublestar.end(), opening_brace.start()),
++    )
++    .skip_trivia()
++    .filter(|tok| matches!(tok.kind(), SimpleTokenKind::LParen))
++    .count();
++
++    let edits = if let Some(last) = dict.iter_values().last() {
+         // Ex) `**{a: 1, b: 2}`
+-        let mut edits = vec![];
+-        for tok in SimpleTokenizer::starts_at(last.end(), locator.contents()).skip_trivia() {
+-            match tok.kind() {
+-                SimpleTokenKind::Comma => {
+-                    edits.push(Edit::range_deletion(tok.range()));
++        let (edits, _) = trailing_edits(last.end(), opening_parentheses, true, locator)?;
++        edits
++    } else {
++        // Ex) `**{}`
++        let (_, spread_end) =
++            trailing_edits(opening_brace.end(), opening_parentheses, false, locator)?;
++        return Some(Fix::safe_edit(empty_spread_edit(
++            doublestar.start(),
++            spread_end,
++            prev_end,
++            is_first,
++            is_last,
++            locator,
++        )?));
++    };
++
++    Some(Fix::safe_edits(
++        // Delete the first `**{`. If the dict is parenthesized, this also
++        // deletes the opening parentheses between the `**` and `{`.
++        Edit::deletion(doublestar.start(), opening_brace.end()),
++        // Delete the trailing `}` and any matching closing parentheses.
++        edits,
++    ))
++}
++
++/// Generate edits to remove the closing tokens of the spread dictionary.
++fn trailing_edits(
++    start: TextSize,
++    opening_parentheses: usize,
++    delete_trailing_comma: bool,
++    locator: &Locator,
++) -> Option<(Vec<Edit>, TextSize)> {
++    let mut edits = vec![];
++    let mut found_closing_brace = false;
++    let mut remaining_parentheses = opening_parentheses;
++    let mut end = start;
++
++    for tok in SimpleTokenizer::starts_at(start, locator.contents()).skip_trivia() {
++        match tok.kind() {
++            SimpleTokenKind::Comma if delete_trailing_comma && !found_closing_brace => {
++                end = tok.end();
++                edits.push(Edit::range_deletion(tok.range()));
++            }
++            SimpleTokenKind::RBrace if !found_closing_brace => {
++                end = tok.end();
++                edits.push(Edit::range_deletion(tok.range()));
++                found_closing_brace = true;
++                if remaining_parentheses == 0 {
++                    break;
+                 }
+-                SimpleTokenKind::RBrace => {
+-                    edits.push(Edit::range_deletion(tok.range()));
++            }
++            SimpleTokenKind::RParen if found_closing_brace && remaining_parentheses > 0 => {
++                end = tok.end();
++                edits.push(Edit::range_deletion(tok.range()));
++                remaining_parentheses -= 1;
++                if remaining_parentheses == 0 {
+                     break;
+                 }
+-                _ => {}
+             }
++            _ if found_closing_brace => break,
++            _ => {}
+         }
+-        Some(Fix::safe_edits(
+-            // Delete the first `**{`
+-            Edit::deletion(doublestar.start(), dict.start() + TextSize::from(1)),
+-            // Delete the trailing `}`
+-            edits,
++    }
++
++    if found_closing_brace && remaining_parentheses == 0 {
++        Some((edits, end))
++    } else {
++        None
++    }
++}
++
++/// Generate an edit to remove an empty spread dictionary while preserving valid separators.
++fn empty_spread_edit(
++    spread_start: TextSize,
++    spread_end: TextSize,
++    prev_end: TextSize,
++    is_first: bool,
++    is_last: bool,
++    locator: &Locator,
++) -> Option<Edit> {
++    if !is_last {
++        Some(Edit::deletion(
++            spread_start,
++            following_item_start(spread_end, locator)?,
+         ))
++    } else if !is_first {
++        let comma = SimpleTokenizer::new(
++            locator.contents(),
++            TextRange::new(prev_end, spread_start),
++        )
++        .filter(|tok| matches!(tok.kind(), SimpleTokenKind::Comma))
++        .last()?;
++        Some(Edit::deletion(comma.start(), spread_end))
+     } else {
+-        // Ex) `**{}`
+-        Some(Fix::safe_edit(Edit::deletion(
+-            doublestar.start(),
+-            dict.end(),
+-        )))
++        Some(Edit::deletion(
++            spread_start,
++            trailing_comma_end(spread_end, locator).unwrap_or(spread_end),
++        ))
++    }
++}
++
++/// Return the start of the item that follows an empty spread dictionary.
++fn following_item_start(spread_end: TextSize, locator: &Locator) -> Option<TextSize> {
++    let mut tokenizer = SimpleTokenizer::starts_at(spread_end, locator.contents());
++    tokenizer.find(|tok| matches!(tok.kind(), SimpleTokenKind::Comma))?;
++    let next = tokenizer.find(|tok| {
++        !matches!(
++            tok.kind(),
++            SimpleTokenKind::Whitespace | SimpleTokenKind::Newline
++        )
++    })?;
++    Some(next.start())
++}
++
++/// Return the end of an optional trailing comma after an only-item empty spread dictionary.
++fn trailing_comma_end(spread_end: TextSize, locator: &Locator) -> Option<TextSize> {
++    let next = SimpleTokenizer::starts_at(spread_end, locator.contents())
++        .skip_trivia()
++        .next()?;
++    if matches!(next.kind(), SimpleTokenKind::Comma) {
++        Some(next.end())
++    } else {
++        None
+     }
+ }

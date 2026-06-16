@@ -1,0 +1,51 @@
+{
+    "total_instances": 10,
+    "submitted_instances": 10,
+    "completed_instances": 10,
+    "resolved_instances": 7,
+    "unresolved_instances": 3,
+    "empty_patch_instances": 0,
+    "error_instances": 0,
+    "completed_ids": [
+        "apache__lucene-13170",
+        "apache__lucene-13301",
+        "apache__lucene-13494",
+        "apache__lucene-13704",
+        "astral-sh__ruff-15309",
+        "astral-sh__ruff-15330",
+        "astral-sh__ruff-15356",
+        "astral-sh__ruff-15394",
+        "astral-sh__ruff-15443",
+        "astral-sh__ruff-15543"
+    ],
+    "incomplete_ids": [],
+    "empty_patch_ids": [],
+    "submitted_ids": [
+        "apache__lucene-13170",
+        "apache__lucene-13301",
+        "apache__lucene-13494",
+        "apache__lucene-13704",
+        "astral-sh__ruff-15309",
+        "astral-sh__ruff-15330",
+        "astral-sh__ruff-15356",
+        "astral-sh__ruff-15394",
+        "astral-sh__ruff-15443",
+        "astral-sh__ruff-15543"
+    ],
+    "resolved_ids": [
+        "apache__lucene-13301",
+        "apache__lucene-13494",
+        "astral-sh__ruff-15309",
+        "astral-sh__ruff-15330",
+        "astral-sh__ruff-15356",
+        "astral-sh__ruff-15443",
+        "astral-sh__ruff-15543"
+    ],
+    "unresolved_ids": [
+        "apache__lucene-13170",
+        "apache__lucene-13704",
+        "astral-sh__ruff-15394"
+    ],
+    "error_ids": [],
+    "schema_version": 2
+}

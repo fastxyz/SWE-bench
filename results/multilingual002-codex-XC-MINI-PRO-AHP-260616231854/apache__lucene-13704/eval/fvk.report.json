@@ -1,0 +1,69 @@
+{
+    "apache__lucene-13704": {
+        "patch_is_None": false,
+        "patch_exists": true,
+        "patch_successfully_applied": true,
+        "resolved": false,
+        "tests_status": {
+            "FAIL_TO_PASS": {
+                "success": [],
+                "failure": [
+                    "TestLatLonDocValuesQueries > testNarrowPolygonCloseToNorthPole"
+                ]
+            },
+            "PASS_TO_PASS": {
+                "success": [
+                    "TestLatLonDocValuesQueries > testSmallSetDistanceNotEmpty",
+                    "TestLatLonDocValuesQueries > testRandomDistance",
+                    "TestLatLonDocValuesQueries > testLowCardinality",
+                    "TestLatLonDocValuesQueries > testRectBoundariesAreInclusive",
+                    "TestLatLonDocValuesQueries > testBoxNull",
+                    "TestLatLonDocValuesQueries > testMultiPolygonBasics",
+                    "TestLatLonDocValuesQueries > testSmallSetDistance",
+                    "TestLatLonDocValuesQueries > testSmallSetHugeDistance",
+                    "TestLatLonDocValuesQueries > testIndexNaNValues",
+                    "TestLatLonDocValuesQueries > testMultiValued",
+                    "TestLatLonDocValuesQueries > testPolygonHole",
+                    "TestLatLonDocValuesQueries > testIndexOutOfRangeValues",
+                    "TestLatLonDocValuesQueries > testDistanceNaN",
+                    "TestLatLonDocValuesQueries > testBoxBasics",
+                    "TestLatLonDocValuesQueries > testBoxInvalidCoordinates",
+                    "TestLatLonDocValuesQueries > testSamePointManyTimes",
+                    "TestLatLonDocValuesQueries > testSmallSetDistanceDateline",
+                    "TestLatLonDocValuesQueries > testPolygonBasics",
+                    "TestLatLonDocValuesQueries > testDistanceInf",
+                    "TestLatLonDocValuesQueries > testEquals",
+                    "TestLatLonDocValuesQueries > testPolygonHoleExcludes",
+                    "TestLatLonDocValuesQueries > testRandomTiny",
+                    "TestLatLonDocValuesQueries > testIndexInfValues",
+                    "TestLatLonDocValuesQueries > testSmallSetTinyDistance",
+                    "TestLatLonDocValuesQueries > testSmallSetMultiValued",
+                    "TestLatLonDocValuesQueries > testRandomMedium",
+                    "TestLatLonDocValuesQueries > testSmallSetPolyWholeMap",
+                    "TestLatLonDocValuesQueries > testSmallSetPoly",
+                    "TestLatLonDocValuesQueries > testIndexExtremeValues",
+                    "TestLatLonDocValuesQueries > testDistanceIllegal",
+                    "TestLatLonDocValuesQueries > testAllLonEqual",
+                    "TestLatLonDocValuesQueries > testSmallSetWholeMap",
+                    "TestLatLonDocValuesQueries > testDistanceNegative",
+                    "TestLatLonDocValuesQueries > testDistanceBasics",
+                    "TestLatLonDocValuesQueries > testDistanceNull",
+                    "TestLatLonDocValuesQueries > testAllLatEqual",
+                    "TestLatLonDocValuesQueries > testSmallSetDateline",
+                    "TestLatLonDocValuesQueries > testPolygonNullField"
+                ],
+                "failure": [
+                    "TestLatLonDocValuesQueries > testSmallSetRect"
+                ]
+            },
+            "FAIL_TO_FAIL": {
+                "success": [],
+                "failure": []
+            },
+            "PASS_TO_FAIL": {
+                "success": [],
+                "failure": []
+            }
+        }
+    }
+}

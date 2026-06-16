@@ -1,0 +1,85 @@
+diff --git a/crates/ruff_linter/src/rules/pyflakes/fixes.rs b/crates/ruff_linter/src/rules/pyflakes/fixes.rs
+index ed80041587..8bed04d6ed 100644
+--- a/crates/ruff_linter/src/rules/pyflakes/fixes.rs
++++ b/crates/ruff_linter/src/rules/pyflakes/fixes.rs
+@@ -10,6 +10,8 @@ use ruff_text_size::Ranged;
+ use crate::cst::matchers::{match_call_mut, match_dict, transform_expression};
+ use crate::Locator;
+ 
++use super::format::FormatSummary;
++
+ /// Generate a [`Edit`] to remove unused keys from format dict.
+ pub(super) fn remove_unused_format_arguments_from_dict(
+     unused_arguments: &[usize],
+@@ -66,9 +68,27 @@ pub(super) fn remove_unused_keyword_arguments_from_format_call(
+ pub(crate) fn remove_unused_positional_arguments_from_format_call(
+     unused_arguments: &[usize],
+     call: &ast::ExprCall,
++    summary: &FormatSummary,
+     locator: &Locator,
+     stylist: &Stylist,
+ ) -> Result<Edit> {
++    if !unused_arguments.is_empty()
++        && call.arguments.keywords.is_empty()
++        && summary.autos.is_empty()
++        && summary.indices.is_empty()
++        && summary.keywords.is_empty()
++        && summary.is_literal_identity
++        && unused_arguments.len() == call.arguments.args.len()
++        && (0..call.arguments.args.len()).all(|index| unused_arguments.contains(&index))
++    {
++        if let ast::Expr::Attribute(ast::ExprAttribute { value, .. }) = call.func.as_ref() {
++            return Ok(Edit::range_replacement(
++                locator.slice(value.range()).to_string(),
++                call.range(),
++            ));
++        }
++    }
++
+     let source_code = locator.slice(call);
+     transform_expression(source_code, stylist, |mut expression| {
+         let call = match_call_mut(&mut expression)?;
+diff --git a/crates/ruff_linter/src/rules/pyflakes/format.rs b/crates/ruff_linter/src/rules/pyflakes/format.rs
+index f53d7acfa1..eb7a41e705 100644
+--- a/crates/ruff_linter/src/rules/pyflakes/format.rs
++++ b/crates/ruff_linter/src/rules/pyflakes/format.rs
+@@ -28,6 +28,7 @@ pub(crate) struct FormatSummary {
+     pub(crate) indices: Vec<usize>,
+     pub(crate) keywords: Vec<Name>,
+     pub(crate) has_nested_parts: bool,
++    pub(crate) is_literal_identity: bool,
+ }
+ 
+ impl TryFrom<&str> for FormatSummary {
+@@ -35,6 +36,11 @@ impl TryFrom<&str> for FormatSummary {
+ 
+     fn try_from(literal: &str) -> Result<Self, Self::Error> {
+         let format_string = FormatString::from_str(literal)?;
++        let is_literal_identity = match format_string.format_parts.as_slice() {
++            [] => true,
++            [FormatPart::Literal(value)] => value == literal,
++            _ => false,
++        };
+ 
+         let mut autos = Vec::new();
+         let mut indices = Vec::new();
+@@ -77,6 +83,7 @@ impl TryFrom<&str> for FormatSummary {
+             indices,
+             keywords,
+             has_nested_parts,
++            is_literal_identity,
+         })
+     }
+ }
+diff --git a/crates/ruff_linter/src/rules/pyflakes/rules/strings.rs b/crates/ruff_linter/src/rules/pyflakes/rules/strings.rs
+index 80fe9f3077..47619d3f81 100644
+--- a/crates/ruff_linter/src/rules/pyflakes/rules/strings.rs
++++ b/crates/ruff_linter/src/rules/pyflakes/rules/strings.rs
+@@ -837,6 +837,7 @@ pub(crate) fn string_dot_format_extra_positional_arguments(
+             let edit = remove_unused_positional_arguments_from_format_call(
+                 &missing,
+                 call,
++                summary,
+                 checker.locator(),
+                 checker.stylist(),
+             )?;

@@ -1,0 +1,109 @@
+diff --git a/crates/ruff_linter/src/rules/flake8_pie/rules/unnecessary_spread.rs b/crates/ruff_linter/src/rules/flake8_pie/rules/unnecessary_spread.rs
+index 15dd9b883b..df406a9674 100644
+--- a/crates/ruff_linter/src/rules/flake8_pie/rules/unnecessary_spread.rs
++++ b/crates/ruff_linter/src/rules/flake8_pie/rules/unnecessary_spread.rs
+@@ -2,7 +2,7 @@ use ruff_diagnostics::{Diagnostic, Edit, Fix, FixAvailability, Violation};
+ use ruff_macros::{derive_message_formats, ViolationMetadata};
+ use ruff_python_ast::{self as ast, Expr};
+ use ruff_python_trivia::{SimpleTokenKind, SimpleTokenizer};
+-use ruff_text_size::{Ranged, TextSize};
++use ruff_text_size::{Ranged, TextRange, TextSize};
+ 
+ use crate::checkers::ast::Checker;
+ use crate::Locator;
+@@ -74,32 +74,75 @@ fn unnecessary_spread_fix(
+     let doublestar = SimpleTokenizer::starts_at(prev_end, locator.contents())
+         .find(|tok| matches!(tok.kind(), SimpleTokenKind::DoubleStar))?;
+ 
+-    if let Some(last) = dict.iter_values().last() {
++    let opening_brace = SimpleTokenizer::new(
++        locator.contents(),
++        TextRange::new(doublestar.end(), dict.end()),
++    )
++    .skip_trivia()
++    .find(|tok| matches!(tok.kind(), SimpleTokenKind::LBrace))?;
++    let opening_parentheses = SimpleTokenizer::new(
++        locator.contents(),
++        TextRange::new(doublestar.end(), opening_brace.start()),
++    )
++    .skip_trivia()
++    .filter(|tok| matches!(tok.kind(), SimpleTokenKind::LParen))
++    .count();
++
++    let edits = if let Some(last) = dict.iter_values().last() {
+         // Ex) `**{a: 1, b: 2}`
+-        let mut edits = vec![];
+-        for tok in SimpleTokenizer::starts_at(last.end(), locator.contents()).skip_trivia() {
+-            match tok.kind() {
+-                SimpleTokenKind::Comma => {
+-                    edits.push(Edit::range_deletion(tok.range()));
++        trailing_edits(last.end(), opening_parentheses, true, locator)?
++    } else {
++        // Ex) `**{}`
++        trailing_edits(opening_brace.end(), opening_parentheses, false, locator)?
++    };
++
++    Some(Fix::safe_edits(
++        // Delete the first `**{`. If the dict is parenthesized, this also
++        // deletes the opening parentheses between the `**` and `{`.
++        Edit::deletion(doublestar.start(), opening_brace.end()),
++        // Delete the trailing `}` and any matching closing parentheses.
++        edits,
++    ))
++}
++
++/// Generate edits to remove the closing tokens of the spread dictionary.
++fn trailing_edits(
++    start: TextSize,
++    opening_parentheses: usize,
++    delete_trailing_comma: bool,
++    locator: &Locator,
++) -> Option<Vec<Edit>> {
++    let mut edits = vec![];
++    let mut found_closing_brace = false;
++    let mut remaining_parentheses = opening_parentheses;
++
++    for tok in SimpleTokenizer::starts_at(start, locator.contents()).skip_trivia() {
++        match tok.kind() {
++            SimpleTokenKind::Comma if delete_trailing_comma && !found_closing_brace => {
++                edits.push(Edit::range_deletion(tok.range()));
++            }
++            SimpleTokenKind::RBrace if !found_closing_brace => {
++                edits.push(Edit::range_deletion(tok.range()));
++                found_closing_brace = true;
++                if remaining_parentheses == 0 {
++                    break;
+                 }
+-                SimpleTokenKind::RBrace => {
+-                    edits.push(Edit::range_deletion(tok.range()));
++            }
++            SimpleTokenKind::RParen if found_closing_brace && remaining_parentheses > 0 => {
++                edits.push(Edit::range_deletion(tok.range()));
++                remaining_parentheses -= 1;
++                if remaining_parentheses == 0 {
+                     break;
+                 }
+-                _ => {}
+             }
++            _ if found_closing_brace => break,
++            _ => {}
+         }
+-        Some(Fix::safe_edits(
+-            // Delete the first `**{`
+-            Edit::deletion(doublestar.start(), dict.start() + TextSize::from(1)),
+-            // Delete the trailing `}`
+-            edits,
+-        ))
++    }
++
++    if found_closing_brace && remaining_parentheses == 0 {
++        Some(edits)
+     } else {
+-        // Ex) `**{}`
+-        Some(Fix::safe_edit(Edit::deletion(
+-            doublestar.start(),
+-            dict.end(),
+-        )))
++        None
+     }
+ }

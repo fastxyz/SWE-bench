@@ -1,0 +1,35 @@
+diff --git a/crates/ruff_linter/src/rules/pycodestyle/rules/logical_lines/mod.rs b/crates/ruff_linter/src/rules/pycodestyle/rules/logical_lines/mod.rs
+index 9c4e1c0e58..008f224ef2 100644
+--- a/crates/ruff_linter/src/rules/pycodestyle/rules/logical_lines/mod.rs
++++ b/crates/ruff_linter/src/rules/pycodestyle/rules/logical_lines/mod.rs
+@@ -468,9 +468,9 @@ struct Line {
+     tokens_end: u32,
+ }
+ 
+-/// Keeps track of whether we are currently visiting a class or function definition in a
+-/// [`LogicalLine`]. If we are visiting a class or function, the enum also keeps track
+-/// of the [type parameters] of the class/function.
++/// Keeps track of whether we are currently visiting a class, function, or type alias definition in
++/// a [`LogicalLine`]. If we are visiting a definition, the enum also keeps track of the
++/// definition's [type parameters].
+ ///
+ /// Call [`DefinitionState::visit_token_kind`] on the [`TokenKind`] of each
+ /// successive [`LogicalLineToken`] to ensure the state remains up to date.
+@@ -524,6 +524,7 @@ impl DefinitionState {
+     }
+ 
+     fn visit_token_kind(&mut self, token_kind: TokenKind) {
++        let is_type_alias = matches!(*self, Self::InTypeAlias(_));
+         let type_params_state_mut = match self {
+             Self::InClass(type_params_state)
+             | Self::InFunction(type_params_state)
+@@ -531,6 +532,9 @@ impl DefinitionState {
+             Self::NotInDefinition => return,
+         };
+         match token_kind {
++            TokenKind::Equal if is_type_alias && type_params_state_mut.before_type_params() => {
++                *type_params_state_mut = TypeParamsState::TypeParamsEnded;
++            }
+             TokenKind::Lpar if type_params_state_mut.before_type_params() => {
+                 *type_params_state_mut = TypeParamsState::TypeParamsEnded;
+             }

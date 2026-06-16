@@ -1,0 +1,24 @@
+diff --git a/crates/ruff_linter/src/rules/pyflakes/fixes.rs b/crates/ruff_linter/src/rules/pyflakes/fixes.rs
+index ed80041587..468e807971 100644
+--- a/crates/ruff_linter/src/rules/pyflakes/fixes.rs
++++ b/crates/ruff_linter/src/rules/pyflakes/fixes.rs
+@@ -69,6 +69,19 @@ pub(crate) fn remove_unused_positional_arguments_from_format_call(
+     locator: &Locator,
+     stylist: &Stylist,
+ ) -> Result<Edit> {
++    if !unused_arguments.is_empty()
++        && call.arguments.keywords.is_empty()
++        && unused_arguments.len() == call.arguments.args.len()
++        && (0..call.arguments.args.len()).all(|index| unused_arguments.contains(&index))
++    {
++        if let ast::Expr::Attribute(ast::ExprAttribute { value, .. }) = call.func.as_ref() {
++            return Ok(Edit::range_replacement(
++                locator.slice(value.range()).to_string(),
++                call.range(),
++            ));
++        }
++    }
++
+     let source_code = locator.slice(call);
+     transform_expression(source_code, stylist, |mut expression| {
+         let call = match_call_mut(&mut expression)?;
