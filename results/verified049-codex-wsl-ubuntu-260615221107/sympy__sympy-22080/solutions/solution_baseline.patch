@@ -1,0 +1,32 @@
+diff --git a/sympy/printing/pycode.py b/sympy/printing/pycode.py
+index b669a2c783..2d8ff776f7 100644
+--- a/sympy/printing/pycode.py
++++ b/sympy/printing/pycode.py
+@@ -6,7 +6,7 @@
+ from collections import defaultdict
+ from itertools import chain
+ from sympy.core import S
+-from .precedence import precedence
++from .precedence import precedence, PRECEDENCE
+ from .codeprinter import CodePrinter
+ 
+ _kw_py2and3 = {
+@@ -115,6 +115,18 @@ def __init__(self, settings=None):
+         self.known_constants = dict(self._kc, **(settings or {}).get(
+             'user_constants', {}))
+ 
++    def _precedence(self, item):
++        if item.__class__.__name__ == "Mod":
++            return PRECEDENCE["Add"]
++        return precedence(item)
++
++    def parenthesize(self, item, level, strict=False):
++        prec = self._precedence(item)
++        if (prec < level) or ((not strict) and prec <= level):
++            return "(%s)" % self._print(item)
++        else:
++            return self._print(item)
++
+     def _declare_number_const(self, name, value):
+         return "%s = %s" % (name, value)
+ 

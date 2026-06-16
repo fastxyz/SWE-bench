@@ -1,0 +1,53 @@
+diff --git a/sympy/physics/secondquant.py b/sympy/physics/secondquant.py
+index d19ee2fc63..afbc48e735 100644
+--- a/sympy/physics/secondquant.py
++++ b/sympy/physics/secondquant.py
+@@ -391,7 +391,8 @@ class Annihilator(SqOperator):
+ 
+ 
+ class Creator(SqOperator):
+-    pass
++    def _latex_power_base(self, printer):
++        return "{%s}" % printer._print(self)
+ 
+ 
+ class AnnihilateBoson(BosonicOperator, Annihilator):
+diff --git a/sympy/printing/latex.py b/sympy/printing/latex.py
+index 64d3207d09..1cbdd66d62 100644
+--- a/sympy/printing/latex.py
++++ b/sympy/printing/latex.py
+@@ -631,12 +631,16 @@ def _print_Pow(self, expr):
+         elif self._settings['fold_frac_powers'] \
+             and expr.exp.is_Rational \
+                 and expr.exp.q != 1:
+-            base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
++            custom_base = getattr(expr.base, '_latex_power_base', None)
++            if custom_base is not None:
++                base = custom_base(self)
++            else:
++                base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
+             p, q = expr.exp.p, expr.exp.q
+             # issue #12886: add parentheses for superscripts raised to powers
+-            if expr.base.is_Symbol:
++            if custom_base is None and expr.base.is_Symbol:
+                 base = self.parenthesize_super(base)
+-            if expr.base.is_Function:
++            if custom_base is None and expr.base.is_Function:
+                 return self._print(expr.base, exp="%s/%s" % (p, q))
+             return r"%s^{%s/%s}" % (base, p, q)
+         elif expr.exp.is_Rational and expr.exp.is_negative and \
+@@ -664,8 +668,12 @@ def _helper_print_standard_power(self, expr, template):
+         exp = self._print(expr.exp)
+         # issue #12886: add parentheses around superscripts raised
+         # to powers
+-        base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
+-        if expr.base.is_Symbol:
++        custom_base = getattr(expr.base, '_latex_power_base', None)
++        if custom_base is not None:
++            base = custom_base(self)
++        else:
++            base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
++        if custom_base is None and expr.base.is_Symbol:
+             base = self.parenthesize_super(base)
+         elif (isinstance(expr.base, Derivative)
+             and base.startswith(r'\left(')

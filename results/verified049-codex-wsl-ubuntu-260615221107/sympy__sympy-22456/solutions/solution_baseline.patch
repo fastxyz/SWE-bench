@@ -1,0 +1,51 @@
+diff --git a/sympy/codegen/ast.py b/sympy/codegen/ast.py
+index a02714b174..279ba28a24 100644
+--- a/sympy/codegen/ast.py
++++ b/sympy/codegen/ast.py
+@@ -135,7 +135,9 @@
+ from sympy.core.basic import Basic
+ from sympy.core.expr import Expr
+ from sympy.core.numbers import Float, Integer, oo
++from sympy.core.symbol import Str
+ from sympy.core.sympify import _sympify, sympify, SympifyError
++from sympy.core.traversal import preorder_traversal
+ from sympy.utilities.iterables import (iterable, topological_sort,
+                                        numbered_symbols, filter_symbols)
+ 
+@@ -335,6 +337,20 @@ def kwargs(self, exclude=(), apply=None):
+         else:
+             return kwargs
+ 
++    def atoms(self, *types):
++        if types:
++            return super().atoms(*types)
++
++        nodes = preorder_traversal(self)
++        result = set()
++        for node in nodes:
++            if isinstance(node, String):
++                result.add(node)
++                nodes.skip()
++            elif isinstance(node, Basic) and not node.args:
++                result.add(node)
++        return result
++
+ 
+ class BreakToken(Token):
+     """ Represents 'break' in C/Python ('exit' in Fortran).
+@@ -898,8 +914,15 @@ class String(Token):
+     not_in_args = ['text']
+     is_Atom = True
+ 
++    def __new__(cls, *args, **kwargs):
++        obj = super().__new__(cls, *args, **kwargs)
++        obj._args = (Str(obj.text),)
++        return obj
++
+     @classmethod
+     def _construct_text(cls, text):
++        if isinstance(text, Str):
++            return text.name
+         if not isinstance(text, str):
+             raise TypeError("Argument text is not a string type.")
+         return text
