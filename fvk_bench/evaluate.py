@@ -248,6 +248,7 @@ def run_official_eval(
     arm: str,
     instance_ids: list[str],
     *,
+    dataset: str,
     results_dir: Path = config.RESULTS_DIR,
     max_workers: int = 4,
     namespace: str | None = "swebench",
@@ -269,7 +270,7 @@ def run_official_eval(
     predictions_path = eval_dir / f"predictions_{arm}.jsonl"
     argv = [
         sys.executable, "-m", "swebench.harness.run_evaluation",
-        "--dataset_name", config.DATASET_NAME,
+        "--dataset_name", dataset,
         "--predictions_path", str(predictions_path),
         "--run_id", harness_run_id,
         "--instance_ids", *instance_ids,
@@ -294,7 +295,7 @@ def run_official_eval(
         if missing:
             retry_argv = [
                 sys.executable, "-m", "swebench.harness.run_evaluation",
-                "--dataset_name", config.DATASET_NAME,
+                "--dataset_name", dataset,
                 "--predictions_path", str(predictions_path),
                 "--run_id", harness_run_id,
                 "--instance_ids", *missing,
@@ -453,6 +454,7 @@ def gold_eval(
     run_id: str,
     instance_ids: list[str],
     *,
+    dataset: str,
     max_workers: int = 4,
     results_dir: Path = config.RESULTS_DIR,
     repo_root: Path = config.REPO_ROOT,
@@ -476,7 +478,7 @@ def gold_eval(
     def run_gold(namespace: str, ids: list[str]) -> None:
         argv = [
             sys.executable, "-m", "swebench.harness.run_evaluation",
-            "--dataset_name", config.DATASET_NAME,
+            "--dataset_name", dataset,
             "--predictions_path", "gold",
             "--run_id", harness_run_id,
             "--instance_ids", *ids,

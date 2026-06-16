@@ -65,6 +65,22 @@ def _manifest_arms(run_dir: Path) -> tuple[str, ...]:
     return config.ARMS
 
 
+def _manifest_dataset(run_dir: Path) -> str:
+    """Resolve the dataset for a completed run, portably, from its manifest."""
+    manifest_path = run_dir / "run_manifest.json"
+    if manifest_path.is_file():
+        try:
+            m = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except ValueError:
+            m = {}
+        iset = m.get("instance_set")
+        if iset in config.REGISTRY:
+            return config.resolve_dataset(iset)
+        if m.get("dataset"):  # legacy manifest recorded a literal dataset name
+            return m["dataset"]
+    return config.resolve_dataset(config.DEFAULT_INSTANCE_SET)
+
+
 def _resolve_selection(args, known: dict) -> list[str] | None:
     """Resolve the --instances|--all|--batch selection against the loaded set."""
     if args.all:
@@ -410,7 +426,9 @@ def _cmd_validate_gold(args) -> int:
 
     print(f"gold check: evaluating official patches for {len(ids)} instance(s)...")
     results = evaluate.gold_eval(
-        args.run_id, ids, max_workers=args.max_workers, results_dir=config.RESULTS_DIR
+        args.run_id, ids,
+        dataset=config.resolve_dataset(args.instance_set),
+        max_workers=args.max_workers, results_dir=config.RESULTS_DIR,
     )
     resolved = 0
     for iid in sorted(results):
@@ -447,6 +465,7 @@ def _cmd_evaluate(args) -> int:
         if arm_list is None:
             return 1
 
+    dataset = _manifest_dataset(run_dir)
     successes = failures = 0
     for arm in arm_list:
         predictions_path, ids = evaluate.build_predictions(run_dir, arm)
@@ -457,6 +476,7 @@ def _cmd_evaluate(args) -> int:
         print(f"[{arm}] {len(ids)} prediction(s) -> {predictions_path}")
         rc = evaluate.run_official_eval(
             args.run_id, arm, ids,
+            dataset=dataset,
             results_dir=results_dir, max_workers=args.max_workers,
         )
         if rc == 0:

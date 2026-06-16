@@ -916,3 +916,19 @@ def test_vendor_instances_failure(monkeypatch, capsys):
 
     assert rc == 1
     assert "no network" in capsys.readouterr().out
+
+
+def test_manifest_dataset_resolution(tmp_path):
+    import json
+    from fvk_bench import cli, config
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+    # multilingual run -> local submodule path resolved at read time
+    (run_dir / "run_manifest.json").write_text(json.dumps({"instance_set": "multilingual300"}))
+    assert cli._manifest_dataset(run_dir) == config.resolve_dataset("multilingual300")
+    # verified run -> HF name
+    (run_dir / "run_manifest.json").write_text(json.dumps({"instance_set": "verified500"}))
+    assert cli._manifest_dataset(run_dir) == "princeton-nlp/SWE-bench_Verified"
+    # legacy manifest (no instance_set) -> recorded dataset field
+    (run_dir / "run_manifest.json").write_text(json.dumps({"dataset": "princeton-nlp/SWE-bench_Verified"}))
+    assert cli._manifest_dataset(run_dir) == "princeton-nlp/SWE-bench_Verified"

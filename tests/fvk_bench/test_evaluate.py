@@ -124,6 +124,7 @@ def test_run_official_eval_golden_argv(tmp_path, capture_popen):
 
     rc = evaluate.run_official_eval(
         RID, "fvk", ["sympy__sympy-1", "astropy__astropy-2"],
+        dataset=config.DATASET_NAME,
         results_dir=results_dir, max_workers=2,
     )
 
@@ -149,6 +150,7 @@ def test_run_official_eval_golden_argv(tmp_path, capture_popen):
 def test_run_official_eval_namespace_none_and_timeout(tmp_path, capture_popen):
     rc = evaluate.run_official_eval(
         RID, "baseline", ["i1"],
+        dataset=config.DATASET_NAME,
         results_dir=tmp_path / "results", namespace=None, timeout=900,
     )
 
@@ -165,7 +167,7 @@ def test_run_official_eval_nonzero_exit_not_raised(tmp_path, monkeypatch):
 
     monkeypatch.setattr(evaluate.subprocess, "Popen", fake_popen)
 
-    rc = evaluate.run_official_eval(RID, "fvk", ["i1"], results_dir=tmp_path / "r")
+    rc = evaluate.run_official_eval(RID, "fvk", ["i1"], dataset=config.DATASET_NAME, results_dir=tmp_path / "r")
 
     assert rc == 3
 
@@ -249,6 +251,7 @@ def test_run_official_eval_retries_missing_nonempty_reports_locally(
         RID,
         "baseline",
         ["demo__demo-1", "demo__demo-2", "demo__demo-3"],
+        dataset=config.DATASET_NAME,
         results_dir=results_dir,
     )
 
@@ -369,6 +372,7 @@ def test_gold_eval(tmp_path, capture_popen):
 
     res = evaluate.gold_eval(
         RID, ["demo__demo-1", "demo__demo-2"],
+        dataset=config.DATASET_NAME,
         max_workers=3, results_dir=results_dir, repo_root=repo_root,
     )
 
@@ -421,6 +425,7 @@ def test_gold_eval_retries_missing_reports_with_local_images(
     res = evaluate.gold_eval(
         RID,
         ["demo__demo-1", "demo__demo-2"],
+        dataset=config.DATASET_NAME,
         max_workers=2,
         results_dir=results_dir,
         repo_root=repo_root,
