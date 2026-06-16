@@ -1,0 +1,28 @@
+diff --git a/lib/matplotlib/figure.py b/lib/matplotlib/figure.py
+index c55864243a..21ae7ec0a3 100644
+--- a/lib/matplotlib/figure.py
++++ b/lib/matplotlib/figure.py
+@@ -3023,6 +3023,12 @@ class Figure(FigureBase):
+         # Set cached renderer to None -- it can't be pickled.
+         state["_cachedRenderer"] = None
+ 
++        # On HiDPI screens, the canvas temporarily scales the figure's dpi to
++        # match the device pixel ratio.  Pickle the logical dpi, not the
++        # backend-specific scaled dpi.
++        if self.canvas.device_pixel_ratio != 1:
++            state["_dpi"] = state.get('_original_dpi', state["_dpi"])
++
+         # add version information to the state
+         state['__mpl_version__'] = mpl.__version__
+ 
+@@ -3043,6 +3049,10 @@ class Figure(FigureBase):
+ 
+         self.__dict__ = state
+ 
++        # Re-sync the dpi-dependent transform in case the pickled _dpi was
++        # normalized from a HiDPI-scaled value.
++        self.dpi_scale_trans.clear().scale(self._dpi)
++
+         # re-initialise some of the unstored state information
+         FigureCanvasBase(self)  # Set self.canvas.
+ 
