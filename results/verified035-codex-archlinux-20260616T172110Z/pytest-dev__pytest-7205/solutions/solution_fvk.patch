@@ -1,0 +1,46 @@
+diff --git a/src/_pytest/setuponly.py b/src/_pytest/setuponly.py
+index c9cc589ff..b55760291 100644
+--- a/src/_pytest/setuponly.py
++++ b/src/_pytest/setuponly.py
+@@ -1,5 +1,10 @@
+ import pytest
+ 
++from _pytest._io.saferepr import saferepr
++
++
++SETUP_SHOW_PARAM_MAXSIZE = 42
++
+ 
+ def pytest_addoption(parser):
+     group = parser.getgroup("debugconfig")
+@@ -26,11 +31,17 @@ def pytest_fixture_setup(fixturedef, request):
+             # display it now and during the teardown (in .finish()).
+             if fixturedef.ids:
+                 if callable(fixturedef.ids):
+-                    fixturedef.cached_param = fixturedef.ids(request.param)
++                    fixturedef.cached_param = _format_fixture_id(
++                        fixturedef.ids(request.param)
++                    )
+                 else:
+-                    fixturedef.cached_param = fixturedef.ids[request.param_index]
++                    fixturedef.cached_param = _format_fixture_id(
++                        fixturedef.ids[request.param_index]
++                    )
+             else:
+-                fixturedef.cached_param = request.param
++                fixturedef.cached_param = saferepr(
++                    request.param, maxsize=SETUP_SHOW_PARAM_MAXSIZE
++                )
+         _show_fixture_action(fixturedef, "SETUP")
+ 
+ 
+@@ -78,3 +89,9 @@ def _show_fixture_action(fixturedef, msg):
+ def pytest_cmdline_main(config):
+     if config.option.setuponly:
+         config.option.setupshow = True
++
++
++def _format_fixture_id(param):
++    if isinstance(param, str):
++        return param
++    return saferepr(param, maxsize=SETUP_SHOW_PARAM_MAXSIZE)

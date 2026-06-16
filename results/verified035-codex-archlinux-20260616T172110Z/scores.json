@@ -1,0 +1,309 @@
+{
+  "run_id": "verified035-codex-archlinux-20260616T172110Z",
+  "arms": [
+    "baseline",
+    "fvk"
+  ],
+  "instances": {
+    "pytest-dev__pytest-7205": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed177-1063-7563-b348-393afdd4e717",
+        "num_turns": null,
+        "duration_seconds": 227.35983098199358,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "1/10",
+          "ptp": "16/16"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed177-1063-7563-b348-393afdd4e717",
+        "num_turns": null,
+        "duration_seconds": 427.6620932829974,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "4/10",
+          "ptp": "16/16"
+        }
+      }
+    },
+    "pytest-dev__pytest-7236": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed177-105c-7b60-9c3a-536ed1420724",
+        "num_turns": null,
+        "duration_seconds": 223.64318006299436,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "51/51"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed177-105c-7b60-9c3a-536ed1420724",
+        "num_turns": null,
+        "duration_seconds": 344.2812690290157,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "51/51"
+        }
+      }
+    },
+    "pytest-dev__pytest-7324": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed177-1051-78b1-b16c-9404f666f7f9",
+        "num_turns": null,
+        "duration_seconds": 219.31256577800377,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "1/3",
+          "ptp": "58/58"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed177-1051-78b1-b16c-9404f666f7f9",
+        "num_turns": null,
+        "duration_seconds": 504.48528720697504,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "3/3",
+          "ptp": "58/58"
+        }
+      }
+    },
+    "pytest-dev__pytest-7432": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed17f-c231-7652-917c-4a4025c20dff",
+        "num_turns": null,
+        "duration_seconds": 143.73279552100576,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "77/77"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed17f-c231-7652-917c-4a4025c20dff",
+        "num_turns": null,
+        "duration_seconds": 341.44999606499914,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "77/77"
+        }
+      }
+    },
+    "pytest-dev__pytest-7490": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed181-15aa-7041-997a-6a995936a570",
+        "num_turns": null,
+        "duration_seconds": 346.01549165498,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "78/78"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed181-15aa-7041-997a-6a995936a570",
+        "num_turns": null,
+        "duration_seconds": 448.44685221501277,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "78/78"
+        }
+      }
+    },
+    "pytest-dev__pytest-7521": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed182-2380-7551-809a-10a5e096402f",
+        "num_turns": null,
+        "duration_seconds": 114.17215198499616,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "125/125"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed182-2380-7551-809a-10a5e096402f",
+        "num_turns": null,
+        "duration_seconds": 339.2432892640063,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "125/125"
+        }
+      }
+    },
+    "pytest-dev__pytest-7571": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed187-32c9-7e92-8cb9-f7995a851b0a",
+        "num_turns": null,
+        "duration_seconds": 150.5667603010079,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "14/14"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed187-32c9-7e92-8cb9-f7995a851b0a",
+        "num_turns": null,
+        "duration_seconds": 355.9007076350099,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "14/14"
+        }
+      }
+    },
+    "pytest-dev__pytest-7982": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed189-189e-73c3-af7b-633df94c563a",
+        "num_turns": null,
+        "duration_seconds": 102.6446669199795,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "78/78"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed189-189e-73c3-af7b-633df94c563a",
+        "num_turns": null,
+        "duration_seconds": 309.57224177900935,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "78/78"
+        }
+      }
+    },
+    "pytest-dev__pytest-8399": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed18d-3efe-7242-873b-777c1cbd5501",
+        "num_turns": null,
+        "duration_seconds": 88.85637652201694,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "59/59"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed18d-3efe-7242-873b-777c1cbd5501",
+        "num_turns": null,
+        "duration_seconds": 331.3681312009867,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "59/59"
+        }
+      }
+    },
+    "scikit-learn__scikit-learn-10297": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed18f-0d62-7d12-ad93-68cb1e9f6e27",
+        "num_turns": null,
+        "duration_seconds": 139.53303620201768,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "28/28"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed18f-0d62-7d12-ad93-68cb1e9f6e27",
+        "num_turns": null,
+        "duration_seconds": 335.58298231099616,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "28/28"
+        }
+      }
+    }
+  },
+  "aggregates": {
+    "arms": {
+      "baseline": {
+        "resolved": 8,
+        "evaluated": 10
+      },
+      "fvk": {
+        "resolved": 9,
+        "evaluated": 10
+      }
+    },
+    "flips": {
+      "baseline_to_fvk": {
+        "up": [
+          "pytest-dev__pytest-7324"
+        ],
+        "down": []
+      }
+    }
+  }
+}

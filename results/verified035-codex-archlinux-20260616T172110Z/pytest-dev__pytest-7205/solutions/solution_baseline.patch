@@ -1,0 +1,34 @@
+diff --git a/src/_pytest/setuponly.py b/src/_pytest/setuponly.py
+index c9cc589ff..b433e425b 100644
+--- a/src/_pytest/setuponly.py
++++ b/src/_pytest/setuponly.py
+@@ -1,5 +1,10 @@
+ import pytest
+ 
++from _pytest._io.saferepr import saferepr
++
++
++SETUP_SHOW_PARAM_MAXSIZE = 42
++
+ 
+ def pytest_addoption(parser):
+     group = parser.getgroup("debugconfig")
+@@ -66,7 +71,7 @@ def _show_fixture_action(fixturedef, msg):
+             tw.write(" (fixtures used: {})".format(", ".join(deps)))
+ 
+     if hasattr(fixturedef, "cached_param"):
+-        tw.write("[{}]".format(fixturedef.cached_param))
++        tw.write("[{}]".format(_format_fixture_param(fixturedef.cached_param)))
+ 
+     tw.flush()
+ 
+@@ -78,3 +83,9 @@ def _show_fixture_action(fixturedef, msg):
+ def pytest_cmdline_main(config):
+     if config.option.setuponly:
+         config.option.setupshow = True
++
++
++def _format_fixture_param(param):
++    if isinstance(param, str):
++        return param
++    return saferepr(param, maxsize=SETUP_SHOW_PARAM_MAXSIZE)
