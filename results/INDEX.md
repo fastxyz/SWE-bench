@@ -17,7 +17,6 @@
 | repro5x-XC-MINI-PRO-AHP-s3 | XC-MINI-PRO-AHP | claude-opus-4-8 | 6 | 0/6 | 0/0 | 0/0 | 2026-06-15T03:19:53.657646+00:00 |
 | repro5x-XC-MINI-PRO-AHP-s4 | XC-MINI-PRO-AHP | claude-opus-4-8 | 6 | 1/6 | 0/0 | 0/0 | 2026-06-15T02:52:46.107050+00:00 |
 | repro5x-XC-MINI-PRO-AHP-s5 | XC-MINI-PRO-AHP | claude-opus-4-8 | 6 | 0/6 | 0/0 | 0/0 | 2026-06-15T03:17:41.450925+00:00 |
-| smoke021-django15572-codex-archlinux | archlinux | gpt-5.5 | 1 | 1/1 | 1/1 | — | 2026-06-16T03:33:46.603402+00:00 |
 | sympy13852-fef0123-XC-MINI-PRO-AHP | XC-MINI-PRO-AHP | claude-opus-4-8 | 1 | 0/1 | 0/1 | 0/0 | 2026-06-15T11:37:13.642558+00:00 |
 | sympy13852-main-260615091942-XC-MINI-PRO-AHP | XC-MINI-PRO-AHP | claude-opus-4-8 | 1 | 0/1 | 0/1 | 0/0 | 2026-06-15T09:45:02.858975+00:00 |
 | verified001-codex-XC-MINI-PRO-AHP-20260615T131050Z | XC-MINI-PRO-AHP | gpt-5.5 | 10 | 7/10 | 8/10 | — | 2026-06-15T13:55:01.777893+00:00 |
