@@ -1,0 +1,41 @@
+diff --git a/django/db/models/query.py b/django/db/models/query.py
+index b48d0df9c0..a22d4da485 100644
+--- a/django/db/models/query.py
++++ b/django/db/models/query.py
+@@ -210,6 +210,13 @@ class QuerySet:
+ 
+     @query.setter
+     def query(self, value):
++        if value.has_select_fields:
++            self._iterable_class = getattr(value, '_iterable_class', ValuesIterable)
++            self._fields = getattr(value, '_fields', (
++                *value.extra_select,
++                *value.values_select,
++                *value.annotation_select,
++            ))
+         self._query = value
+ 
+     def as_manager(cls):
+@@ -823,12 +830,14 @@ class QuerySet:
+             clone = clone.annotate(**expressions)
+         clone._fields = fields
+         clone.query.set_values(fields)
++        clone.query._fields = fields
+         return clone
+ 
+     def values(self, *fields, **expressions):
+         fields += tuple(expressions)
+         clone = self._values(*fields, **expressions)
+         clone._iterable_class = ValuesIterable
++        clone.query._iterable_class = ValuesIterable
+         return clone
+ 
+     def values_list(self, *fields, flat=False, named=False):
+@@ -860,6 +869,7 @@ class QuerySet:
+             else FlatValuesListIterable if flat
+             else ValuesListIterable
+         )
++        clone.query._iterable_class = clone._iterable_class
+         return clone
+ 
+     def dates(self, field_name, kind, order='ASC'):

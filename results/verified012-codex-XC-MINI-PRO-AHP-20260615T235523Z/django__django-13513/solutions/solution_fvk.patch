@@ -1,0 +1,34 @@
+diff --git a/django/views/debug.py b/django/views/debug.py
+index 7a89f7bd15..12d5e2a9fd 100644
+--- a/django/views/debug.py
++++ b/django/views/debug.py
+@@ -397,14 +397,16 @@ class ExceptionReporter:
+     def get_traceback_frames(self):
+         def explicit_or_implicit_cause(exc_value):
+             explicit = getattr(exc_value, '__cause__', None)
+-            suppress_context = getattr(exc_value, '__suppress_context__', None)
+-            implicit = getattr(exc_value, '__context__', None)
+-            return explicit or (None if suppress_context else implicit)
++            if explicit is not None:
++                return explicit
++            if getattr(exc_value, '__suppress_context__', False):
++                return None
++            return getattr(exc_value, '__context__', None)
+ 
+         # Get the exception and all its causes
+         exceptions = []
+         exc_value = self.exc_value
+-        while exc_value:
++        while exc_value is not None:
+             exceptions.append(exc_value)
+             exc_value = explicit_or_implicit_cause(exc_value)
+             if exc_value in exceptions:
+@@ -446,7 +448,7 @@ class ExceptionReporter:
+                 post_context = []
+             frames.append({
+                 'exc_cause': explicit_or_implicit_cause(exc_value),
+-                'exc_cause_explicit': getattr(exc_value, '__cause__', True),
++                'exc_cause_explicit': getattr(exc_value, '__cause__', None) is not None,
+                 'tb': tb,
+                 'type': 'django' if module_name.startswith('django.') else 'user',
+                 'filename': filename,
