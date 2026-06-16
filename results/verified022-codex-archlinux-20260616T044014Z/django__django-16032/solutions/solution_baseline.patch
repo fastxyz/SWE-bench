@@ -1,0 +1,46 @@
+diff --git a/django/db/models/fields/related_lookups.py b/django/db/models/fields/related_lookups.py
+index 1a845a1f7f..109b8b274e 100644
+--- a/django/db/models/fields/related_lookups.py
++++ b/django/db/models/fields/related_lookups.py
+@@ -105,7 +105,7 @@ class RelatedIn(In):
+                     target_field = self.lhs.field.name
+                 else:
+                     target_field = self.lhs.field.target_field.name
+-                self.rhs.add_fields([target_field], True)
++                self.rhs.set_values([target_field])
+         return super().get_prep_lookup()
+ 
+     def as_sql(self, compiler, connection):
+diff --git a/django/db/models/sql/query.py b/django/db/models/sql/query.py
+index 8419dc0d54..bfa935d9ed 100644
+--- a/django/db/models/sql/query.py
++++ b/django/db/models/sql/query.py
+@@ -203,6 +203,7 @@ class Query(BaseExpression):
+     # Holds the selects defined by a call to values() or values_list()
+     # excluding annotation_select and extra_select.
+     values_select = ()
++    has_select_fields = False
+ 
+     # SQL annotation-related attributes.
+     annotation_select_mask = None
+@@ -263,12 +264,6 @@ class Query(BaseExpression):
+         elif len(self.annotation_select) == 1:
+             return next(iter(self.annotation_select.values())).output_field
+ 
+-    @property
+-    def has_select_fields(self):
+-        return bool(
+-            self.select or self.annotation_select_mask or self.extra_select_mask
+-        )
+-
+     @cached_property
+     def base_table(self):
+         for alias in self.alias_map:
+@@ -2381,6 +2376,7 @@ class Query(BaseExpression):
+         self._extra_select_cache = None
+ 
+     def set_values(self, fields):
++        self.has_select_fields = True
+         self.select_related = False
+         self.clear_deferred_loading()
+         self.clear_select_fields()

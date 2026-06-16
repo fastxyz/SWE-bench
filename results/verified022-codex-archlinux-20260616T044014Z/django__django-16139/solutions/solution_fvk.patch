@@ -1,0 +1,18 @@
+diff --git a/django/contrib/auth/forms.py b/django/contrib/auth/forms.py
+index b3cfc6723c..3e71ef5bfd 100644
+--- a/django/contrib/auth/forms.py
++++ b/django/contrib/auth/forms.py
+@@ -163,7 +163,12 @@ class UserChangeForm(forms.ModelForm):
+         super().__init__(*args, **kwargs)
+         password = self.fields.get("password")
+         if password:
+-            password.help_text = password.help_text.format("../password/")
++            password_url = "../password/"
++            if self.instance.pk is not None:
++                from django.contrib.admin.utils import quote
++
++                password_url = "../../%s/password/" % quote(self.instance.pk)
++            password.help_text = password.help_text.format(password_url)
+         user_permissions = self.fields.get("user_permissions")
+         if user_permissions:
+             user_permissions.queryset = user_permissions.queryset.select_related(
