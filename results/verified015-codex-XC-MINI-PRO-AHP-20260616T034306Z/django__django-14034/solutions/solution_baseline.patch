@@ -1,0 +1,53 @@
+diff --git a/django/forms/fields.py b/django/forms/fields.py
+index 65d6a9ec82..413d3ba516 100644
+--- a/django/forms/fields.py
++++ b/django/forms/fields.py
+@@ -21,7 +21,7 @@ from django.forms.utils import from_current_timezone, to_current_timezone
+ from django.forms.widgets import (
+     FILE_INPUT_CONTRADICTION, CheckboxInput, ClearableFileInput, DateInput,
+     DateTimeInput, EmailInput, FileInput, HiddenInput, MultipleHiddenInput,
+-    NullBooleanSelect, NumberInput, Select, SelectMultiple,
++    MultiWidget, NullBooleanSelect, NumberInput, Select, SelectMultiple,
+     SplitDateTimeWidget, SplitHiddenDateTimeWidget, Textarea, TextInput,
+     TimeInput, URLInput,
+ )
+@@ -999,6 +999,13 @@ class MultiValueField(Field):
+                 # by those individual fields.
+                 f.required = False
+         self.fields = fields
++        if isinstance(self.widget, MultiWidget):
++            self.widget.require_all_fields = self.require_all_fields
++            for field, widget in zip(self.fields, self.widget.widgets):
++                widget.is_required = (
++                    self.required and
++                    (self.require_all_fields or field.required)
++                )
+ 
+     def __deepcopy__(self, memo):
+         result = super().__deepcopy__(memo)
+diff --git a/django/forms/widgets.py b/django/forms/widgets.py
+index 00c19e2c55..d18cfdc5a4 100644
+--- a/django/forms/widgets.py
++++ b/django/forms/widgets.py
+@@ -801,6 +801,7 @@ class MultiWidget(Widget):
+     You'll probably want to use this class with MultiValueField.
+     """
+     template_name = 'django/forms/widgets/multiwidget.html'
++    require_all_fields = True
+ 
+     def __init__(self, widgets, attrs=None):
+         if isinstance(widgets, dict):
+@@ -843,7 +844,12 @@ class MultiWidget(Widget):
+                 widget_attrs = final_attrs.copy()
+                 widget_attrs['id'] = '%s_%s' % (id_, i)
+             else:
+-                widget_attrs = final_attrs
++                widget_attrs = final_attrs.copy()
++            if not self.require_all_fields and widget_attrs.get('required'):
++                widget_attrs['required'] = (
++                    widget.use_required_attribute(widget_value) and
++                    widget.is_required
++                )
+             subwidgets.append(widget.get_context(widget_name, widget_value, widget_attrs)['widget'])
+         context['widget']['subwidgets'] = subwidgets
+         return context

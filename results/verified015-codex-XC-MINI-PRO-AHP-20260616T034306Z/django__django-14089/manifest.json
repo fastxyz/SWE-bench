@@ -1,0 +1,76 @@
+{
+  "run_id": "verified015-codex-XC-MINI-PRO-AHP-20260616T034306Z",
+  "instance_id": "django__django-14089",
+  "baseline_session_id": "019ece8b-4bac-7413-b4f8-58016c7a10ff",
+  "core_hash_post_baseline": "d2dc6921ee348b59d2f34ae895594f205cbcde96e50b3c35ba08c6bd751b543d",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ece8b-4bac-7413-b4f8-58016c7a10ff",
+      "attempts": 1,
+      "started_at": "2026-06-16T03:48:14.331181+00:00",
+      "ended_at": "2026-06-16T03:50:05.781435+00:00",
+      "num_turns": null,
+      "duration_seconds": 111.44794893400103,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "update_plan": 4,
+          "exec_command": 16,
+          "apply_patch": 2
+        },
+        "violations": [],
+        "exec_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 102
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ece8b-4bac-7413-b4f8-58016c7a10ff",
+      "attempts": 1,
+      "started_at": "2026-06-16T03:50:06.246831+00:00",
+      "ended_at": "2026-06-16T03:56:27.619655+00:00",
+      "num_turns": null,
+      "duration_seconds": 381.3690942579997,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "update_plan": 11,
+          "exec_command": 42,
+          "apply_patch": 4
+        },
+        "violations": [],
+        "exec_warnings": [
+          "{\"cmd\":\"grep -R \\\"python_requires\\\\|Programming Language :: Python ::\\\" -n repo/setup.cfg repo/pyproject.toml repo/setup.py repo/tox.ini\",\"workdir\":\"/home/xc/.swe-fvk-runs/verified015-codex-XC-MINI-PR"
+        ],
+        "unparseable_lines": 0,
+        "lines": 237
+      }
+    },
+    "control": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    }
+  },
+  "agent": "codex",
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "b7c2dd08d551bc15b1a3f1af5beab7dbf555521a2e7047fbd2b2ef7a18b6679a",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": null,
+    "fvk": null,
+    "control": null
+  }
+}

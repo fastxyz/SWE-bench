@@ -1,0 +1,309 @@
+{
+  "run_id": "verified015-codex-XC-MINI-PRO-AHP-20260616T034306Z",
+  "arms": [
+    "baseline",
+    "fvk"
+  ],
+  "instances": {
+    "django__django-14034": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece8b-4be4-7820-828a-940ed40c3101",
+        "num_turns": null,
+        "duration_seconds": 369.1479917559918,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "12/12"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece8b-4be4-7820-828a-940ed40c3101",
+        "num_turns": null,
+        "duration_seconds": 395.1407202369883,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "12/12"
+        }
+      }
+    },
+    "django__django-14053": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece8b-4bdf-7303-8b4e-8b3ffaee796a",
+        "num_turns": null,
+        "duration_seconds": 267.58008408099704,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "31/31"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece8b-4bdf-7303-8b4e-8b3ffaee796a",
+        "num_turns": null,
+        "duration_seconds": 414.7909139159892,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "31/31"
+        }
+      }
+    },
+    "django__django-14089": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece8b-4bac-7413-b4f8-58016c7a10ff",
+        "num_turns": null,
+        "duration_seconds": 111.44794893400103,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "43/43"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece8b-4bac-7413-b4f8-58016c7a10ff",
+        "num_turns": null,
+        "duration_seconds": 381.3690942579997,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "43/43"
+        }
+      }
+    },
+    "django__django-14122": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece92-f3ea-7c50-972b-84a2fe318c27",
+        "num_turns": null,
+        "duration_seconds": 200.93635453699972,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "26/26"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece92-f3ea-7c50-972b-84a2fe318c27",
+        "num_turns": null,
+        "duration_seconds": 376.40474907300086,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "26/26"
+        }
+      }
+    },
+    "django__django-14140": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece95-d862-7362-a8d6-81d2b1e1d15c",
+        "num_turns": null,
+        "duration_seconds": 165.46968665299937,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "2/4",
+          "ptp": "199/199"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece95-d862-7362-a8d6-81d2b1e1d15c",
+        "num_turns": null,
+        "duration_seconds": 269.0764660640125,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "2/4",
+          "ptp": "199/199"
+        }
+      }
+    },
+    "django__django-14155": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece97-1814-7fd0-a348-9a0a9cb2e302",
+        "num_turns": null,
+        "duration_seconds": 246.89206349900633,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/3",
+          "ptp": "89/89"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece97-1814-7fd0-a348-9a0a9cb2e302",
+        "num_turns": null,
+        "duration_seconds": 472.1769281790039,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/3",
+          "ptp": "89/89"
+        }
+      }
+    },
+    "django__django-14170": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece9b-ebf2-73b0-bed4-417e9aa20ea6",
+        "num_turns": null,
+        "duration_seconds": 265.62931171100354,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "76/76"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece9b-ebf2-73b0-bed4-417e9aa20ea6",
+        "num_turns": null,
+        "duration_seconds": 551.9440583870019,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "76/76"
+        }
+      }
+    },
+    "django__django-14238": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece9c-a258-7b52-b4f2-d2804a635fd7",
+        "num_turns": null,
+        "duration_seconds": 121.03755267499946,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "39/39"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece9c-a258-7b52-b4f2-d2804a635fd7",
+        "num_turns": null,
+        "duration_seconds": 473.0252560270019,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "39/39"
+        }
+      }
+    },
+    "django__django-14311": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecea2-3ab1-78b1-9f7f-27f53a6a96c0",
+        "num_turns": null,
+        "duration_seconds": 160.67112268898927,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "59/59"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecea2-3ab1-78b1-9f7f-27f53a6a96c0",
+        "num_turns": null,
+        "duration_seconds": 480.6689397989976,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "59/59"
+        }
+      }
+    },
+    "django__django-14315": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecea5-db2b-76a3-a205-022926c79abf",
+        "num_turns": null,
+        "duration_seconds": 151.64800016500521,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "9/11",
+          "ptp": "0/0"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecea5-db2b-76a3-a205-022926c79abf",
+        "num_turns": null,
+        "duration_seconds": 416.2137766090018,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "11/11",
+          "ptp": "0/0"
+        }
+      }
+    }
+  },
+  "aggregates": {
+    "arms": {
+      "baseline": {
+        "resolved": 7,
+        "evaluated": 10
+      },
+      "fvk": {
+        "resolved": 8,
+        "evaluated": 10
+      }
+    },
+    "flips": {
+      "baseline_to_fvk": {
+        "up": [
+          "django__django-14315"
+        ],
+        "down": []
+      }
+    }
+  }
+}
