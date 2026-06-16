@@ -1,0 +1,84 @@
+diff --git a/django/db/models/sql/query.py b/django/db/models/sql/query.py
+index aaf35ee37c..4ebb9dc1b0 100644
+--- a/django/db/models/sql/query.py
++++ b/django/db/models/sql/query.py
+@@ -572,8 +572,6 @@ class Query(BaseExpression):
+         if self.distinct_fields != rhs.distinct_fields:
+             raise TypeError('Cannot combine queries with different distinct fields.')
+ 
+-        # Work out how to relabel the rhs aliases, if necessary.
+-        change_map = {}
+         conjunction = (connector == AND)
+ 
+         # Determine which existing joins can be reused. When combining the
+@@ -592,6 +590,19 @@ class Query(BaseExpression):
+         # Base table must be present in the query - this is the same
+         # table on both sides.
+         self.get_initial_alias()
++        # Prevent the rhs from generating aliases that could overlap with
++        # aliases already present in rhs while combining aliases.
++        if self.alias_prefix == rhs.alias_prefix and len(rhs.alias_map) > 1:
++            initial_alias = next(iter(rhs.alias_map), None)
++            rhs = rhs.clone()
++            rhs.table_map = {
++                table_name: aliases[:]
++                for table_name, aliases in rhs.table_map.items()
++            }
++            rhs.bump_prefix(self, exclude={initial_alias})
++
++        # Work out how to relabel the rhs aliases, if necessary.
++        change_map = {}
+         joinpromoter = JoinPromoter(connector, 2, False)
+         joinpromoter.add_votes(
+             j for j in self.alias_map if self.alias_map[j].join_type == INNER)
+@@ -879,13 +890,15 @@ class Query(BaseExpression):
+             for alias, aliased in self.external_aliases.items()
+         }
+ 
+-    def bump_prefix(self, outer_query):
++    def bump_prefix(self, outer_query, exclude=None):
+         """
+         Change the alias prefix to the next letter in the alphabet in a way
+         that the outer query's aliases and this query's aliases will not
+         conflict. Even tables that previously had no alias will get an alias
+-        after this call.
++        after this call. Aliases in exclude are not changed.
+         """
++        exclude = set(exclude or ())
++
+         def prefix_gen():
+             """
+             Generate a sequence of characters in alphabetical order:
+@@ -915,18 +928,26 @@ class Query(BaseExpression):
+         local_recursion_limit = sys.getrecursionlimit() // 16
+         for pos, prefix in enumerate(prefix_gen()):
+             if prefix not in self.subq_aliases:
+-                self.alias_prefix = prefix
+-                break
++                change_map = {
++                    alias: '%s%d' % (prefix, pos)
++                    for pos, alias in enumerate(self.alias_map)
++                    if alias not in exclude
++                }
++                if (
++                    set(change_map).isdisjoint(change_map.values()) and
++                    set(change_map.values()).isdisjoint(
++                        set(self.alias_map).difference(change_map)
++                    )
++                ):
++                    self.alias_prefix = prefix
++                    break
+             if pos > local_recursion_limit:
+                 raise RecursionError(
+                     'Maximum recursion depth exceeded: too many subqueries.'
+                 )
+         self.subq_aliases = self.subq_aliases.union([self.alias_prefix])
+         outer_query.subq_aliases = outer_query.subq_aliases.union(self.subq_aliases)
+-        self.change_aliases({
+-            alias: '%s%d' % (self.alias_prefix, pos)
+-            for pos, alias in enumerate(self.alias_map)
+-        })
++        self.change_aliases(change_map)
+ 
+     def get_initial_alias(self):
+         """

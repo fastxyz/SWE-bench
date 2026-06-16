@@ -1,0 +1,56 @@
+{
+  "run_id": "verified019-codex-XC-MINI-PRO-AHP-20260616T072953Z",
+  "created_utc": "2026-06-16T08:23:09.731066+00:00",
+  "host": {
+    "hostname": "XC-MINI-PRO-AHP",
+    "os": "Linux-6.8.0-124-generic-x86_64-with-glibc2.39",
+    "arch": "x86_64",
+    "python": "3.10.20"
+  },
+  "agent": "codex",
+  "codex_version": "codex-cli 0.140.0-alpha.2",
+  "invocation": {
+    "model": "gpt-5.5",
+    "effort": "xhigh",
+    "sandbox": "workspace-write",
+    "max_turns": {
+      "baseline": 200,
+      "fvk": 200,
+      "control": 200
+    }
+  },
+  "dataset": "princeton-nlp/SWE-bench_Verified",
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "b7c2dd08d551bc15b1a3f1af5beab7dbf555521a2e7047fbd2b2ef7a18b6679a",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "fvk_bench_version": "0.1.0",
+  "git": {
+    "repo_sha": "73e7dc3c4b8de0a5f802552224ab96d5b066b84b",
+    "submodules": {
+      "third_party/formal-verification-kit": "25a33f4e0002ede9074f86b12156d46b2fd7ec67",
+      "third_party/swebench-fvk-reproducibility": "983557904cca9cc54a15425f2ab0eb6524521155"
+    }
+  },
+  "max_parallel": 3,
+  "arms": [
+    "baseline",
+    "fvk"
+  ],
+  "instance_set": "verified500",
+  "instances": [
+    "django__django-15128",
+    "django__django-15161",
+    "django__django-15252",
+    "django__django-15268",
+    "django__django-15277",
+    "django__django-15278",
+    "django__django-15280",
+    "django__django-15315",
+    "django__django-15368",
+    "django__django-15375"
+  ],
+  "claude_bin": "claude",
+  "codex_bin": "/home/xc/.vscode/extensions/openai.chatgpt-26.609.30741-linux-x64/bin/linux-x86_64/codex"
+}
