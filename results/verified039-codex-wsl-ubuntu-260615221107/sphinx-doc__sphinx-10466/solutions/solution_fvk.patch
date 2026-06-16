@@ -1,0 +1,38 @@
+diff --git a/sphinx/builders/gettext.py b/sphinx/builders/gettext.py
+index e8bc547b7..f410a816d 100644
+--- a/sphinx/builders/gettext.py
++++ b/sphinx/builders/gettext.py
+@@ -28,11 +28,22 @@ from sphinx.util.template import SphinxRenderer
+ logger = logging.getLogger(__name__)
+ 
+ 
++def _unique_locations(locations: Iterable[Tuple[str, int]]) -> List[Tuple[str, int]]:
++    unique: List[Tuple[str, int]] = []
++    seen: Set[Tuple[str, int]] = set()
++    for location in locations:
++        if location not in seen:
++            unique.append(location)
++            seen.add(location)
++
++    return unique
++
++
+ class Message:
+     """An entry of translatable message."""
+     def __init__(self, text: str, locations: List[Tuple[str, int]], uuids: List[str]):
+         self.text = text
+-        self.locations = locations
++        self.locations = _unique_locations(locations)
+         self.uuids = uuids
+ 
+ 
+@@ -57,7 +68,8 @@ class Catalog:
+ 
+     def __iter__(self) -> Generator[Message, None, None]:
+         for message in self.messages:
+-            positions = [(source, line) for source, line, uuid in self.metadata[message]]
++            positions = [(canon_path(relpath(source)), line)
++                         for source, line, uuid in self.metadata[message]]
+             uuids = [uuid for source, line, uuid in self.metadata[message]]
+             yield Message(message, positions, uuids)
+ 

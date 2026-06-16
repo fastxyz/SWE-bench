@@ -1,0 +1,78 @@
+{
+  "run_id": "verified039-codex-wsl-ubuntu-260615221107",
+  "instance_id": "sphinx-doc__sphinx-10614",
+  "baseline_session_id": "019ecec2-e7bd-73c2-9373-f873901a18ba",
+  "core_hash_post_baseline": "89fcb8c25ce6cc5f5cec5c68397e58b7c10a033506511facbba9e62e5c14b9ce",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ecec2-e7bd-73c2-9373-f873901a18ba",
+      "attempts": 1,
+      "started_at": "2026-06-16T04:49:00.218674+00:00",
+      "ended_at": "2026-06-16T04:53:55.708024+00:00",
+      "num_turns": null,
+      "duration_seconds": 295.4877432189969,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "update_plan": 5,
+          "exec_command": 35,
+          "apply_patch": 3
+        },
+        "violations": [],
+        "exec_warnings": [
+          "{\"cmd\":\"rg -n \\\"line-length|flake8|max-line|tool.ruff|tool.mypy\\\" repo/pyproject.toml repo/tox.ini\",\"workdir\":\"/home/patrickmao/.swe-fvk-runs/verified039-codex-wsl-ubuntu-260615221107/sphinx-doc__sphi"
+        ],
+        "unparseable_lines": 0,
+        "lines": 164
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ecec2-e7bd-73c2-9373-f873901a18ba",
+      "attempts": 1,
+      "started_at": "2026-06-16T04:53:56.078241+00:00",
+      "ended_at": "2026-06-16T05:01:03.301485+00:00",
+      "num_turns": null,
+      "duration_seconds": 427.22009891400376,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "update_plan": 12,
+          "exec_command": 64,
+          "apply_patch": 12
+        },
+        "violations": [],
+        "exec_warnings": [
+          "{\"cmd\":\"rg -n \\\"line-length|flake8|max-line|tool.ruff|tool.mypy\\\" repo/pyproject.toml repo/tox.ini\",\"workdir\":\"/home/patrickmao/.swe-fvk-runs/verified039-codex-wsl-ubuntu-260615221107/sphinx-doc__sphi"
+        ],
+        "unparseable_lines": 0,
+        "lines": 340
+      }
+    },
+    "control": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    }
+  },
+  "agent": "codex",
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "b7c2dd08d551bc15b1a3f1af5beab7dbf555521a2e7047fbd2b2ef7a18b6679a",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": null,
+    "fvk": null,
+    "control": null
+  }
+}

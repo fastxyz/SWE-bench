@@ -1,0 +1,83 @@
+diff --git a/sphinx/domains/std.py b/sphinx/domains/std.py
+index d820cfe5c..88f678a82 100644
+--- a/sphinx/domains/std.py
++++ b/sphinx/domains/std.py
+@@ -305,7 +305,7 @@ def make_glossary_term(env: "BuildEnvironment", textnodes: Iterable[Node], index
+         term['ids'].append(node_id)
+ 
+     std = cast(StandardDomain, env.get_domain('std'))
+-    std.note_object('term', termtext.lower(), node_id, location=term)
++    std.note_object('term', termtext, node_id, location=term)
+ 
+     # add an index entry too
+     indexnode = addnodes.index()
+@@ -565,8 +565,7 @@ class StandardDomain(Domain):
+         # links to tokens in grammar productions
+         'token':   TokenXRefRole(),
+         # links to terms in glossary
+-        'term':    XRefRole(lowercase=True, innernodeclass=nodes.inline,
+-                            warn_dangling=True),
++        'term':    XRefRole(innernodeclass=nodes.inline, warn_dangling=True),
+         # links to headings or arbitrary labels
+         'ref':     XRefRole(lowercase=True, innernodeclass=nodes.inline,
+                             warn_dangling=True),
+@@ -926,18 +925,34 @@ class StandardDomain(Domain):
+     def _resolve_obj_xref(self, env: "BuildEnvironment", fromdocname: str,
+                           builder: "Builder", typ: str, target: str,
+                           node: pending_xref, contnode: Element) -> Element:
+-        objtypes = self.objtypes_for_role(typ) or []
+-        for objtype in objtypes:
+-            if (objtype, target) in self.objects:
+-                docname, labelid = self.objects[objtype, target]
+-                break
++        if typ == 'term':
++            docname, labelid = self._resolve_term(target)
+         else:
+-            docname, labelid = '', ''
++            objtypes = self.objtypes_for_role(typ) or []
++            for objtype in objtypes:
++                if (objtype, target) in self.objects:
++                    docname, labelid = self.objects[objtype, target]
++                    break
++            else:
++                docname, labelid = '', ''
+         if not docname:
+             return None
+         return make_refnode(builder, fromdocname, docname,
+                             labelid, contnode)
+ 
++    def _resolve_term(self, target: str) -> Tuple[str, str]:
++        docname, labelid = self.objects.get(('term', target), ('', ''))
++        if docname:
++            return docname, labelid
++
++        # Preserve historical case-insensitive lookup only when it is unambiguous.
++        matches = {info for (objtype, name), info in self.objects.items()
++                   if objtype == 'term' and name.lower() == target.lower()}
++        if len(matches) == 1:
++            return matches.pop()
++        else:
++            return '', ''
++
+     def resolve_any_xref(self, env: "BuildEnvironment", fromdocname: str,
+                          builder: "Builder", target: str, node: pending_xref,
+                          contnode: Element) -> List[Tuple[str, Element]]:
+@@ -951,11 +966,14 @@ class StandardDomain(Domain):
+                 results.append(('std:' + role, res))
+         # all others
+         for objtype in self.object_types:
+-            key = (objtype, target)
+             if objtype == 'term':
+-                key = (objtype, ltarget)
+-            if key in self.objects:
+-                docname, labelid = self.objects[key]
++                docname, labelid = self._resolve_term(target)
++                if docname:
++                    results.append(('std:' + self.role_for_objtype(objtype),
++                                    make_refnode(builder, fromdocname, docname,
++                                                 labelid, contnode)))
++            elif (objtype, target) in self.objects:
++                docname, labelid = self.objects[objtype, target]
+                 results.append(('std:' + self.role_for_objtype(objtype),
+                                 make_refnode(builder, fromdocname, docname,
+                                              labelid, contnode)))

@@ -1,0 +1,104 @@
+diff --git a/sphinx/ext/graphviz.py b/sphinx/ext/graphviz.py
+index 8b21d9e3b..300c946c3 100644
+--- a/sphinx/ext/graphviz.py
++++ b/sphinx/ext/graphviz.py
+@@ -218,7 +218,7 @@ class GraphvizSimple(SphinxDirective):
+ 
+ 
+ def fix_svg_relative_paths(self: SphinxTranslator, filepath: str) -> None:
+-    """Change relative links in generated svg files to be relative to imgpath."""
++    """Change relative links in generated svg files to be relative to imagedir."""
+     tree = ET.parse(filepath)  # NoQA: S314
+     root = tree.getroot()
+     ns = {'svg': 'http://www.w3.org/2000/svg', 'xlink': 'http://www.w3.org/1999/xlink'}
+@@ -230,15 +230,13 @@ def fix_svg_relative_paths(self: SphinxTranslator, filepath: str) -> None:
+         root.findall('.//svg:a[@xlink:href]', ns),
+     ):
+         scheme, hostname, url, query, fragment = urlsplit(element.attrib[href_name])
+-        if hostname:
++        if scheme or hostname or url.startswith('/'):
+             # not a relative link
+             continue
+ 
+-        old_path = path.join(self.builder.outdir, url)
+-        new_path = path.relpath(
+-            old_path,
+-            start=path.join(self.builder.outdir, self.builder.imgpath),
+-        )
++        new_path = posixpath.relpath(posixpath.normpath(url), self.builder.imagedir)
++        if url.endswith('/') and not new_path.endswith('/'):
++            new_path += '/'
+         modified_url = urlunsplit((scheme, hostname, new_path, query, fragment))
+ 
+         element.set(href_name, modified_url)
+diff --git a/sphinx/ext/inheritance_diagram.py b/sphinx/ext/inheritance_diagram.py
+index 6e3985512..abfeb093c 100644
+--- a/sphinx/ext/inheritance_diagram.py
++++ b/sphinx/ext/inheritance_diagram.py
+@@ -33,10 +33,12 @@ from __future__ import annotations
+ import builtins
+ import hashlib
+ import inspect
++import posixpath
+ import re
+ from collections.abc import Iterable
+ from importlib import import_module
+ from typing import Any, cast
++from urllib.parse import urlsplit, urlunsplit
+ 
+ from docutils import nodes
+ from docutils.nodes import Node
+@@ -395,6 +397,30 @@ def get_graph_hash(node: inheritance_diagram) -> str:
+     return hashlib.md5(encoded, usedforsecurity=False).hexdigest()[-10:]
+ 
+ 
++def _render_target_uri(builder: Any, uri: str) -> str:
++    """Convert a current-page relative URI to one relative to the output root."""
++    parsed = urlsplit(uri)
++    if parsed.scheme or parsed.netloc or parsed.path.startswith('/'):
++        return uri
++
++    current_uri = builder.get_target_uri(builder.current_docname)
++    if not parsed.path:
++        target = current_uri
++    else:
++        if current_uri.endswith('/'):
++            current_dir = current_uri
++        else:
++            current_dir = posixpath.dirname(current_uri)
++
++        target = posixpath.normpath(posixpath.join(current_dir, parsed.path))
++        if parsed.path.endswith('/') and not target.endswith('/'):
++            target += '/'
++        if target == '.':
++            target = ''
++
++    return urlunsplit(('', '', target, parsed.query, parsed.fragment))
++
++
+ def html_visit_inheritance_diagram(self: HTML5Translator, node: inheritance_diagram) -> None:
+     """
+     Output the graph for HTML.  This will insert a PNG with clickable
+@@ -407,18 +433,19 @@ def html_visit_inheritance_diagram(self: HTML5Translator, node: inheritance_diag
+ 
+     # Create a mapping from fully-qualified class names to URLs.
+     graphviz_output_format = self.builder.env.config.graphviz_output_format.upper()
+-    current_filename = self.builder.current_docname + self.builder.out_suffix
++    current_filename = self.builder.get_target_uri(self.builder.current_docname)
+     urls = {}
+     pending_xrefs = cast(Iterable[addnodes.pending_xref], node)
+     for child in pending_xrefs:
+         if child.get('refuri') is not None:
+             if graphviz_output_format == 'SVG':
+-                urls[child['reftitle']] = "../" + child.get('refuri')
++                urls[child['reftitle']] = _render_target_uri(
++                    self.builder, child.get('refuri'))
+             else:
+                 urls[child['reftitle']] = child.get('refuri')
+         elif child.get('refid') is not None:
+             if graphviz_output_format == 'SVG':
+-                urls[child['reftitle']] = '../' + current_filename + '#' + child.get('refid')
++                urls[child['reftitle']] = current_filename + '#' + child.get('refid')
+             else:
+                 urls[child['reftitle']] = '#' + child.get('refid')
+ 

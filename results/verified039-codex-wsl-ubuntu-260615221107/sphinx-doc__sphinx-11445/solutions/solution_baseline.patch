@@ -1,0 +1,34 @@
+diff --git a/sphinx/util/rst.py b/sphinx/util/rst.py
+index 7a1538325..b97299676 100644
+--- a/sphinx/util/rst.py
++++ b/sphinx/util/rst.py
+@@ -75,12 +75,28 @@ def default_role(docname: str, name: str) -> Generator[None, None, None]:
+     docutils.unregister_role('')
+ 
+ 
++def _is_section_title(content: StringList, pos: int) -> bool:
++    """Check if content[pos] is followed by a section title underline."""
++    if pos + 1 >= len(content):
++        return False
++
++    title = content[pos].rstrip()
++    underline = content[pos + 1].strip()
++    if not title or not underline or len(underline) < len(title):
++        return False
++
++    underline_char = underline[0]
++    return (not underline_char.isalnum() and
++            not underline_char.isspace() and
++            underline == underline_char * len(underline))
++
++
+ def prepend_prolog(content: StringList, prolog: str) -> None:
+     """Prepend a string to content body as prolog."""
+     if prolog:
+         pos = 0
+         for line in content:
+-            if docinfo_re.match(line):
++            if docinfo_re.match(line) and not _is_section_title(content, pos):
+                 pos += 1
+             else:
+                 break

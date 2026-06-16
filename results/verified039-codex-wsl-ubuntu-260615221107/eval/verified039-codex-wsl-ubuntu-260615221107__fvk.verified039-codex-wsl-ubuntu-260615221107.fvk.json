@@ -1,0 +1,51 @@
+{
+    "total_instances": 10,
+    "submitted_instances": 10,
+    "completed_instances": 10,
+    "resolved_instances": 7,
+    "unresolved_instances": 3,
+    "empty_patch_instances": 0,
+    "error_instances": 0,
+    "completed_ids": [
+        "scikit-learn__scikit-learn-9288",
+        "sphinx-doc__sphinx-10323",
+        "sphinx-doc__sphinx-10435",
+        "sphinx-doc__sphinx-10449",
+        "sphinx-doc__sphinx-10466",
+        "sphinx-doc__sphinx-10614",
+        "sphinx-doc__sphinx-10673",
+        "sphinx-doc__sphinx-11445",
+        "sphinx-doc__sphinx-11510",
+        "sphinx-doc__sphinx-7440"
+    ],
+    "incomplete_ids": [],
+    "empty_patch_ids": [],
+    "submitted_ids": [
+        "scikit-learn__scikit-learn-9288",
+        "sphinx-doc__sphinx-10323",
+        "sphinx-doc__sphinx-10435",
+        "sphinx-doc__sphinx-10449",
+        "sphinx-doc__sphinx-10466",
+        "sphinx-doc__sphinx-10614",
+        "sphinx-doc__sphinx-10673",
+        "sphinx-doc__sphinx-11445",
+        "sphinx-doc__sphinx-11510",
+        "sphinx-doc__sphinx-7440"
+    ],
+    "resolved_ids": [
+        "scikit-learn__scikit-learn-9288",
+        "sphinx-doc__sphinx-10323",
+        "sphinx-doc__sphinx-10435",
+        "sphinx-doc__sphinx-10449",
+        "sphinx-doc__sphinx-10673",
+        "sphinx-doc__sphinx-11445",
+        "sphinx-doc__sphinx-7440"
+    ],
+    "unresolved_ids": [
+        "sphinx-doc__sphinx-10466",
+        "sphinx-doc__sphinx-10614",
+        "sphinx-doc__sphinx-11510"
+    ],
+    "error_ids": [],
+    "schema_version": 2
+}
