@@ -17,6 +17,7 @@
 | repro5x-XC-MINI-PRO-AHP-s3 | XC-MINI-PRO-AHP | claude-opus-4-8 | 6 | 0/6 | 0/0 | 0/0 | 2026-06-15T03:19:53.657646+00:00 |
 | repro5x-XC-MINI-PRO-AHP-s4 | XC-MINI-PRO-AHP | claude-opus-4-8 | 6 | 1/6 | 0/0 | 0/0 | 2026-06-15T02:52:46.107050+00:00 |
 | repro5x-XC-MINI-PRO-AHP-s5 | XC-MINI-PRO-AHP | claude-opus-4-8 | 6 | 0/6 | 0/0 | 0/0 | 2026-06-15T03:17:41.450925+00:00 |
+| smoke021-django15572-codex-archlinux | archlinux | gpt-5.5 | 1 | 1/1 | 1/1 | — | 2026-06-16T03:33:46.603402+00:00 |
 | sympy13852-fef0123-XC-MINI-PRO-AHP | XC-MINI-PRO-AHP | claude-opus-4-8 | 1 | 0/1 | 0/1 | 0/0 | 2026-06-15T11:37:13.642558+00:00 |
 | sympy13852-main-260615091942-XC-MINI-PRO-AHP | XC-MINI-PRO-AHP | claude-opus-4-8 | 1 | 0/1 | 0/1 | 0/0 | 2026-06-15T09:45:02.858975+00:00 |
 | verified001-codex-XC-MINI-PRO-AHP-20260615T131050Z | XC-MINI-PRO-AHP | gpt-5.5 | 10 | 7/10 | 8/10 | — | 2026-06-15T13:55:01.777893+00:00 |
@@ -52,6 +53,8 @@
 | verified031-codex-archlinux-20260616T140808Z | archlinux | gpt-5.5 | 10 | 10/10 | 10/10 | — | 2026-06-16T14:47:55.421524+00:00 |
 | verified032-codex-archlinux-20260616T145521Z | archlinux | gpt-5.5 | 10 | 7/10 | 7/10 | — | 2026-06-16T15:36:32.503186+00:00 |
 | verified033-codex-archlinux-20260616T154504Z | archlinux | gpt-5.5 | 10 | 5/10 | 5/10 | — | 2026-06-16T16:31:10.682898+00:00 |
+| verified034-codex-archlinux-20260616T163816Z | archlinux | gpt-5.5 | 10 | 7/10 | 8/10 | — | 2026-06-16T17:15:58.727104+00:00 |
+| verified035-codex-archlinux-20260616T172110Z | archlinux | gpt-5.5 | 10 | 8/10 | 9/10 | — | 2026-06-16T17:59:09.026808+00:00 |
 | verified036-codex-wsl-ubuntu-260615212520 | wsl-ubuntu | gpt-5.5 | 10 | 10/10 | 10/10 | — | 2026-06-16T03:02:44.210426+00:00 |
 | verified037-codex-wsl-ubuntu-260615221107 | wsl-ubuntu | gpt-5.5 | 10 | 10/10 | 10/10 | — | 2026-06-16T03:46:30.031039+00:00 |
 | verified038-codex-wsl-ubuntu-260615221107 | wsl-ubuntu | gpt-5.5 | 10 | 10/10 | 10/10 | — | 2026-06-16T04:31:58.941765+00:00 |
