@@ -1,0 +1,113 @@
+diff --git a/django/db/backends/base/operations.py b/django/db/backends/base/operations.py
+index f6a043e31f..f7f2f24840 100644
+--- a/django/db/backends/base/operations.py
++++ b/django/db/backends/base/operations.py
+@@ -159,6 +159,16 @@ class BaseDatabaseOperations:
+         """
+         return self.date_extract_sql(lookup_type, field_name)
+ 
++    def _split_tzname_delta(self, tzname):
++        """
++        Split a time zone name into a fixed-offset prefix, sign, and offset.
++        """
++        for prefix in ('', 'UTC'):
++            if tzname.startswith(prefix + '+') or tzname.startswith(prefix + '-'):
++                offset = tzname[len(prefix):]
++                return prefix, offset[0], offset[1:]
++        return None, None, None
++
+     def deferrable_sql(self):
+         """
+         Return the SQL to make a constraint "initially deferred" during a
+diff --git a/django/db/backends/mysql/operations.py b/django/db/backends/mysql/operations.py
+index 89730cee29..022c05a718 100644
+--- a/django/db/backends/mysql/operations.py
++++ b/django/db/backends/mysql/operations.py
+@@ -76,10 +76,9 @@ class DatabaseOperations(BaseDatabaseOperations):
+             return "DATE(%s)" % (field_name)
+ 
+     def _prepare_tzname_delta(self, tzname):
+-        if '+' in tzname:
+-            return tzname[tzname.find('+'):]
+-        elif '-' in tzname:
+-            return tzname[tzname.find('-'):]
++        _, sign, offset = self._split_tzname_delta(tzname)
++        if sign:
++            return sign + offset
+         return tzname
+ 
+     def _convert_field_to_tz(self, field_name, tzname):
+diff --git a/django/db/backends/oracle/operations.py b/django/db/backends/oracle/operations.py
+index 4cfc7da070..9f913d8b67 100644
+--- a/django/db/backends/oracle/operations.py
++++ b/django/db/backends/oracle/operations.py
+@@ -108,10 +108,9 @@ END;
+     _tzname_re = _lazy_re_compile(r'^[\w/:+-]+$')
+ 
+     def _prepare_tzname_delta(self, tzname):
+-        if '+' in tzname:
+-            return tzname[tzname.find('+'):]
+-        elif '-' in tzname:
+-            return tzname[tzname.find('-'):]
++        _, sign, offset = self._split_tzname_delta(tzname)
++        if sign:
++            return sign + offset
+         return tzname
+ 
+     def _convert_field_to_tz(self, field_name, tzname):
+diff --git a/django/db/backends/postgresql/operations.py b/django/db/backends/postgresql/operations.py
+index 8d19872bea..ddf5153c8f 100644
+--- a/django/db/backends/postgresql/operations.py
++++ b/django/db/backends/postgresql/operations.py
+@@ -44,10 +44,10 @@ class DatabaseOperations(BaseDatabaseOperations):
+         return "DATE_TRUNC('%s', %s)" % (lookup_type, field_name)
+ 
+     def _prepare_tzname_delta(self, tzname):
+-        if '+' in tzname:
+-            return tzname.replace('+', '-')
+-        elif '-' in tzname:
+-            return tzname.replace('-', '+')
++        prefix, sign, offset = self._split_tzname_delta(tzname)
++        if sign:
++            sign = '-' if sign == '+' else '+'
++            return prefix + sign + offset
+         return tzname
+ 
+     def _convert_field_to_tz(self, field_name, tzname):
+diff --git a/django/db/backends/sqlite3/base.py b/django/db/backends/sqlite3/base.py
+index a64190f0d0..ae154c4dbb 100644
+--- a/django/db/backends/sqlite3/base.py
++++ b/django/db/backends/sqlite3/base.py
+@@ -401,6 +401,9 @@ class DatabaseWrapper(BaseDatabaseWrapper):
+ 
+ 
+ FORMAT_QMARK_REGEX = _lazy_re_compile(r'(?<!%)%s')
++TIMEZONE_OFFSET_REGEX = _lazy_re_compile(
++    r'^(?P<tzname>UTC)?(?P<sign>[+-])(?P<hours>\d{2})(?::?(?P<minutes>\d{2}))?$'
++)
+ 
+ 
+ class SQLiteCursorWrapper(Database.Cursor):
+@@ -433,14 +436,14 @@ def _sqlite_datetime_parse(dt, tzname=None, conn_tzname=None):
+     if conn_tzname:
+         dt = dt.replace(tzinfo=pytz.timezone(conn_tzname))
+     if tzname is not None and tzname != conn_tzname:
+-        sign_index = tzname.find('+') + tzname.find('-') + 1
+-        if sign_index > -1:
+-            sign = tzname[sign_index]
+-            tzname, offset = tzname.split(sign)
+-            if offset:
+-                hours, minutes = offset.split(':')
+-                offset_delta = datetime.timedelta(hours=int(hours), minutes=int(minutes))
+-                dt += offset_delta if sign == '+' else -offset_delta
++        offset_match = TIMEZONE_OFFSET_REGEX.match(tzname)
++        if offset_match:
++            tzname = offset_match['tzname'] or 'UTC'
++            offset_delta = datetime.timedelta(
++                hours=int(offset_match['hours']),
++                minutes=int(offset_match['minutes'] or 0),
++            )
++            dt += offset_delta if offset_match['sign'] == '+' else -offset_delta
+         dt = timezone.localtime(dt, pytz.timezone(tzname))
+     return dt
+ 

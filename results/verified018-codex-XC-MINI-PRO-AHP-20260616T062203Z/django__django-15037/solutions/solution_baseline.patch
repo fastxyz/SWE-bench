@@ -1,0 +1,94 @@
+diff --git a/django/core/management/commands/inspectdb.py b/django/core/management/commands/inspectdb.py
+index f9b4bfb477..d488ecfd37 100644
+--- a/django/core/management/commands/inspectdb.py
++++ b/django/core/management/commands/inspectdb.py
+@@ -57,6 +57,28 @@ class Command(BaseCommand):
+             yield 'from %s import models' % self.db_module
+             known_models = []
+             table_info = connection.introspection.get_table_list(cursor)
++            table_to_column_to_field_name = {}
++            table_to_primary_key_column = {}
++
++            def get_column_to_field_name(table_name):
++                if table_name not in table_to_column_to_field_name:
++                    try:
++                        relations = connection.introspection.get_relations(cursor, table_name)
++                    except NotImplementedError:
++                        relations = {}
++                    table_description = connection.introspection.get_table_description(cursor, table_name)
++                    table_to_column_to_field_name[table_name] = self.normalize_table_columns(
++                        table_description,
++                        relations,
++                    )
++                return table_to_column_to_field_name[table_name]
++
++            def get_primary_key_column(table_name):
++                if table_name not in table_to_primary_key_column:
++                    table_to_primary_key_column[table_name] = (
++                        connection.introspection.get_primary_key_column(cursor, table_name)
++                    )
++                return table_to_primary_key_column[table_name]
+ 
+             # Determine types of tables and/or views to be introspected.
+             types = {'t'}
+@@ -84,6 +106,9 @@ class Command(BaseCommand):
+                         if c['unique'] and len(c['columns']) == 1
+                     ]
+                     table_description = connection.introspection.get_table_description(cursor, table_name)
++                    table_to_primary_key_column[table_name] = primary_key_column
++                    column_to_field_name = self.normalize_table_columns(table_description, relations)
++                    table_to_column_to_field_name[table_name] = column_to_field_name
+                 except Exception as e:
+                     yield "# Unable to inspect table '%s'" % table_name
+                     yield "# The error was: %s" % e
+@@ -94,7 +119,6 @@ class Command(BaseCommand):
+                 yield 'class %s(models.Model):' % table2model(table_name)
+                 known_models.append(table2model(table_name))
+                 used_column_names = []  # Holds column names used in the table so far
+-                column_to_field_name = {}  # Maps column names to names of model fields
+                 for row in table_description:
+                     comment_notes = []  # Holds Field notes, to be displayed in a Python comment.
+                     extra_params = {}  # Holds Field parameters such as 'db_column'.
+@@ -107,7 +131,6 @@ class Command(BaseCommand):
+                     comment_notes.extend(notes)
+ 
+                     used_column_names.append(att_name)
+-                    column_to_field_name[column_name] = att_name
+ 
+                     # Add primary_key and unique, if necessary.
+                     if column_name == primary_key_column:
+@@ -124,6 +147,10 @@ class Command(BaseCommand):
+                             "self" if relations[column_name][1] == table_name
+                             else table2model(relations[column_name][1])
+                         )
++                        rel_column, rel_table = relations[column_name]
++                        if rel_column != get_primary_key_column(rel_table):
++                            rel_to_field = get_column_to_field_name(rel_table).get(rel_column, rel_column)
++                            extra_params['to_field'] = rel_to_field
+                         if rel_to in known_models:
+                             field_type = '%s(%s' % (rel_type, rel_to)
+                         else:
+@@ -172,6 +199,23 @@ class Command(BaseCommand):
+                 is_partition = any(info.name == table_name and info.type == 'p' for info in table_info)
+                 yield from self.get_meta(table_name, constraints, column_to_field_name, is_view, is_partition)
+ 
++    def normalize_table_columns(self, table_description, relations):
++        """
++        Return a mapping of column names to the model field names generated for them.
++        """
++        column_to_field_name = {}
++        used_column_names = []
++        for row in table_description:
++            column_name = row.name
++            att_name, _, _ = self.normalize_col_name(
++                column_name,
++                used_column_names,
++                column_name in relations,
++            )
++            used_column_names.append(att_name)
++            column_to_field_name[column_name] = att_name
++        return column_to_field_name
++
+     def normalize_col_name(self, col_name, used_column_names, is_relation):
+         """
+         Modify the column name to make it Python-compatible as a field name

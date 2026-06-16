@@ -36,6 +36,7 @@
 | verified015-codex-XC-MINI-PRO-AHP-20260616T034306Z | XC-MINI-PRO-AHP | gpt-5.5 | 10 | 7/10 | 8/10 | — | 2026-06-16T04:26:44.919595+00:00 |
 | verified016-codex-XC-MINI-PRO-AHP-20260616T043623Z | XC-MINI-PRO-AHP | gpt-5.5 | 10 | 8/10 | 8/10 | — | 2026-06-16T05:18:04.781133+00:00 |
 | verified017-codex-XC-MINI-PRO-AHP-20260616T052940Z | XC-MINI-PRO-AHP | gpt-5.5 | 10 | 10/10 | 10/10 | — | 2026-06-16T06:08:06.835676+00:00 |
+| verified018-codex-XC-MINI-PRO-AHP-20260616T062203Z | XC-MINI-PRO-AHP | gpt-5.5 | 10 | 8/10 | 8/10 | — | 2026-06-16T07:16:16.570492+00:00 |
 | verified021-codex-archlinux-20260616T035839Z | archlinux | gpt-5.5 | 10 | 8/10 | 8/10 | — | 2026-06-16T04:36:47.275043+00:00 |
 | verified022-codex-archlinux-20260616T044014Z | archlinux | gpt-5.5 | 10 | 10/10 | 10/10 | — | 2026-06-16T05:18:22.897580+00:00 |
 | verified023-codex-archlinux-20260616T052232Z | archlinux | gpt-5.5 | 10 | 9/10 | 9/10 | — | 2026-06-16T05:59:48.416058+00:00 |
