@@ -1,0 +1,34 @@
+diff --git a/xarray/coding/variables.py b/xarray/coding/variables.py
+index b035ff82..27be846f 100644
+--- a/xarray/coding/variables.py
++++ b/xarray/coding/variables.py
+@@ -308,14 +308,22 @@ class UnsignedIntegerCoder(VariableCoder):
+         if "_Unsigned" in attrs:
+             unsigned = pop_to(attrs, encoding, "_Unsigned")
+ 
+-            if data.dtype.kind == "i":
+-                if unsigned == "true":
+-                    unsigned_dtype = np.dtype("u%s" % data.dtype.itemsize)
+-                    transform = partial(np.asarray, dtype=unsigned_dtype)
+-                    data = lazy_elemwise_func(data, transform, unsigned_dtype)
++            if data.dtype.kind in ("i", "u"):
++                is_unsigned = unsigned == "true" or unsigned is True
++                is_signed = unsigned == "false" or unsigned is False
++
++                if is_unsigned and data.dtype.kind == "i":
++                    new_dtype = np.dtype("u%s" % data.dtype.itemsize)
++                elif is_signed and data.dtype.kind == "u":
++                    new_dtype = np.dtype("i%s" % data.dtype.itemsize)
++                else:
++                    new_dtype = None
++
++                if new_dtype is not None:
++                    transform = partial(np.asarray, dtype=new_dtype)
++                    data = lazy_elemwise_func(data, transform, new_dtype)
+                     if "_FillValue" in attrs:
+-                        new_fill = unsigned_dtype.type(attrs["_FillValue"])
+-                        attrs["_FillValue"] = new_fill
++                        attrs["_FillValue"] = new_dtype.type(attrs["_FillValue"])
+             else:
+                 warnings.warn(
+                     "variable %r has _Unsigned attribute but is not "

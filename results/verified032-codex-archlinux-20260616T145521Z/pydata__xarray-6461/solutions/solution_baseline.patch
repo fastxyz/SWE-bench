@@ -1,0 +1,35 @@
+diff --git a/xarray/core/computation.py b/xarray/core/computation.py
+index 7676d8e5..9d91d191 100644
+--- a/xarray/core/computation.py
++++ b/xarray/core/computation.py
+@@ -1829,7 +1829,29 @@ def where(cond, x, y, keep_attrs=None):
+     if keep_attrs is True:
+         # keep the attributes of x, the second parameter, by default to
+         # be consistent with the `where` method of `DataArray` and `Dataset`
+-        keep_attrs = lambda attrs, context: attrs[1]
++        x_attrs = []
++        for attr_source in (x, getattr(x, "variable", None)):
++            try:
++                x_attrs.append(attr_source.attrs)
++            except AttributeError:
++                pass
++        try:
++            x_variables = x.variables
++        except AttributeError:
++            try:
++                x_variables = x.coords.variables
++            except AttributeError:
++                x_variables = {}
++        x_attrs.extend(var.attrs for var in x_variables.values())
++
++        def keep_attrs(attrs, context):
++            for attrs_ in attrs:
++                for x_attrs_ in x_attrs:
++                    if attrs_ is x_attrs_ or (
++                        x_attrs_ and utils.dict_equiv(attrs_, x_attrs_)
++                    ):
++                        return attrs_
++            return {}
+ 
+     # alignment for three arguments is complicated, so don't support it yet
+     return apply_ufunc(

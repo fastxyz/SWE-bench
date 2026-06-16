@@ -1,0 +1,307 @@
+{
+  "run_id": "verified032-codex-archlinux-20260616T145521Z",
+  "arms": [
+    "baseline",
+    "fvk"
+  ],
+  "instances": {
+    "pydata__xarray-4966": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0f1-bde3-7b80-b87d-b7899d142572",
+        "num_turns": null,
+        "duration_seconds": 244.7711563000048,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "4/4",
+          "ptp": "21/21"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0f1-bde3-7b80-b87d-b7899d142572",
+        "num_turns": null,
+        "duration_seconds": 387.67587208899204,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "4/4",
+          "ptp": "21/21"
+        }
+      }
+    },
+    "pydata__xarray-6461": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0f1-bdf7-7153-8600-7d231b38f1b1",
+        "num_turns": null,
+        "duration_seconds": 482.8786057859834,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "247/247"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0f1-bdf7-7153-8600-7d231b38f1b1",
+        "num_turns": null,
+        "duration_seconds": 273.86196721400484,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "247/247"
+        }
+      }
+    },
+    "pydata__xarray-6599": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0f1-bdf3-7840-a048-0925bbc378d5",
+        "num_turns": null,
+        "duration_seconds": 213.82448850298533,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "264/264"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0f1-bdf3-7840-a048-0925bbc378d5",
+        "num_turns": null,
+        "duration_seconds": 370.09492627100553,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "264/264"
+        }
+      }
+    },
+    "pydata__xarray-6721": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0fa-ad6d-7eb3-8ac6-838ba61f0632",
+        "num_turns": null,
+        "duration_seconds": 206.55736067899852,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "1405/1405"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0fa-ad6d-7eb3-8ac6-838ba61f0632",
+        "num_turns": null,
+        "duration_seconds": 337.0784440370044,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "1405/1405"
+        }
+      }
+    },
+    "pydata__xarray-6744": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0fb-6c06-7c70-a60d-cd9fe3153c5c",
+        "num_turns": null,
+        "duration_seconds": 154.64221593301045,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "3/3",
+          "ptp": "1815/1815"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0fb-6c06-7c70-a60d-cd9fe3153c5c",
+        "num_turns": null,
+        "duration_seconds": 446.43596086700563,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "3/3",
+          "ptp": "1815/1815"
+        }
+      }
+    },
+    "pydata__xarray-6938": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0fd-520b-7801-aa19-a80d77397a60",
+        "num_turns": null,
+        "duration_seconds": 173.75300753698684,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "430/430"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0fd-520b-7801-aa19-a80d77397a60",
+        "num_turns": null,
+        "duration_seconds": 399.66637249899213,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "430/430"
+        }
+      }
+    },
+    "pydata__xarray-6992": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed103-0222-74a1-a875-3ba1085d4437",
+        "num_turns": null,
+        "duration_seconds": 254.41094825600157,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/12",
+          "ptp": "945/945"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed103-0222-74a1-a875-3ba1085d4437",
+        "num_turns": null,
+        "duration_seconds": 312.8114679429855,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/12",
+          "ptp": "945/945"
+        }
+      }
+    },
+    "pydata__xarray-7229": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed104-a0a6-7333-b6af-539fbbacfa06",
+        "num_turns": null,
+        "duration_seconds": 405.027257957001,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "280/280"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed104-a0a6-7333-b6af-539fbbacfa06",
+        "num_turns": null,
+        "duration_seconds": 312.04125803298666,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "280/280"
+        }
+      }
+    },
+    "pydata__xarray-7233": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed106-19d8-7bb0-8de3-125121256e98",
+        "num_turns": null,
+        "duration_seconds": 112.7146324510104,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "189/189"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed106-19d8-7bb0-8de3-125121256e98",
+        "num_turns": null,
+        "duration_seconds": 440.9318771440012,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "189/189"
+        }
+      }
+    },
+    "pydata__xarray-7393": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed10b-b2c5-77b2-b6f4-7e2ee61cef4b",
+        "num_turns": null,
+        "duration_seconds": 119.06197511800565,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "71/71"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed10b-b2c5-77b2-b6f4-7e2ee61cef4b",
+        "num_turns": null,
+        "duration_seconds": 408.1815713499964,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "71/71"
+        }
+      }
+    }
+  },
+  "aggregates": {
+    "arms": {
+      "baseline": {
+        "resolved": 7,
+        "evaluated": 10
+      },
+      "fvk": {
+        "resolved": 7,
+        "evaluated": 10
+      }
+    },
+    "flips": {
+      "baseline_to_fvk": {
+        "up": [],
+        "down": []
+      }
+    }
+  }
+}
