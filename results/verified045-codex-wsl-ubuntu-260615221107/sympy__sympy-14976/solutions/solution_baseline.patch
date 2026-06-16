@@ -1,0 +1,20 @@
+diff --git a/sympy/printing/pycode.py b/sympy/printing/pycode.py
+index d06901425d..357cb3d967 100644
+--- a/sympy/printing/pycode.py
++++ b/sympy/printing/pycode.py
+@@ -331,6 +331,15 @@ def _print_Float(self, e):
+         args = str(tuple(map(int, e._mpf_)))
+         return '{func}({args})'.format(func=self._module_format('mpmath.mpf'), args=args)
+ 
++    def _print_Rational(self, e):
++        if e.q == 1:
++            return str(e.p)
++
++        func = self._module_format('mpmath.mpf')
++        if e.p < 0:
++            return '-{func}({p})/{func}({q})'.format(
++                func=func, p=-e.p, q=e.q)
++        return '{func}({p})/{func}({q})'.format(func=func, p=e.p, q=e.q)
+ 
+     def _print_uppergamma(self, e):
+         return "{0}({1}, {2}, {3})".format(

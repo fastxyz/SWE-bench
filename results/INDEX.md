@@ -49,6 +49,7 @@
 | verified028-codex-archlinux-20260616T095431Z | archlinux | gpt-5.5 | 10 | 8/10 | 8/10 | — | 2026-06-16T10:58:20.026062+00:00 |
 | verified029-codex-archlinux-20260616T111534Z | archlinux | gpt-5.5 | 10 | 8/10 | 8/10 | — | 2026-06-16T12:22:15.512825+00:00 |
 | verified030-codex-archlinux-20260616T123754Z | archlinux | gpt-5.5 | 10 | 5/10 | 5/10 | — | 2026-06-16T13:35:14.256992+00:00 |
+| verified031-codex-archlinux-20260616T140808Z | archlinux | gpt-5.5 | 10 | 10/10 | 10/10 | — | 2026-06-16T14:47:55.421524+00:00 |
 | verified036-codex-wsl-ubuntu-260615212520 | wsl-ubuntu | gpt-5.5 | 10 | 10/10 | 10/10 | — | 2026-06-16T03:02:44.210426+00:00 |
 | verified037-codex-wsl-ubuntu-260615221107 | wsl-ubuntu | gpt-5.5 | 10 | 10/10 | 10/10 | — | 2026-06-16T03:46:30.031039+00:00 |
 | verified038-codex-wsl-ubuntu-260615221107 | wsl-ubuntu | gpt-5.5 | 10 | 10/10 | 10/10 | — | 2026-06-16T04:31:58.941765+00:00 |
@@ -58,3 +59,4 @@
 | verified042-codex-wsl-ubuntu-260615221107 | wsl-ubuntu | gpt-5.5 | 10 | 8/10 | 8/10 | — | 2026-06-16T07:46:56.128416+00:00 |
 | verified043-codex-wsl-ubuntu-260615221107 | wsl-ubuntu | gpt-5.5 | 10 | 10/10 | 9/10 | — | 2026-06-16T14:49:54.185001+00:00 |
 | verified044-codex-wsl-ubuntu-260615221107 | wsl-ubuntu | gpt-5.5 | 10 | 6/10 | 6/10 | — | 2026-06-16T15:34:36.919238+00:00 |
+| verified045-codex-wsl-ubuntu-260615221107 | wsl-ubuntu | gpt-5.5 | 10 | 7/10 | 7/10 | — | 2026-06-16T16:19:45.249240+00:00 |
