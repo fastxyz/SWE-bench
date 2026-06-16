@@ -1,0 +1,76 @@
+{
+  "run_id": "verified042-codex-wsl-ubuntu-260615221107",
+  "instance_id": "sphinx-doc__sphinx-9320",
+  "baseline_session_id": "019ecf4f-a292-7ac0-a38f-b3354e2cc99c",
+  "core_hash_post_baseline": "59a1d5c65cbf00c6f1d9510948cce30283875b02c2d5c0437aee407ba76b9afc",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ecf4f-a292-7ac0-a38f-b3354e2cc99c",
+      "attempts": 1,
+      "started_at": "2026-06-16T07:22:43.087931+00:00",
+      "ended_at": "2026-06-16T07:27:39.018753+00:00",
+      "num_turns": null,
+      "duration_seconds": 295.9291208989962,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "exec_command": 28,
+          "apply_patch": 2
+        },
+        "violations": [],
+        "exec_warnings": [
+          "{\"cmd\":\"rg -n \\\"ask_user\\\\(|main\\\\(\\\\[|pytest.raises\\\\(SystemExit|return 130|KeyboardInterrupt|EOFError\\\" repo/tests/test_quickstart.py repo/tests -g '*.py'\",\"workdir\":\"/home/patrickmao/.swe-fvk-runs/"
+        ],
+        "unparseable_lines": 0,
+        "lines": 118
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ecf4f-a292-7ac0-a38f-b3354e2cc99c",
+      "attempts": 1,
+      "started_at": "2026-06-16T07:27:39.382753+00:00",
+      "ended_at": "2026-06-16T07:36:02.267613+00:00",
+      "num_turns": null,
+      "duration_seconds": 502.8818956280011,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "exec_command": 63,
+          "apply_patch": 4
+        },
+        "violations": [],
+        "exec_warnings": [
+          "{\"cmd\":\"rg -n \\\"ask_user\\\\(|main\\\\(\\\\[|pytest.raises\\\\(SystemExit|return 130|KeyboardInterrupt|EOFError\\\" repo/tests/test_quickstart.py repo/tests -g '*.py'\",\"workdir\":\"/home/patrickmao/.swe-fvk-runs/"
+        ],
+        "unparseable_lines": 0,
+        "lines": 253
+      }
+    },
+    "control": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    }
+  },
+  "agent": "codex",
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "b7c2dd08d551bc15b1a3f1af5beab7dbf555521a2e7047fbd2b2ef7a18b6679a",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": null,
+    "fvk": null,
+    "control": null
+  }
+}

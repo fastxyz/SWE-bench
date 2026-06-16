@@ -1,0 +1,108 @@
+diff --git a/sphinx/ext/autodoc/__init__.py b/sphinx/ext/autodoc/__init__.py
+index 1f4c98284..6cf4537c1 100644
+--- a/sphinx/ext/autodoc/__init__.py
++++ b/sphinx/ext/autodoc/__init__.py
+@@ -1673,9 +1673,26 @@ class ClassDocumenter(DocstringSignatureMixin, ModuleLevelDocumenter):  # type:
+         else:
+             return False, [m for m in members.values() if m.class_ == self.object]
+ 
++    def get_docstring_comment(self) -> Optional[List[str]]:
++        try:
++            analyzer = ModuleAnalyzer.for_module(self.modname)
++            analyzer.analyze()
++            key = ('.'.join(self.objpath[:-1]), self.objpath[-1])
++            if key in analyzer.attr_docs:
++                self.directive.record_dependencies.add(analyzer.srcname)
++                return list(analyzer.attr_docs[key])
++        except PycodeError:
++            pass
++
++        return None
++
+     def get_doc(self, ignore: int = None) -> Optional[List[List[str]]]:
+         if self.doc_as_attr:
+             # Don't show the docstring of the class when it is an alias.
++            comment = self.get_docstring_comment()
++            if comment is not None:
++                return [comment]
++
+             return None
+ 
+         lines = getattr(self, '_new_docstrings', None)
+@@ -1723,7 +1740,7 @@ class ClassDocumenter(DocstringSignatureMixin, ModuleLevelDocumenter):  # type:
+ 
+     def add_content(self, more_content: Optional[StringList], no_docstring: bool = False
+                     ) -> None:
+-        if self.doc_as_attr:
++        if self.doc_as_attr and self.get_docstring_comment() is None:
+             try:
+                 more_content = StringList([_('alias of %s') % restify(self.object)], source='')
+             except AttributeError:
+@@ -1785,6 +1802,10 @@ class DataDocumenterMixinBase:
+         """Update docstring for the NewType object."""
+         pass
+ 
++    def has_docstring_comment(self) -> bool:
++        """Check the object has an explicit docstring-comment."""
++        return False
++
+ 
+ class GenericAliasMixin(DataDocumenterMixinBase):
+     """
+@@ -1797,7 +1818,7 @@ class GenericAliasMixin(DataDocumenterMixinBase):
+                 super().should_suppress_directive_header())
+ 
+     def update_content(self, more_content: StringList) -> None:
+-        if inspect.isgenericalias(self.object):
++        if inspect.isgenericalias(self.object) and not self.has_docstring_comment():
+             more_content.append(_('alias of %s') % restify(self.object), '')
+             more_content.append('', '')
+ 
+@@ -1815,7 +1836,7 @@ class NewTypeMixin(DataDocumenterMixinBase):
+                 super().should_suppress_directive_header())
+ 
+     def update_content(self, more_content: StringList) -> None:
+-        if inspect.isNewType(self.object):
++        if inspect.isNewType(self.object) and not self.has_docstring_comment():
+             supertype = restify(self.object.__supertype__)
+             more_content.append(_('alias of %s') % supertype, '')
+             more_content.append('', '')
+@@ -1848,7 +1869,7 @@ class TypeVarMixin(DataDocumenterMixinBase):
+             return super().get_doc()  # type: ignore
+ 
+     def update_content(self, more_content: StringList) -> None:
+-        if isinstance(self.object, TypeVar):
++        if isinstance(self.object, TypeVar) and not self.has_docstring_comment():
+             attrs = [repr(self.object.__name__)]
+             for constraint in self.object.__constraints__:
+                 attrs.append(stringify_typehint(constraint))
+@@ -1998,10 +2019,13 @@ class DataDocumenter(GenericAliasMixin, NewTypeMixin, TypeVarMixin,
+ 
+         return None
+ 
++    def has_docstring_comment(self) -> bool:
++        return self.get_module_comment(self.objpath[-1]) is not None
++
+     def get_doc(self, ignore: int = None) -> Optional[List[List[str]]]:
+         # Check the variable has a docstring-comment
+         comment = self.get_module_comment(self.objpath[-1])
+-        if comment:
++        if comment is not None:
+             return [comment]
+         else:
+             return super().get_doc(ignore)
+@@ -2571,10 +2595,13 @@ class AttributeDocumenter(GenericAliasMixin, NewTypeMixin, SlotsMixin,  # type:
+ 
+         return None
+ 
++    def has_docstring_comment(self) -> bool:
++        return self.get_attribute_comment(self.parent, self.objpath[-1]) is not None
++
+     def get_doc(self, ignore: int = None) -> Optional[List[List[str]]]:
+         # Check the attribute has a docstring-comment
+         comment = self.get_attribute_comment(self.parent, self.objpath[-1])
+-        if comment:
++        if comment is not None:
+             return [comment]
+ 
+         try:

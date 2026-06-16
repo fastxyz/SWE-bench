@@ -1,0 +1,19 @@
+diff --git a/sphinx/util/inspect.py b/sphinx/util/inspect.py
+index a415a7074..2f67c8e0c 100644
+--- a/sphinx/util/inspect.py
++++ b/sphinx/util/inspect.py
+@@ -432,6 +432,14 @@ def safe_getattr(obj: Any, name: str, *defargs: Any) -> Any:
+ 
+ def object_description(object: Any) -> str:
+     """A repr() implementation that returns text safe to use in reST context."""
++    if isinstance(object, enum.Enum):
++        enum_class = object.__class__.__qualname__
++        enum_name = object.name
++        if enum_name is not None:
++            if isinstance(object, enum.Flag):
++                return "|".join("%s.%s" % (enum_class, name)
++                                for name in enum_name.split("|"))
++            return "%s.%s" % (enum_class, enum_name)
+     if isinstance(object, dict):
+         try:
+             sorted_keys = sorted(object)
