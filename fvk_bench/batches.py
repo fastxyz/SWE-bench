@@ -31,10 +31,29 @@ BATCHES: dict[str, tuple[str, ...]] = {
 VERIFIED_BATCH_SIZE = 10
 VERIFIED_BATCH_COUNT = 50
 
+MULTILINGUAL_BATCH_SIZE = 10
+MULTILINGUAL_BATCH_COUNT = 30
+
 
 def verified_batch_names() -> tuple[str, ...]:
     """Return generated full-Verified batch names in order."""
     return tuple(f"verified{i:03d}" for i in range(1, VERIFIED_BATCH_COUNT + 1))
+
+
+def multilingual_batch_names() -> tuple[str, ...]:
+    """Return generated multilingual300 batch names in order."""
+    return tuple(f"multilingual{i:03d}" for i in range(1, MULTILINGUAL_BATCH_COUNT + 1))
+
+
+def batch_names_for_scheme(scheme: str) -> tuple[str, ...]:
+    """Return the ordered batch names for an instance set's batch scheme."""
+    if scheme == "fvk45_fixed5":
+        return tuple(BATCHES)
+    if scheme == "verified_sorted10":
+        return verified_batch_names()
+    if scheme == "multilingual_sorted10":
+        return multilingual_batch_names()
+    raise KeyError(f"unknown batch scheme {scheme!r}")
 
 
 def batch_instances(
@@ -66,7 +85,19 @@ def batch_instances(
         start = idx * VERIFIED_BATCH_SIZE
         return ids[start:start + VERIFIED_BATCH_SIZE]
 
+    multilingual_names = multilingual_batch_names()
+    if name in multilingual_names:
+        ids = tuple(instance_ids or ())
+        required = MULTILINGUAL_BATCH_SIZE * MULTILINGUAL_BATCH_COUNT
+        if len(ids) != required:
+            raise KeyError(
+                f"{name} requires exactly {required} ordered multilingual300 instance ids; "
+                f"got {len(ids)}"
+            )
+        idx = int(name.removeprefix("multilingual")) - 1
+        start = idx * MULTILINGUAL_BATCH_SIZE
+        return ids[start:start + MULTILINGUAL_BATCH_SIZE]
+
     raise KeyError(
-        f"unknown batch {name!r}; valid: {', '.join(sorted(BATCHES))} "
-        f"or verified001..verified050"
+        f"unknown batch {name!r}; valid: {', '.join(sorted(BATCHES))}, verified001..verified050, or multilingual001..multilingual030"
     )
