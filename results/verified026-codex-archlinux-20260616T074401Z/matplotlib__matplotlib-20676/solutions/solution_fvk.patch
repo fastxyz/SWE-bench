@@ -1,0 +1,36 @@
+diff --git a/lib/matplotlib/widgets.py b/lib/matplotlib/widgets.py
+index a199e45d40..ee73278f09 100644
+--- a/lib/matplotlib/widgets.py
++++ b/lib/matplotlib/widgets.py
+@@ -2149,7 +2149,7 @@ class SpanSelector(_SelectorWidget):
+                                visible=False,
+                                **self._rectprops)
+ 
+-        self.ax.add_patch(self._rect)
++        self.ax.add_artist(self._rect)
+         if len(self.artists) > 0:
+             self.artists[0] = self._rect
+         else:
+@@ -2366,10 +2366,20 @@ class ToolLineHandles:
+             line_props = {}
+         line_props.update({'visible': False, 'animated': useblit})
+ 
+-        line_fun = ax.axvline if self.direction == 'horizontal' else ax.axhline
+         self._line_props = line_props
+ 
+-        self.artists = [line_fun(p, **line_props) for p in positions]
++        if self.direction == 'horizontal':
++            trans = ax.get_xaxis_transform()
++            self.artists = [
++                Line2D([p, p], [0, 1], transform=trans, **line_props)
++                for p in positions]
++        else:
++            trans = ax.get_yaxis_transform()
++            self.artists = [
++                Line2D([0, 1], [p, p], transform=trans, **line_props)
++                for p in positions]
++        for artist in self.artists:
++            self.ax.add_artist(artist)
+ 
+     @property
+     def positions(self):

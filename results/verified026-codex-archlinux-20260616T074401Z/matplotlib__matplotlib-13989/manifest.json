@@ -1,0 +1,74 @@
+{
+  "run_id": "verified026-codex-archlinux-20260616T074401Z",
+  "instance_id": "matplotlib__matplotlib-13989",
+  "baseline_session_id": "019ecf6f-b734-7290-aef0-a64b5b84b4ce",
+  "core_hash_post_baseline": "373aae8753b122f1b1e33fc5a83e119aefc919ea673c27a5657323761205e08c",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ecf6f-b734-7290-aef0-a64b5b84b4ce",
+      "attempts": 1,
+      "started_at": "2026-06-16T07:57:45.332871+00:00",
+      "ended_at": "2026-06-16T07:59:47.024545+00:00",
+      "num_turns": null,
+      "duration_seconds": 121.68712226400385,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "exec_command": 18,
+          "update_plan": 2,
+          "apply_patch": 2
+        },
+        "violations": [],
+        "exec_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 92
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ecf6f-b734-7290-aef0-a64b5b84b4ce",
+      "attempts": 1,
+      "started_at": "2026-06-16T07:59:47.455032+00:00",
+      "ended_at": "2026-06-16T08:07:57.118601+00:00",
+      "num_turns": null,
+      "duration_seconds": 489.6590058849979,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "exec_command": 44,
+          "update_plan": 8,
+          "apply_patch": 7
+        },
+        "violations": [],
+        "exec_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 241
+      }
+    },
+    "control": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    }
+  },
+  "agent": "codex",
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "b7c2dd08d551bc15b1a3f1af5beab7dbf555521a2e7047fbd2b2ef7a18b6679a",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": null,
+    "fvk": null,
+    "control": null
+  }
+}

@@ -1,0 +1,78 @@
+diff --git a/lib/matplotlib/axes/_base.py b/lib/matplotlib/axes/_base.py
+index 802fd3c997..294ed78a33 100644
+--- a/lib/matplotlib/axes/_base.py
++++ b/lib/matplotlib/axes/_base.py
+@@ -650,6 +650,9 @@ class _AxesBase(martist.Artist):
+                 axis.callbacks.connect(
+                     'units', self._unit_change_handler(name)))
+ 
++        self._set_tick_params_from_rcparams()
++
++    def _set_tick_params_from_rcparams(self):
+         rcParams = mpl.rcParams
+         self.tick_params(
+             top=rcParams['xtick.top'] and rcParams['xtick.minor.top'],
+@@ -1192,6 +1195,27 @@ class _AxesBase(martist.Artist):
+         xaxis_visible = self.xaxis.get_visible()
+         yaxis_visible = self.yaxis.get_visible()
+ 
++        # Preserve structural tick placement for twins while resetting normal
++        # tick styling and rcParam-derived visibility below.
++        visibility_keys = ('tick1On', 'tick2On', 'label1On', 'label2On')
++
++        def _tick_visibility(axis):
++            return [
++                {key: tick_kw[key] for key in visibility_keys
++                 if key in tick_kw}
++                for tick_kw in [axis._major_tick_kw, axis._minor_tick_kw]
++            ]
++
++        def _set_tick_visibility(axis, visibility):
++            for which, kw in zip(('major', 'minor'), visibility):
++                if kw:
++                    axis.set_tick_params(which=which, **kw)
++
++        preserve_ticks = len(self._twinned_axes.get_siblings(self)) > 1
++        if preserve_ticks:
++            xaxis_tick_visibility = _tick_visibility(self.xaxis)
++            yaxis_tick_visibility = _tick_visibility(self.yaxis)
++
+         self.xaxis.clear()
+         self.yaxis.clear()
+ 
+@@ -1300,6 +1324,15 @@ class _AxesBase(martist.Artist):
+         self.xaxis.set_clip_path(self.patch)
+         self.yaxis.set_clip_path(self.patch)
+ 
++        self._set_tick_params_from_rcparams()
++        if preserve_ticks:
++            _set_tick_visibility(self.xaxis, xaxis_tick_visibility)
++            _set_tick_visibility(self.yaxis, yaxis_tick_visibility)
++        if getattr(self, '_label_outer_xaxis_called', False):
++            self._label_outer_xaxis()
++        if getattr(self, '_label_outer_yaxis_called', False):
++            self._label_outer_yaxis()
++
+         self._shared_axes["x"].clean()
+         self._shared_axes["y"].clean()
+         if self._sharex is not None:
+diff --git a/lib/matplotlib/axes/_subplots.py b/lib/matplotlib/axes/_subplots.py
+index f92d08440e..515bfe5882 100644
+--- a/lib/matplotlib/axes/_subplots.py
++++ b/lib/matplotlib/axes/_subplots.py
+@@ -113,6 +113,7 @@ class SubplotBase:
+         self._label_outer_yaxis()
+ 
+     def _label_outer_xaxis(self):
++        self._label_outer_xaxis_called = True
+         ss = self.get_subplotspec()
+         label_position = self.xaxis.get_label_position()
+         if not ss.is_first_row():  # Remove top label/ticklabels/offsettext.
+@@ -129,6 +130,7 @@ class SubplotBase:
+                 self.xaxis.offsetText.set_visible(False)
+ 
+     def _label_outer_yaxis(self):
++        self._label_outer_yaxis_called = True
+         ss = self.get_subplotspec()
+         label_position = self.yaxis.get_label_position()
+         if not ss.is_first_col():  # Remove left label/ticklabels/offsettext.

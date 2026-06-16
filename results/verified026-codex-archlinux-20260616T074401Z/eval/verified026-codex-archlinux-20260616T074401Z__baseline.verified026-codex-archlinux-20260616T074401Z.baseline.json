@@ -1,0 +1,51 @@
+{
+    "total_instances": 10,
+    "submitted_instances": 10,
+    "completed_instances": 10,
+    "resolved_instances": 8,
+    "unresolved_instances": 2,
+    "empty_patch_instances": 0,
+    "error_instances": 0,
+    "completed_ids": [
+        "django__django-17087",
+        "django__django-7530",
+        "django__django-9296",
+        "matplotlib__matplotlib-13989",
+        "matplotlib__matplotlib-14623",
+        "matplotlib__matplotlib-20488",
+        "matplotlib__matplotlib-20676",
+        "matplotlib__matplotlib-20826",
+        "matplotlib__matplotlib-20859",
+        "matplotlib__matplotlib-21568"
+    ],
+    "incomplete_ids": [],
+    "empty_patch_ids": [],
+    "submitted_ids": [
+        "django__django-17087",
+        "django__django-7530",
+        "django__django-9296",
+        "matplotlib__matplotlib-13989",
+        "matplotlib__matplotlib-14623",
+        "matplotlib__matplotlib-20488",
+        "matplotlib__matplotlib-20676",
+        "matplotlib__matplotlib-20826",
+        "matplotlib__matplotlib-20859",
+        "matplotlib__matplotlib-21568"
+    ],
+    "resolved_ids": [
+        "django__django-17087",
+        "django__django-7530",
+        "django__django-9296",
+        "matplotlib__matplotlib-13989",
+        "matplotlib__matplotlib-14623",
+        "matplotlib__matplotlib-20488",
+        "matplotlib__matplotlib-20859",
+        "matplotlib__matplotlib-21568"
+    ],
+    "unresolved_ids": [
+        "matplotlib__matplotlib-20676",
+        "matplotlib__matplotlib-20826"
+    ],
+    "error_ids": [],
+    "schema_version": 2
+}

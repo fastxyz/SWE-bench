@@ -1,0 +1,51 @@
+diff --git a/lib/matplotlib/axes/_base.py b/lib/matplotlib/axes/_base.py
+index 802fd3c997..b91529fc3a 100644
+--- a/lib/matplotlib/axes/_base.py
++++ b/lib/matplotlib/axes/_base.py
+@@ -650,6 +650,9 @@ class _AxesBase(martist.Artist):
+                 axis.callbacks.connect(
+                     'units', self._unit_change_handler(name)))
+ 
++        self._set_tick_params_from_rcparams()
++
++    def _set_tick_params_from_rcparams(self):
+         rcParams = mpl.rcParams
+         self.tick_params(
+             top=rcParams['xtick.top'] and rcParams['xtick.minor.top'],
+@@ -1192,6 +1195,25 @@ class _AxesBase(martist.Artist):
+         xaxis_visible = self.xaxis.get_visible()
+         yaxis_visible = self.yaxis.get_visible()
+ 
++        # Preserve structural tick visibility settings (shared axes, twins)
++        # while resetting tick styling below.
++        visibility_keys = ('tick1On', 'tick2On', 'label1On', 'label2On')
++
++        def _tick_visibility(axis):
++            return [
++                {key: tick_kw[key] for key in visibility_keys
++                 if key in tick_kw}
++                for tick_kw in [axis._major_tick_kw, axis._minor_tick_kw]
++            ]
++
++        def _set_tick_visibility(axis, visibility):
++            for which, kw in zip(('major', 'minor'), visibility):
++                if kw:
++                    axis.set_tick_params(which=which, **kw)
++
++        xaxis_tick_visibility = _tick_visibility(self.xaxis)
++        yaxis_tick_visibility = _tick_visibility(self.yaxis)
++
+         self.xaxis.clear()
+         self.yaxis.clear()
+ 
+@@ -1300,6 +1322,10 @@ class _AxesBase(martist.Artist):
+         self.xaxis.set_clip_path(self.patch)
+         self.yaxis.set_clip_path(self.patch)
+ 
++        self._set_tick_params_from_rcparams()
++        _set_tick_visibility(self.xaxis, xaxis_tick_visibility)
++        _set_tick_visibility(self.yaxis, yaxis_tick_visibility)
++
+         self._shared_axes["x"].clean()
+         self._shared_axes["y"].clean()
+         if self._sharex is not None:
