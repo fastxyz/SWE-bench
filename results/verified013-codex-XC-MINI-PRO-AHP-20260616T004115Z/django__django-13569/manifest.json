@@ -1,0 +1,74 @@
+{
+  "run_id": "verified013-codex-XC-MINI-PRO-AHP-20260616T004115Z",
+  "instance_id": "django__django-13569",
+  "baseline_session_id": "019ecde3-df0f-74b0-9212-b46052c80271",
+  "core_hash_post_baseline": "8333dde58f5b0f8da71d478a91c1530d183fa8d0d1348484e548a500a9a47c7c",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ecde3-df0f-74b0-9212-b46052c80271",
+      "attempts": 1,
+      "started_at": "2026-06-16T00:45:23.427675+00:00",
+      "ended_at": "2026-06-16T00:49:51.924314+00:00",
+      "num_turns": null,
+      "duration_seconds": 268.4943081399979,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "update_plan": 5,
+          "exec_command": 43,
+          "apply_patch": 4
+        },
+        "violations": [],
+        "exec_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 205
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ecde3-df0f-74b0-9212-b46052c80271",
+      "attempts": 1,
+      "started_at": "2026-06-16T00:49:52.390760+00:00",
+      "ended_at": "2026-06-16T00:57:24.276582+00:00",
+      "num_turns": null,
+      "duration_seconds": 451.88222173199756,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "update_plan": 10,
+          "exec_command": 87,
+          "apply_patch": 9
+        },
+        "violations": [],
+        "exec_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 406
+      }
+    },
+    "control": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    }
+  },
+  "agent": "codex",
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "b7c2dd08d551bc15b1a3f1af5beab7dbf555521a2e7047fbd2b2ef7a18b6679a",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": null,
+    "fvk": null,
+    "control": null
+  }
+}

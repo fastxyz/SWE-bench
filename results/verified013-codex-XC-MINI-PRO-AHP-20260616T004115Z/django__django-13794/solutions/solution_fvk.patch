@@ -1,0 +1,23 @@
+diff --git a/django/template/defaultfilters.py b/django/template/defaultfilters.py
+index 1c844580c6..5e27bf7799 100644
+--- a/django/template/defaultfilters.py
++++ b/django/template/defaultfilters.py
+@@ -11,6 +11,7 @@ from urllib.parse import quote
+ from django.utils import formats
+ from django.utils.dateformat import format, time_format
+ from django.utils.encoding import iri_to_uri
++from django.utils.functional import Promise
+ from django.utils.html import (
+     avoid_wrapping, conditional_escape, escape, escapejs,
+     json_script as _json_script, linebreaks, strip_tags, urlize as _urlize,
+@@ -674,6 +675,10 @@ def unordered_list(value, autoescape=True):
+ @register.filter(is_safe=False)
+ def add(value, arg):
+     """Add the arg to the value."""
++    if isinstance(value, Promise) and getattr(value, '_delegate_text', False):
++        value = str(value)
++    if isinstance(arg, Promise) and getattr(arg, '_delegate_text', False):
++        arg = str(arg)
+     try:
+         return int(value) + int(arg)
+     except (ValueError, TypeError):
