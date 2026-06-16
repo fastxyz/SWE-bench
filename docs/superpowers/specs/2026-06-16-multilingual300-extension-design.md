@@ -148,7 +148,8 @@ Dataset resolution per command:
 
 ## 7. Validation / bring-up sequence (post-implementation)
 
-1. Create the fastxyz mirror repo and add the submodule; `git submodule update --init`.
+1. Create `fastxyz/SWE-bench_Multilingual` (a mirror of `SWE-bench/SWE-bench_Multilingual`),
+   add it as the `third_party/swe-bench-multilingual` submodule, and `git submodule update --init`.
 2. `vendor-instances --instance-set multilingual300` → assert 300 visible rows.
 3. `doctor` (unchanged; host is x86_64).
 4. `validate-gold` on **one instance per language (~9)** — proves the local-dataset path
@@ -172,8 +173,10 @@ Dataset resolution per command:
 
 ## 9. Dependencies & risks
 
-- **Setup dependency:** the submodule needs a fastxyz-owned repo to point at (mirror of
-  `SWE-bench/SWE-bench_Multilingual`), created the same way the FVK kit was mirrored.
+- **Setup dependency (confirmed):** create `fastxyz/SWE-bench_Multilingual` as a mirror of
+  `SWE-bench/SWE-bench_Multilingual` (same approach as the FVK-kit mirror), and point the
+  `third_party/swe-bench-multilingual` submodule at it. The mirror must include the dataset
+  payload (LFS/parquet) so eval is genuinely offline.
 - **Docker images:** prebuilt multilingual images may not exist under the `swebench`
   namespace; `evaluate.py` already falls back to local builds (`--namespace none`), so
   eval still works but the first run may be slower / use more disk. Confirmed by step 4
