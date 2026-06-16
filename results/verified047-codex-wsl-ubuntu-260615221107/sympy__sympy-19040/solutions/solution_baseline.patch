@@ -1,0 +1,51 @@
+diff --git a/sympy/polys/factortools.py b/sympy/polys/factortools.py
+index c6a5f9f063..a0225de081 100644
+--- a/sympy/polys/factortools.py
++++ b/sympy/polys/factortools.py
+@@ -1146,23 +1146,33 @@ def dmp_ext_factor(f, u, K):
+     if all(d <= 0 for d in dmp_degree_list(f, u)):
+         return lc, []
+ 
+-    f, F = dmp_sqf_part(f, u, K), f
+-    s, g, r = dmp_sqf_norm(f, u, K)
++    F = f
++    G, f = dmp_primitive(f, u, K)
+ 
+-    factors = dmp_factor_list_include(r, u, K.dom)
++    coeff, factors = dmp_factor_list(G, u - 1, K)
++    lc *= coeff
++    factors = [([g], k) for g, k in factors]
+ 
+-    if len(factors) == 1:
+-        factors = [f]
+-    else:
+-        H = dmp_raise([K.one, s*K.unit], u, 0, K)
++    if dmp_degree(f, u) > 0:
++        f = dmp_sqf_part(f, u, K)
++        s, g, r = dmp_sqf_norm(f, u, K)
++
++        H = dmp_factor_list_include(r, u, K.dom)
++
++        if len(H) == 1:
++            H = [f]
++        else:
++            shift = dmp_raise([K.one, s*K.unit], u, 0, K)
++
++            for i, (factor, _) in enumerate(H):
++                h = dmp_convert(factor, u, K.dom, K)
++                h, _, g = dmp_inner_gcd(h, g, u, K)
++                h = dmp_compose(h, shift, u, K)
++                H[i] = h
+ 
+-        for i, (factor, _) in enumerate(factors):
+-            h = dmp_convert(factor, u, K.dom, K)
+-            h, _, g = dmp_inner_gcd(h, g, u, K)
+-            h = dmp_compose(h, H, u, K)
+-            factors[i] = h
++        factors += dmp_trial_division(F, H, u, K)
+ 
+-    return lc, dmp_trial_division(F, factors, u, K)
++    return lc, _sort_factors(factors)
+ 
+ 
+ def dup_gf_factor(f, K):

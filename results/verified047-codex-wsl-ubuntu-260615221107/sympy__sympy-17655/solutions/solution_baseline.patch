@@ -1,0 +1,76 @@
+diff --git a/sympy/geometry/point.py b/sympy/geometry/point.py
+index 7c978c47be..d2039afd75 100644
+--- a/sympy/geometry/point.py
++++ b/sympy/geometry/point.py
+@@ -24,12 +24,14 @@
+ from sympy.core import S, sympify, Expr
+ from sympy.core.compatibility import is_sequence
+ from sympy.core.containers import Tuple
++from sympy.core.mul import Mul
+ from sympy.simplify import nsimplify, simplify
+ from sympy.geometry.exceptions import GeometryError
+ from sympy.functions.elementary.miscellaneous import sqrt
+ from sympy.functions.elementary.complexes import im
+ from sympy.matrices import Matrix
+ from sympy.core.numbers import Float
++from sympy.core.power import Pow
+ from sympy.core.evaluate import global_evaluate
+ from sympy.core.add import Add
+ from sympy.utilities.iterables import uniq
+@@ -104,6 +106,8 @@ class Point(GeometryEntity):
+     """
+ 
+     is_Point = True
++    # Slightly higher than Expr so scalar expressions dispatch to __rmul__.
++    _op_priority = 10.001
+ 
+     def __new__(cls, *args, **kwargs):
+         evaluate = kwargs.get('evaluate', global_evaluate[0])
+@@ -230,6 +234,19 @@ def __div__(self, divisor):
+         coords = [simplify(x/divisor) for x in self.args]
+         return Point(coords, evaluate=False)
+ 
++    def __radd__(self, other):
++        if isinstance(other, Expr):
++            return Add(other, self)
++        return other.__add__(self)
++
++    def __rdiv__(self, other):
++        if isinstance(other, Expr):
++            return Mul(other, Pow(self, S.NegativeOne))
++        try:
++            return other.__div__(self)
++        except AttributeError:
++            return NotImplemented
++
+     def __eq__(self, other):
+         if not isinstance(other, Point) or len(self.args) != len(other.args):
+             return False
+@@ -278,11 +295,19 @@ def __mul__(self, factor):
+         coords = [simplify(x*factor) for x in self.args]
+         return Point(coords, evaluate=False)
+ 
++    def __rmul__(self, factor):
++        return self*factor
++
+     def __neg__(self):
+         """Negate the point."""
+         coords = [-x for x in self.args]
+         return Point(coords, evaluate=False)
+ 
++    def __rsub__(self, other):
++        if isinstance(other, Expr):
++            return Add(other, -self)
++        return other.__sub__(self)
++
+     def __sub__(self, other):
+         """Subtract two points, or subtract a factor from this point's
+         coordinates."""
+@@ -853,6 +878,7 @@ def unit(self):
+     n = evalf
+ 
+     __truediv__ = __div__
++    __rtruediv__ = __rdiv__
+ 
+ class Point2D(Point):
+     """A point in a 2-dimensional Euclidean space.
