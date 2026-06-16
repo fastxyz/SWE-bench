@@ -34,6 +34,7 @@
 | verified013-codex-XC-MINI-PRO-AHP-20260616T004115Z | XC-MINI-PRO-AHP | gpt-5.5 | 10 | 9/10 | 9/10 | — | 2026-06-16T01:16:11.763294+00:00 |
 | verified014-codex-XC-MINI-PRO-AHP-20260616T024414Z | XC-MINI-PRO-AHP | gpt-5.5 | 10 | 9/10 | 9/10 | — | 2026-06-16T03:30:58.750297+00:00 |
 | verified015-codex-XC-MINI-PRO-AHP-20260616T034306Z | XC-MINI-PRO-AHP | gpt-5.5 | 10 | 7/10 | 8/10 | — | 2026-06-16T04:26:44.919595+00:00 |
+| verified016-codex-XC-MINI-PRO-AHP-20260616T043623Z | XC-MINI-PRO-AHP | gpt-5.5 | 10 | 8/10 | 8/10 | — | 2026-06-16T05:18:04.781133+00:00 |
 | verified036-codex-wsl-ubuntu-260615212520 | wsl-ubuntu | gpt-5.5 | 10 | 10/10 | 10/10 | — | 2026-06-16T03:02:44.210426+00:00 |
 | verified037-codex-wsl-ubuntu-260615221107 | wsl-ubuntu | gpt-5.5 | 10 | 10/10 | 10/10 | — | 2026-06-16T03:46:30.031039+00:00 |
 | verified038-codex-wsl-ubuntu-260615221107 | wsl-ubuntu | gpt-5.5 | 10 | 10/10 | 10/10 | — | 2026-06-16T04:31:58.941765+00:00 |
