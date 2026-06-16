@@ -1,0 +1,60 @@
+diff --git a/sympy/utilities/codegen.py b/sympy/utilities/codegen.py
+index f0befb2bd7..b18b4b0045 100644
+--- a/sympy/utilities/codegen.py
++++ b/sympy/utilities/codegen.py
+@@ -564,6 +564,19 @@ def _get_symbol(self, s):
+                 raise ValueError("Failed to print %s" % str(s))
+         return expr_str.strip()
+ 
++    def _get_input_arg_metadata(self, symbol, array_symbols=None):
++        array = None
++        if array_symbols is not None and symbol in array_symbols:
++            array = array_symbols[symbol]
++        elif isinstance(symbol, MatrixSymbol):
++            array = symbol
++
++        if array is None or not array.shape:
++            return {}
++
++        dims = [(S.Zero, dim - 1) for dim in array.shape]
++        return {'dimensions': dims}
++
+     def __init__(self, project="project", cse=False):
+         """Initialize a code generator.
+ 
+@@ -702,15 +715,7 @@ def routine(self, name, expr, argument_sequence=None, global_vars=None):
+             array_symbols[array] = array
+ 
+         for symbol in sorted(symbols, key=str):
+-            if symbol in array_symbols:
+-                dims = []
+-                array = array_symbols[symbol]
+-                for dim in array.shape:
+-                    dims.append((S.Zero, dim - 1))
+-                metadata = {'dimensions': dims}
+-            else:
+-                metadata = {}
+-
++            metadata = self._get_input_arg_metadata(symbol, array_symbols)
+             arg_list.append(InputArgument(symbol, **metadata))
+ 
+         output_args.sort(key=lambda x: str(x.name))
+@@ -721,6 +726,8 @@ def routine(self, name, expr, argument_sequence=None, global_vars=None):
+             new_sequence = []
+             for arg in argument_sequence:
+                 if isinstance(arg, IndexedBase):
++                    if arg.shape:
++                        array_symbols[arg.label] = arg
+                     new_sequence.append(arg.label)
+                 else:
+                     new_sequence.append(arg)
+@@ -739,7 +746,8 @@ def routine(self, name, expr, argument_sequence=None, global_vars=None):
+                 try:
+                     new_args.append(name_arg_dict[symbol])
+                 except KeyError:
+-                    new_args.append(InputArgument(symbol))
++                    metadata = self._get_input_arg_metadata(symbol, array_symbols)
++                    new_args.append(InputArgument(symbol, **metadata))
+             arg_list = new_args
+ 
+         return Routine(name, arg_list, return_val, local_vars, global_vars)

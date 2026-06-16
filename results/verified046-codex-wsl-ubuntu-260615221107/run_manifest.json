@@ -1,0 +1,57 @@
+{
+  "run_id": "verified046-codex-wsl-ubuntu-260615221107",
+  "created_utc": "2026-06-16T17:02:39.361624+00:00",
+  "host": {
+    "hostname": "wsl-ubuntu",
+    "os": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "arch": "x86_64",
+    "python": "3.12.3"
+  },
+  "agent": "codex",
+  "codex_version": "codex-cli 0.140.0",
+  "invocation": {
+    "model": "gpt-5.5",
+    "effort": "xhigh",
+    "sandbox": "workspace-write",
+    "max_turns": {
+      "baseline": 200,
+      "fvk": 200,
+      "control": 200
+    }
+  },
+  "dataset": "princeton-nlp/SWE-bench_Verified",
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "b7c2dd08d551bc15b1a3f1af5beab7dbf555521a2e7047fbd2b2ef7a18b6679a",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "fvk_bench_version": "0.1.0",
+  "git": {
+    "repo_sha": "09e9b2f2b203947ae6926dd14c360040bac5c820",
+    "submodules": {
+      "third_party/formal-verification-kit": "fef0123cd40a0205c03751ab42126c03b9a2c6ad",
+      "third_party/swe-bench-multilingual": "f08240bde99473837fbd4c87d7f5153efa01b32b",
+      "third_party/swebench-fvk-reproducibility": "983557904cca9cc54a15425f2ab0eb6524521155"
+    }
+  },
+  "max_parallel": 3,
+  "arms": [
+    "baseline",
+    "fvk"
+  ],
+  "instance_set": "verified500",
+  "instances": [
+    "sympy__sympy-15599",
+    "sympy__sympy-15809",
+    "sympy__sympy-15875",
+    "sympy__sympy-15976",
+    "sympy__sympy-16450",
+    "sympy__sympy-16597",
+    "sympy__sympy-16766",
+    "sympy__sympy-16792",
+    "sympy__sympy-16886",
+    "sympy__sympy-17139"
+  ],
+  "claude_bin": "claude",
+  "codex_bin": "codex"
+}
