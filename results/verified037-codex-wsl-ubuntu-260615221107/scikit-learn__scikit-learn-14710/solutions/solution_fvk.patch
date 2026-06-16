@@ -1,0 +1,42 @@
+diff --git a/sklearn/ensemble/_hist_gradient_boosting/gradient_boosting.py b/sklearn/ensemble/_hist_gradient_boosting/gradient_boosting.py
+index ad6a5a8ca3..a5dfd3eed2 100644
+--- a/sklearn/ensemble/_hist_gradient_boosting/gradient_boosting.py
++++ b/sklearn/ensemble/_hist_gradient_boosting/gradient_boosting.py
+@@ -420,6 +420,10 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
+         else:
+             return X_binned_train, y_train
+ 
++    def _get_y_for_scorer(self, y):
++        """Return target values expected by scorers."""
++        return y
++
+     def _check_early_stopping_scorer(self, X_binned_small_train, y_small_train,
+                                      X_binned_val, y_val):
+         """Check if fitting should be early-stopped based on scorer.
+@@ -427,12 +431,14 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
+         Scores are computed on validation data or on training data.
+         """
+         self.train_score_.append(
+-            self.scorer_(self, X_binned_small_train, y_small_train)
++            self.scorer_(self, X_binned_small_train,
++                         self._get_y_for_scorer(y_small_train))
+         )
+ 
+         if self._use_validation_data:
+             self.validation_score_.append(
+-                self.scorer_(self, X_binned_val, y_val)
++                self.scorer_(self, X_binned_val,
++                             self._get_y_for_scorer(y_val))
+             )
+             return self._should_stop(self.validation_score_)
+         else:
+@@ -1034,6 +1040,9 @@ class HistGradientBoostingClassifier(BaseHistGradientBoosting,
+         encoded_y = encoded_y.astype(Y_DTYPE, copy=False)
+         return encoded_y
+ 
++    def _get_y_for_scorer(self, y):
++        return self.classes_[y.astype(np.intp)]
++
+     def _get_loss(self):
+         if self.loss == 'auto':
+             if self.n_trees_per_iteration_ == 1:

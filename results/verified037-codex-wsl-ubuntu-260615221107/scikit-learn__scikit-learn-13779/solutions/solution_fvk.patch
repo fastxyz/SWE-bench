@@ -1,0 +1,38 @@
+diff --git a/sklearn/ensemble/voting.py b/sklearn/ensemble/voting.py
+index 7afa7180cc..93911990be 100644
+--- a/sklearn/ensemble/voting.py
++++ b/sklearn/ensemble/voting.py
+@@ -76,13 +76,16 @@ class _BaseVoting(_BaseComposition, TransformerMixin):
+                              '; got %d weights, %d estimators'
+                              % (len(self.weights), len(self.estimators)))
+ 
++        non_none_estimators = [(name, est) for name, est in self.estimators
++                               if est is not None]
++
+         if sample_weight is not None:
+-            for name, step in self.estimators:
++            for name, step in non_none_estimators:
+                 if not has_fit_parameter(step, 'sample_weight'):
+                     raise ValueError('Underlying estimator \'%s\' does not'
+                                      ' support sample weights.' % name)
+ 
+-        names, clfs = zip(*self.estimators)
++        names = [name for name, _ in self.estimators]
+         self._validate_names(names)
+ 
+         n_isnone = np.sum([clf is None for _, clf in self.estimators])
+@@ -93,11 +96,11 @@ class _BaseVoting(_BaseComposition, TransformerMixin):
+         self.estimators_ = Parallel(n_jobs=self.n_jobs)(
+                 delayed(_parallel_fit_estimator)(clone(clf), X, y,
+                                                  sample_weight=sample_weight)
+-                for clf in clfs if clf is not None)
++                for _, clf in non_none_estimators)
+ 
+         self.named_estimators_ = Bunch()
+-        for k, e in zip(self.estimators, self.estimators_):
+-            self.named_estimators_[k[0]] = e
++        for (name, _), e in zip(non_none_estimators, self.estimators_):
++            self.named_estimators_[name] = e
+         return self
+ 
+     def set_params(self, **params):
