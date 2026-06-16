@@ -1,0 +1,74 @@
+diff --git a/django/core/servers/basehttp.py b/django/core/servers/basehttp.py
+index fef5532e58..462cfec9b7 100644
+--- a/django/core/servers/basehttp.py
++++ b/django/core/servers/basehttp.py
+@@ -128,6 +128,44 @@ class ServerHandler(simple_server.ServerHandler):
+             LimitedStream(stdin, content_length), stdout, stderr, environ, **kwargs
+         )
+ 
++    def write(self, data):
++        if self.environ.get("REQUEST_METHOD") != "HEAD":
++            return super().write(data)
++
++        assert isinstance(data, bytes), "write() argument must be a bytestring"
++
++        if not self.status:
++            raise AssertionError("write() before start_response()")
++        elif not self.headers_sent:
++            self.bytes_sent = len(data)
++            self.send_headers()
++            self._flush()
++        else:
++            self.bytes_sent += len(data)
++
++    def sendfile(self):
++        if self.environ.get("REQUEST_METHOD") == "HEAD":
++            return False
++        return super().sendfile()
++
++    def finish_response(self):
++        if self.environ.get("REQUEST_METHOD") != "HEAD":
++            return super().finish_response()
++
++        try:
++            if not self.result_is_file() or not self.sendfile():
++                for data in self.result:
++                    self.write(data)
++                    break
++                self.finish_content()
++                self._flush()
++        except Exception:
++            if hasattr(self.result, "close"):
++                self.result.close()
++            raise
++        else:
++            self.close()
++
+     def cleanup_headers(self):
+         super().cleanup_headers()
+         # HTTP/1.1 requires support for persistent connections. Send 'close' if
+diff --git a/django/middleware/http.py b/django/middleware/http.py
+index 84c5466bb6..fa1e7d6ccb 100644
+--- a/django/middleware/http.py
++++ b/django/middleware/http.py
+@@ -5,16 +5,16 @@ from django.utils.http import parse_http_date_safe
+ 
+ class ConditionalGetMiddleware(MiddlewareMixin):
+     """
+-    Handle conditional GET operations. If the response has an ETag or
++    Handle conditional GET and HEAD operations. If the response has an ETag or
+     Last-Modified header and the request has If-None-Match or If-Modified-Since,
+     replace the response with HttpNotModified. Add an ETag header if needed.
+     """
+ 
+     def process_response(self, request, response):
+         # It's too late to prevent an unsafe request with a 412 response, and
+-        # for a HEAD request, the response body is always empty so computing
+-        # an accurate ETag isn't possible.
+-        if request.method != "GET":
++        # for safe requests, the response body is available for ETag
++        # calculation before the server strips it from HEAD responses.
++        if request.method not in ("GET", "HEAD"):
+             return response
+ 
+         if self.needs_etag(response) and not response.has_header("ETag"):
