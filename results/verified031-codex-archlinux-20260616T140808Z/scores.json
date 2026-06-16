@@ -1,0 +1,307 @@
+{
+  "run_id": "verified031-codex-archlinux-20260616T140808Z",
+  "arms": [
+    "baseline",
+    "fvk"
+  ],
+  "instances": {
+    "pydata__xarray-3151": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0c6-2a5d-79a0-bee1-08c7a134366a",
+        "num_turns": null,
+        "duration_seconds": 123.71802353099338,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "66/66"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0c6-2a5d-79a0-bee1-08c7a134366a",
+        "num_turns": null,
+        "duration_seconds": 298.7352772800077,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "66/66"
+        }
+      }
+    },
+    "pydata__xarray-3305": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0c6-2a5f-7523-acd1-8f5f8eba9c9e",
+        "num_turns": null,
+        "duration_seconds": 158.71057553801802,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "653/653"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0c6-2a5f-7523-acd1-8f5f8eba9c9e",
+        "num_turns": null,
+        "duration_seconds": 400.61827802698826,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "653/653"
+        }
+      }
+    },
+    "pydata__xarray-3677": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0c6-2a1d-74c1-a623-3803ff79dd80",
+        "num_turns": null,
+        "duration_seconds": 160.40266119301668,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "21/21"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0c6-2a1d-74c1-a623-3803ff79dd80",
+        "num_turns": null,
+        "duration_seconds": 388.38606234200415,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "21/21"
+        }
+      }
+    },
+    "pydata__xarray-3993": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0cc-a07c-7042-b7da-ace5ffb45e10",
+        "num_turns": null,
+        "duration_seconds": 306.4055729410029,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "2398/2398"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0cc-a07c-7042-b7da-ace5ffb45e10",
+        "num_turns": null,
+        "duration_seconds": 429.5753746269911,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "2398/2398"
+        }
+      }
+    },
+    "pydata__xarray-4075": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0ce-8f1e-77d0-ba00-8ca54695819f",
+        "num_turns": null,
+        "duration_seconds": 169.06048007198842,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "958/958"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0ce-8f1e-77d0-ba00-8ca54695819f",
+        "num_turns": null,
+        "duration_seconds": 384.4365349650034,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "958/958"
+        }
+      }
+    },
+    "pydata__xarray-4094": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0ce-b867-7011-8423-f02916b925bc",
+        "num_turns": null,
+        "duration_seconds": 203.48194616200635,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "862/862"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0ce-b867-7011-8423-f02916b925bc",
+        "num_turns": null,
+        "duration_seconds": 688.0472645720001,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "862/862"
+        }
+      }
+    },
+    "pydata__xarray-4356": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0d7-0991-7d83-9076-dfb87d3155f1",
+        "num_turns": null,
+        "duration_seconds": 138.79554850401473,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "8/8",
+          "ptp": "604/604"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0d7-0991-7d83-9076-dfb87d3155f1",
+        "num_turns": null,
+        "duration_seconds": 326.580458573997,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "8/8",
+          "ptp": "604/604"
+        }
+      }
+    },
+    "pydata__xarray-4629": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0d7-e3aa-7f53-840e-75293e036726",
+        "num_turns": null,
+        "duration_seconds": 84.59869306199835,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "32/32"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0d7-e3aa-7f53-840e-75293e036726",
+        "num_turns": null,
+        "duration_seconds": 363.3786249269906,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "32/32"
+        }
+      }
+    },
+    "pydata__xarray-4687": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0dc-5bce-73b2-8f88-b40dd84426b6",
+        "num_turns": null,
+        "duration_seconds": 351.15765931500937,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "1717/1717"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0dc-5bce-73b2-8f88-b40dd84426b6",
+        "num_turns": null,
+        "duration_seconds": 350.1972060549888,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "1717/1717"
+        }
+      }
+    },
+    "pydata__xarray-4695": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0de-2ae8-7760-b064-678d3509fb84",
+        "num_turns": null,
+        "duration_seconds": 128.7065897140128,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "875/875"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed0de-2ae8-7760-b064-678d3509fb84",
+        "num_turns": null,
+        "duration_seconds": 465.23196893400745,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "875/875"
+        }
+      }
+    }
+  },
+  "aggregates": {
+    "arms": {
+      "baseline": {
+        "resolved": 10,
+        "evaluated": 10
+      },
+      "fvk": {
+        "resolved": 10,
+        "evaluated": 10
+      }
+    },
+    "flips": {
+      "baseline_to_fvk": {
+        "up": [],
+        "down": []
+      }
+    }
+  }
+}

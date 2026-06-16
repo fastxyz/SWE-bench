@@ -1,0 +1,78 @@
+{
+  "run_id": "verified031-codex-archlinux-20260616T140808Z",
+  "instance_id": "pydata__xarray-3993",
+  "baseline_session_id": "019ed0cc-a07c-7042-b7da-ace5ffb45e10",
+  "core_hash_post_baseline": "6fbdaa40de68f17624ce42cdd5c22c119e8efbc6c5c7cd69cb7c62f4898131b6",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ed0cc-a07c-7042-b7da-ace5ffb45e10",
+      "attempts": 1,
+      "started_at": "2026-06-16T14:18:51.605514+00:00",
+      "ended_at": "2026-06-16T14:23:58.015587+00:00",
+      "num_turns": null,
+      "duration_seconds": 306.4055729410029,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "update_plan": 4,
+          "exec_command": 51,
+          "apply_patch": 2
+        },
+        "violations": [],
+        "exec_warnings": [
+          "{\"cmd\":\"rg \\\"filterwarnings|error::|FutureWarning|DeprecationWarning\\\" repo/setup.cfg repo/pytest.ini repo/tox.ini -n\",\"workdir\":\"/home/yuqing/.swe-fvk-runs/verified031-codex-archlinux-20260616T140808"
+        ],
+        "unparseable_lines": 0,
+        "lines": 211
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ed0cc-a07c-7042-b7da-ace5ffb45e10",
+      "attempts": 1,
+      "started_at": "2026-06-16T14:23:58.121105+00:00",
+      "ended_at": "2026-06-16T14:31:07.713532+00:00",
+      "num_turns": null,
+      "duration_seconds": 429.5753746269911,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "update_plan": 10,
+          "exec_command": 98,
+          "apply_patch": 4
+        },
+        "violations": [],
+        "exec_warnings": [
+          "{\"cmd\":\"rg \\\"filterwarnings|error::|FutureWarning|DeprecationWarning\\\" repo/setup.cfg repo/pytest.ini repo/tox.ini -n\",\"workdir\":\"/home/yuqing/.swe-fvk-runs/verified031-codex-archlinux-20260616T140808"
+        ],
+        "unparseable_lines": 0,
+        "lines": 411
+      }
+    },
+    "control": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    }
+  },
+  "agent": "codex",
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "b7c2dd08d551bc15b1a3f1af5beab7dbf555521a2e7047fbd2b2ef7a18b6679a",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": null,
+    "fvk": null,
+    "control": null
+  }
+}

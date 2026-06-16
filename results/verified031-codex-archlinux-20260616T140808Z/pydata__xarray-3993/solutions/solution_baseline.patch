@@ -1,0 +1,63 @@
+diff --git a/xarray/core/dataarray.py b/xarray/core/dataarray.py
+index 2fef3edb..358239e5 100644
+--- a/xarray/core/dataarray.py
++++ b/xarray/core/dataarray.py
+@@ -190,6 +190,26 @@ def _check_data_shape(data, coords, dims):
+     return data
+ 
+ 
++def _deprecate_dataarray_integrate_dim(func):
++    @functools.wraps(func)
++    def wrapper(self, *args, **kwargs):
++        if "dim" in kwargs:
++            if args or "coord" in kwargs:
++                raise TypeError("cannot specify both 'coord' and 'dim'")
++
++            warnings.warn(
++                "The `dim` argument to DataArray.integrate is deprecated. "
++                "Use `coord` instead.",
++                FutureWarning,
++                stacklevel=2,
++            )
++            kwargs["coord"] = kwargs.pop("dim")
++
++        return func(self, *args, **kwargs)
++
++    return wrapper
++
++
+ class _LocIndexer:
+     __slots__ = ("data_array",)
+ 
+@@ -3480,18 +3500,19 @@ class DataArray(AbstractArray, DataWithCoords):
+         ds = self._to_temp_dataset().differentiate(coord, edge_order, datetime_unit)
+         return self._from_temp_dataset(ds)
+ 
++    @_deprecate_dataarray_integrate_dim
+     def integrate(
+-        self, dim: Union[Hashable, Sequence[Hashable]], datetime_unit: str = None
++        self, coord: Union[Hashable, Sequence[Hashable]], datetime_unit: str = None
+     ) -> "DataArray":
+         """ integrate the array with the trapezoidal rule.
+ 
+         .. note::
+-            This feature is limited to simple cartesian geometry, i.e. dim
++            This feature is limited to simple cartesian geometry, i.e. coord
+             must be one dimensional.
+ 
+         Parameters
+         ----------
+-        dim : hashable, or sequence of hashable
++        coord : hashable, or sequence of hashable
+             Coordinate(s) used for the integration.
+         datetime_unit : {"Y", "M", "W", "D", "h", "m", "s", "ms", "us", "ns", \
+                          "ps", "fs", "as"}, optional
+@@ -3528,7 +3549,7 @@ class DataArray(AbstractArray, DataWithCoords):
+         array([5.4, 6.6, 7.8])
+         Dimensions without coordinates: y
+         """
+-        ds = self._to_temp_dataset().integrate(dim, datetime_unit)
++        ds = self._to_temp_dataset().integrate(coord, datetime_unit)
+         return self._from_temp_dataset(ds)
+ 
+     def unify_chunks(self) -> "DataArray":
