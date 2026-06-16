@@ -1,0 +1,45 @@
+diff --git a/lib/matplotlib/axis.py b/lib/matplotlib/axis.py
+index c0e706e2b3..78ff0d87be 100644
+--- a/lib/matplotlib/axis.py
++++ b/lib/matplotlib/axis.py
+@@ -33,6 +33,13 @@ _gridline_param_names = ['grid_' + name
+                          for name in _line_param_names + _line_param_aliases]
+ 
+ 
++def _get_tick_label_color(tick_name):
++    color = mpl.rcParams[f'{tick_name}.labelcolor']
++    if color == 'inherit':
++        color = mpl.rcParams[f'{tick_name}.color']
++    return color
++
++
+ class Tick(martist.Artist):
+     """
+     Abstract base class for the axis ticks, grid lines and labels.
+@@ -120,7 +127,7 @@ class Tick(martist.Artist):
+         self._base_pad = pad
+ 
+         if labelcolor is None:
+-            labelcolor = mpl.rcParams[f"{name}.labelcolor"]
++            labelcolor = _get_tick_label_color(name)
+ 
+         if labelcolor == 'inherit':
+             # inherit from tick color
+@@ -2255,7 +2262,7 @@ class XAxis(Axis):
+             transform=mtransforms.blended_transform_factory(
+                 self.axes.transAxes, mtransforms.IdentityTransform()),
+             fontsize=mpl.rcParams['xtick.labelsize'],
+-            color=mpl.rcParams['xtick.color'],
++            color=_get_tick_label_color('xtick'),
+         )
+         self.offset_text_position = 'bottom'
+ 
+@@ -2515,7 +2522,7 @@ class YAxis(Axis):
+             transform=mtransforms.blended_transform_factory(
+                 self.axes.transAxes, mtransforms.IdentityTransform()),
+             fontsize=mpl.rcParams['ytick.labelsize'],
+-            color=mpl.rcParams['ytick.color'],
++            color=_get_tick_label_color('ytick'),
+         )
+         self.offset_text_position = 'left'
+ 

@@ -1,0 +1,45 @@
+diff --git a/lib/matplotlib/cm.py b/lib/matplotlib/cm.py
+index 38158db956..325d1d251c 100644
+--- a/lib/matplotlib/cm.py
++++ b/lib/matplotlib/cm.py
+@@ -197,7 +197,10 @@ class ColormapRegistry(Mapping):
+         """
+         # get the default color map
+         if cmap is None:
+-            return self[mpl.rcParams["image.cmap"]]
++            cmap = mpl.rcParams["image.cmap"]
++            if isinstance(cmap, colors.Colormap):
++                return cmap
++            return self[cmap]
+ 
+         # if the user passed in a Colormap, simply return it
+         if isinstance(cmap, colors.Colormap):
+@@ -714,9 +717,11 @@ def _ensure_cmap(cmap):
+     Colormap
+ 
+     """
++    if cmap is None:
++        cmap = mpl.rcParams["image.cmap"]
+     if isinstance(cmap, colors.Colormap):
+         return cmap
+-    cmap_name = cmap if cmap is not None else mpl.rcParams["image.cmap"]
++    cmap_name = cmap
+     # use check_in_list to ensure type stability of the exception raised by
+     # the internal usage of this (ValueError vs KeyError)
+     _api.check_in_list(sorted(_colormaps), cmap=cmap_name)
+diff --git a/lib/matplotlib/pyplot.py b/lib/matplotlib/pyplot.py
+index 58ce4c03fa..8910854010 100644
+--- a/lib/matplotlib/pyplot.py
++++ b/lib/matplotlib/pyplot.py
+@@ -2278,9 +2278,10 @@ def set_cmap(cmap: Colormap | str) -> None:
+     matplotlib.cm.register_cmap
+     matplotlib.cm.get_cmap
+     """
++    cmap_name = cmap if isinstance(cmap, str) else None
+     cmap = get_cmap(cmap)
+ 
+-    rc('image', cmap=cmap.name)
++    rc('image', cmap=cmap_name if cmap_name is not None else cmap)
+     im = gci()
+ 
+     if im is not None:

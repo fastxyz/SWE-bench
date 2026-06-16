@@ -1,0 +1,51 @@
+{
+    "total_instances": 10,
+    "submitted_instances": 10,
+    "completed_instances": 10,
+    "resolved_instances": 8,
+    "unresolved_instances": 2,
+    "empty_patch_instances": 0,
+    "error_instances": 0,
+    "completed_ids": [
+        "matplotlib__matplotlib-24570",
+        "matplotlib__matplotlib-24627",
+        "matplotlib__matplotlib-24637",
+        "matplotlib__matplotlib-24870",
+        "matplotlib__matplotlib-24970",
+        "matplotlib__matplotlib-25122",
+        "matplotlib__matplotlib-25287",
+        "matplotlib__matplotlib-25311",
+        "matplotlib__matplotlib-25332",
+        "matplotlib__matplotlib-25479"
+    ],
+    "incomplete_ids": [],
+    "empty_patch_ids": [],
+    "submitted_ids": [
+        "matplotlib__matplotlib-24570",
+        "matplotlib__matplotlib-24627",
+        "matplotlib__matplotlib-24637",
+        "matplotlib__matplotlib-24870",
+        "matplotlib__matplotlib-24970",
+        "matplotlib__matplotlib-25122",
+        "matplotlib__matplotlib-25287",
+        "matplotlib__matplotlib-25311",
+        "matplotlib__matplotlib-25332",
+        "matplotlib__matplotlib-25479"
+    ],
+    "resolved_ids": [
+        "matplotlib__matplotlib-24570",
+        "matplotlib__matplotlib-24627",
+        "matplotlib__matplotlib-24637",
+        "matplotlib__matplotlib-24970",
+        "matplotlib__matplotlib-25122",
+        "matplotlib__matplotlib-25287",
+        "matplotlib__matplotlib-25311",
+        "matplotlib__matplotlib-25332"
+    ],
+    "unresolved_ids": [
+        "matplotlib__matplotlib-24870",
+        "matplotlib__matplotlib-25479"
+    ],
+    "error_ids": [],
+    "schema_version": 2
+}

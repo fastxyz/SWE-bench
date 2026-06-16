@@ -1,0 +1,307 @@
+{
+  "run_id": "verified028-codex-archlinux-20260616T095431Z",
+  "arms": [
+    "baseline",
+    "fvk"
+  ],
+  "instances": {
+    "matplotlib__matplotlib-24570": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecfe2-b43c-7853-afde-3fe1331a34fa",
+        "num_turns": null,
+        "duration_seconds": 143.05944322700088,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "267/267"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecfe2-b43c-7853-afde-3fe1331a34fa",
+        "num_turns": null,
+        "duration_seconds": 616.850160172995,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "267/267"
+        }
+      }
+    },
+    "matplotlib__matplotlib-24627": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecfe2-b45f-7261-a25d-a7fe18f6692f",
+        "num_turns": null,
+        "duration_seconds": 682.1468751640059,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "776/776"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecfe2-b45f-7261-a25d-a7fe18f6692f",
+        "num_turns": null,
+        "duration_seconds": 488.28641457800404,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "776/776"
+        }
+      }
+    },
+    "matplotlib__matplotlib-24637": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecfe2-b443-7843-8e27-01783b7785ae",
+        "num_turns": null,
+        "duration_seconds": 245.4754445819999,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "29/29"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecfe2-b443-7843-8e27-01783b7785ae",
+        "num_turns": null,
+        "duration_seconds": 806.9922586570028,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "29/29"
+        }
+      }
+    },
+    "matplotlib__matplotlib-24870": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecfee-8b1f-70f0-9553-cc4827a2701a",
+        "num_turns": null,
+        "duration_seconds": 295.39683064199926,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "65/65"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecfee-8b1f-70f0-9553-cc4827a2701a",
+        "num_turns": null,
+        "duration_seconds": 550.8846045550017,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "65/65"
+        }
+      }
+    },
+    "matplotlib__matplotlib-24970": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecff2-f9a7-7d61-82ab-b9ed932e23a6",
+        "num_turns": null,
+        "duration_seconds": 213.8097633490106,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "253/253"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecff2-f9a7-7d61-82ab-b9ed932e23a6",
+        "num_turns": null,
+        "duration_seconds": 465.10384281599545,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "253/253"
+        }
+      }
+    },
+    "matplotlib__matplotlib-25122": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecff4-c5cb-7812-b176-89b44f0980ac",
+        "num_turns": null,
+        "duration_seconds": 165.52803868000046,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "12/12",
+          "ptp": "2476/2476"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecff4-c5cb-7812-b176-89b44f0980ac",
+        "num_turns": null,
+        "duration_seconds": 335.76807396599906,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "12/12",
+          "ptp": "2476/2476"
+        }
+      }
+    },
+    "matplotlib__matplotlib-25287": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecffb-abba-7ec0-b0bb-a40e3d8a91e4",
+        "num_turns": null,
+        "duration_seconds": 194.91216037698905,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "786/786"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecffb-abba-7ec0-b0bb-a40e3d8a91e4",
+        "num_turns": null,
+        "duration_seconds": 373.8730932920007,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "786/786"
+        }
+      }
+    },
+    "matplotlib__matplotlib-25311": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecffc-a21c-78b3-8749-e6fd67a5fe5b",
+        "num_turns": null,
+        "duration_seconds": 338.6617968149949,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "181/181"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecffc-a21c-78b3-8749-e6fd67a5fe5b",
+        "num_turns": null,
+        "duration_seconds": 358.15766677800275,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "181/181"
+        }
+      }
+    },
+    "matplotlib__matplotlib-25332": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecffd-8f9b-7501-829c-9893e7b0f8de",
+        "num_turns": null,
+        "duration_seconds": 177.6079994009924,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "181/181"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecffd-8f9b-7501-829c-9893e7b0f8de",
+        "num_turns": null,
+        "duration_seconds": 253.73481030399853,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "181/181"
+        }
+      }
+    },
+    "matplotlib__matplotlib-25479": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed004-59f6-78f1-8d12-31285a344f19",
+        "num_turns": null,
+        "duration_seconds": 232.6145956209948,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/2",
+          "ptp": "263/263"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed004-59f6-78f1-8d12-31285a344f19",
+        "num_turns": null,
+        "duration_seconds": 860.3781303440046,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/2",
+          "ptp": "263/263"
+        }
+      }
+    }
+  },
+  "aggregates": {
+    "arms": {
+      "baseline": {
+        "resolved": 8,
+        "evaluated": 10
+      },
+      "fvk": {
+        "resolved": 8,
+        "evaluated": 10
+      }
+    },
+    "flips": {
+      "baseline_to_fvk": {
+        "up": [],
+        "down": []
+      }
+    }
+  }
+}

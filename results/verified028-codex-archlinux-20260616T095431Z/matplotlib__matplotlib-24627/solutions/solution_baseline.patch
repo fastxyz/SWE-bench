@@ -1,0 +1,125 @@
+diff --git a/lib/matplotlib/artist.py b/lib/matplotlib/artist.py
+index 99577ece53..ea47bb3670 100644
+--- a/lib/matplotlib/artist.py
++++ b/lib/matplotlib/artist.py
+@@ -84,6 +84,28 @@ def _stale_axes_callback(self, val):
+         self.axes.stale = val
+ 
+ 
++def _remove_artist_from_parent(artist):
++    """Clear parent bookkeeping after *artist* has been removed."""
++    artist.stale_callback = None
++
++    try:
++        axes = artist.axes
++    except AttributeError:
++        axes = None
++    if axes:
++        if hasattr(axes, "_mouseover_set"):
++            axes._mouseover_set.discard(artist)
++        if hasattr(axes, "stale"):
++            axes.stale = True
++        try:
++            artist.axes = None
++        except AttributeError:
++            pass
++
++    if getattr(artist, "figure", None):
++        artist.figure = None
++
++
+ _XYPair = namedtuple("_XYPair", "x y")
+ 
+ 
+diff --git a/lib/matplotlib/axes/_base.py b/lib/matplotlib/axes/_base.py
+index 90b0bf117e..862e0c1a64 100644
+--- a/lib/matplotlib/axes/_base.py
++++ b/lib/matplotlib/axes/_base.py
+@@ -1283,6 +1283,13 @@ class _AxesBase(martist.Artist):
+ 
+         xaxis_visible = self.xaxis.get_visible()
+         yaxis_visible = self.yaxis.get_visible()
++        old_children = list(getattr(self, "_children", []))
++        old_child_axes = list(getattr(self, "child_axes", []))
++        old_legend = getattr(self, "legend_", None)
++        old_title_artists = [
++            getattr(self, name, None)
++            for name in ("title", "_left_title", "_right_title")]
++        old_patch = getattr(self, "patch", None)
+ 
+         for axis in self._axis_map.values():
+             axis.clear()  # Also resets the scale to linear.
+@@ -1309,11 +1316,17 @@ class _AxesBase(martist.Artist):
+ 
+         self._gridOn = mpl.rcParams['axes.grid']
+         self._children = []
++        for artist in old_children:
++            martist._remove_artist_from_parent(artist)
+         self._mouseover_set = _OrderedSet()
+         self.child_axes = []
++        for ax in old_child_axes:
++            martist._remove_artist_from_parent(ax)
+         self._current_image = None  # strictly for pyplot via _sci, _gci
+         self._projection_init = None  # strictly for pyplot.subplot
+         self.legend_ = None
++        if old_legend is not None:
++            martist._remove_artist_from_parent(old_legend)
+         self.containers = []
+ 
+         self.grid(False)  # Disable grid on init to use rcParameter
+@@ -1354,6 +1367,9 @@ class _AxesBase(martist.Artist):
+ 
+         for _title in (self.title, self._left_title, self._right_title):
+             self._set_artist_props(_title)
++        for _title in old_title_artists:
++            if _title is not None:
++                martist._remove_artist_from_parent(_title)
+ 
+         # The patch draws the background of the Axes.  We want this to be below
+         # the other artists.  We use the frame to draw the edges so we are
+@@ -1364,6 +1380,8 @@ class _AxesBase(martist.Artist):
+         self.patch.set_edgecolor('none')
+         self.patch.set_linewidth(0)
+         self.patch.set_transform(self.transAxes)
++        if old_patch is not None:
++            martist._remove_artist_from_parent(old_patch)
+ 
+         self.set_axis_on()
+ 
+diff --git a/lib/matplotlib/figure.py b/lib/matplotlib/figure.py
+index 6c18ba1a64..099a54858f 100644
+--- a/lib/matplotlib/figure.py
++++ b/lib/matplotlib/figure.py
+@@ -25,7 +25,8 @@ import numpy as np
+ import matplotlib as mpl
+ from matplotlib import _blocking_input, backend_bases, _docstring, projections
+ from matplotlib.artist import (
+-    Artist, allow_rasterization, _finalize_rasterization)
++    Artist, allow_rasterization, _finalize_rasterization,
++    _remove_artist_from_parent)
+ from matplotlib.backend_bases import (
+     DrawEvent, FigureCanvasBase, NonGuiException, MouseButton, _get_renderer)
+ import matplotlib._api as _api
+@@ -941,14 +942,21 @@ default: %(va)s
+         self.suppressComposite = None
+ 
+         # first clear the axes in any subfigures
+-        for subfig in self.subfigs:
++        old_subfigs = list(self.subfigs)
++        for subfig in old_subfigs:
+             subfig.clear(keep_observers=keep_observers)
+         self.subfigs = []
++        for subfig in old_subfigs:
++            _remove_artist_from_parent(subfig)
+ 
+         for ax in tuple(self.axes):  # Iterate over the copy.
+             ax.clear()
+             self.delaxes(ax)  # Remove ax from self._axstack.
++            _remove_artist_from_parent(ax)
+ 
++        for artist in (*self.artists, *self.lines, *self.patches,
++                       *self.texts, *self.images, *self.legends):
++            _remove_artist_from_parent(artist)
+         self.artists = []
+         self.lines = []
+         self.patches = []

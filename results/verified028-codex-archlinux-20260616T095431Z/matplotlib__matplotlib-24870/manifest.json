@@ -1,0 +1,73 @@
+{
+  "run_id": "verified028-codex-archlinux-20260616T095431Z",
+  "instance_id": "matplotlib__matplotlib-24870",
+  "baseline_session_id": "019ecfee-8b1f-70f0-9553-cc4827a2701a",
+  "core_hash_post_baseline": "5345de2fda223f7312fdb239171280b859a17a30bb0b42e78419506508ec5e73",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ecfee-8b1f-70f0-9553-cc4827a2701a",
+      "attempts": 1,
+      "started_at": "2026-06-16T10:16:17.086473+00:00",
+      "ended_at": "2026-06-16T10:21:12.489602+00:00",
+      "num_turns": null,
+      "duration_seconds": 295.39683064199926,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "exec_command": 32,
+          "apply_patch": 2
+        },
+        "violations": [],
+        "exec_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 122
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ecfee-8b1f-70f0-9553-cc4827a2701a",
+      "attempts": 1,
+      "started_at": "2026-06-16T10:21:12.847579+00:00",
+      "ended_at": "2026-06-16T10:30:23.738053+00:00",
+      "num_turns": null,
+      "duration_seconds": 550.8846045550017,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "exec_command": 85,
+          "apply_patch": 7,
+          "update_plan": 5
+        },
+        "violations": [],
+        "exec_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 346
+      }
+    },
+    "control": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    }
+  },
+  "agent": "codex",
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "b7c2dd08d551bc15b1a3f1af5beab7dbf555521a2e7047fbd2b2ef7a18b6679a",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": null,
+    "fvk": null,
+    "control": null
+  }
+}

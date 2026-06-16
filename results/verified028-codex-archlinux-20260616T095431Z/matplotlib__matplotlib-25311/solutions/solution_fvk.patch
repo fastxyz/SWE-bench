@@ -1,0 +1,95 @@
+diff --git a/lib/matplotlib/offsetbox.py b/lib/matplotlib/offsetbox.py
+index 1dee8a23d9..8f05a454b9 100644
+--- a/lib/matplotlib/offsetbox.py
++++ b/lib/matplotlib/offsetbox.py
+@@ -1505,7 +1505,7 @@ class DraggableBase:
+         if not ref_artist.pickable():
+             ref_artist.set_picker(True)
+         self.got_artist = False
+-        self.canvas = self.ref_artist.figure.canvas
++        self._canvas = self.ref_artist.figure.canvas
+         self._use_blit = use_blit and self.canvas.supports_blit
+         self.cids = [
+             self.canvas.callbacks._connect_picklable(
+@@ -1514,12 +1514,42 @@ class DraggableBase:
+                 'button_release_event', self.on_release),
+         ]
+ 
++    @property
++    def canvas(self):
++        canvas = getattr(self, "_canvas", None)
++        if canvas is None and self.ref_artist.figure is not None:
++            canvas = self._canvas = self.ref_artist.figure.canvas
++        return canvas
++
++    @canvas.setter
++    def canvas(self, canvas):
++        self._canvas = canvas
++
++    def __getstate__(self):
++        state = self.__dict__.copy()
++        state.pop("canvas", None)
++        state["_canvas"] = None
++        state["got_artist"] = False
++        state.pop("background", None)
++        return state
++
++    def __setstate__(self, state):
++        # Backward compatibility for pickles created before canvas was renamed
++        # to _canvas.
++        state.pop("canvas", None)
++        state.setdefault("_canvas", None)
++        self.__dict__ = state
++
++    def _use_blitting(self):
++        canvas = self.canvas
++        return self._use_blit and canvas is not None and canvas.supports_blit
++
+     def on_motion(self, evt):
+         if self._check_still_parented() and self.got_artist:
+             dx = evt.x - self.mouse_x
+             dy = evt.y - self.mouse_y
+             self.update_offset(dx, dy)
+-            if self._use_blit:
++            if self._use_blitting():
+                 self.canvas.restore_region(self.background)
+                 self.ref_artist.draw(
+                     self.ref_artist.figure._get_renderer())
+@@ -1532,7 +1562,7 @@ class DraggableBase:
+             self.mouse_x = evt.mouseevent.x
+             self.mouse_y = evt.mouseevent.y
+             self.got_artist = True
+-            if self._use_blit:
++            if self._use_blitting():
+                 self.ref_artist.set_animated(True)
+                 self.canvas.draw()
+                 self.background = \
+@@ -1550,7 +1580,7 @@ class DraggableBase:
+             self.got_artist = False
+             self.canvas.mpl_disconnect(self._c1)
+ 
+-            if self._use_blit:
++            if self._use_blitting():
+                 self.ref_artist.set_animated(False)
+ 
+     def _check_still_parented(self):
+@@ -1562,14 +1592,17 @@ class DraggableBase:
+ 
+     def disconnect(self):
+         """Disconnect the callbacks."""
++        canvas = self.canvas
++        if canvas is None:
++            return
+         for cid in self.cids:
+-            self.canvas.mpl_disconnect(cid)
++            canvas.mpl_disconnect(cid)
+         try:
+             c1 = self._c1
+         except AttributeError:
+             pass
+         else:
+-            self.canvas.mpl_disconnect(c1)
++            canvas.mpl_disconnect(c1)
+ 
+     def save_offset(self):
+         pass
