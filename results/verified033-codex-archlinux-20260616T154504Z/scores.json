@@ -1,0 +1,307 @@
+{
+  "run_id": "verified033-codex-archlinux-20260616T154504Z",
+  "arms": [
+    "baseline",
+    "fvk"
+  ],
+  "instances": {
+    "pylint-dev__pylint-4551": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed11e-6b53-7bb3-9601-e285a10542d1",
+        "num_turns": null,
+        "duration_seconds": 271.7710211779922,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/10",
+          "ptp": "0/0"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed11e-6b53-7bb3-9601-e285a10542d1",
+        "num_turns": null,
+        "duration_seconds": 359.6504509189981,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/10",
+          "ptp": "0/0"
+        }
+      }
+    },
+    "pylint-dev__pylint-4604": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed11e-6b6e-73f1-91ee-e82b4f690125",
+        "num_turns": null,
+        "duration_seconds": 191.80541714502033,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/21",
+          "ptp": "0/0"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed11e-6b6e-73f1-91ee-e82b4f690125",
+        "num_turns": null,
+        "duration_seconds": 516.302202824998,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/21",
+          "ptp": "0/0"
+        }
+      }
+    },
+    "pylint-dev__pylint-4661": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed11e-6b78-7251-ad8d-9d7f6410d376",
+        "num_turns": null,
+        "duration_seconds": 233.02493687099195,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "0/0"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed11e-6b78-7251-ad8d-9d7f6410d376",
+        "num_turns": null,
+        "duration_seconds": 386.38012246901053,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "0/0"
+        }
+      }
+    },
+    "pylint-dev__pylint-4970": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed127-e554-78f2-a174-f141568b31d0",
+        "num_turns": null,
+        "duration_seconds": 250.14035220397636,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "17/17"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed127-e554-78f2-a174-f141568b31d0",
+        "num_turns": null,
+        "duration_seconds": 413.9371938870172,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "17/17"
+        }
+      }
+    },
+    "pylint-dev__pylint-6386": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed128-151b-7f20-ac32-56a13c218e5e",
+        "num_turns": null,
+        "duration_seconds": 234.05083447499783,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "7/7"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed128-151b-7f20-ac32-56a13c218e5e",
+        "num_turns": null,
+        "duration_seconds": 416.39026587997796,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "7/7"
+        }
+      }
+    },
+    "pylint-dev__pylint-6528": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed129-412e-7012-a85d-6cad91f6ac43",
+        "num_turns": null,
+        "duration_seconds": 379.8081326709944,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "2/4",
+          "ptp": "171/171"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed129-412e-7012-a85d-6cad91f6ac43",
+        "num_turns": null,
+        "duration_seconds": 401.2394173029752,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "2/4",
+          "ptp": "171/171"
+        }
+      }
+    },
+    "pylint-dev__pylint-6903": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed132-0af4-78e2-b18a-c8d3abd0fe25",
+        "num_turns": null,
+        "duration_seconds": 159.84935477899853,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "8/8"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed132-0af4-78e2-b18a-c8d3abd0fe25",
+        "num_turns": null,
+        "duration_seconds": 444.1378788599977,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "8/8"
+        }
+      }
+    },
+    "pylint-dev__pylint-7080": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed132-11ae-7c10-b654-d2d03ac2653f",
+        "num_turns": null,
+        "duration_seconds": 382.88053859898355,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "120/120"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed132-11ae-7c10-b654-d2d03ac2653f",
+        "num_turns": null,
+        "duration_seconds": 416.38854515901767,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "120/120"
+        }
+      }
+    },
+    "pylint-dev__pylint-7277": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed135-356c-7120-8cf5-05c2d7b9505c",
+        "num_turns": null,
+        "duration_seconds": 159.18114929800504,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "122/122"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed135-356c-7120-8cf5-05c2d7b9505c",
+        "num_turns": null,
+        "duration_seconds": 416.5207981019921,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "122/122"
+        }
+      }
+    },
+    "pylint-dev__pylint-8898": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed13b-4ce3-7120-8f5e-43b979dc010b",
+        "num_turns": null,
+        "duration_seconds": 286.55781978098094,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "18/18"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ed13b-4ce3-7120-8f5e-43b979dc010b",
+        "num_turns": null,
+        "duration_seconds": 398.86231866199523,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "18/18"
+        }
+      }
+    }
+  },
+  "aggregates": {
+    "arms": {
+      "baseline": {
+        "resolved": 5,
+        "evaluated": 10
+      },
+      "fvk": {
+        "resolved": 5,
+        "evaluated": 10
+      }
+    },
+    "flips": {
+      "baseline_to_fvk": {
+        "up": [],
+        "down": []
+      }
+    }
+  }
+}

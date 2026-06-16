@@ -1,0 +1,58 @@
+diff --git a/pylint/config/argument.py b/pylint/config/argument.py
+index 30a5fd175..9588ee456 100644
+--- a/pylint/config/argument.py
++++ b/pylint/config/argument.py
+@@ -111,10 +111,52 @@ def _regex_transformer(value: str) -> Pattern[str]:
+         raise argparse.ArgumentTypeError(msg) from e
+ 
+ 
++def _split_regex_csv(value: str) -> Sequence[str]:
++    """Split comma-separated regex values on commas that are not regex syntax."""
++    patterns: list[str] = []
++    pattern: list[str] = []
++    escaped = False
++    in_character_class = False
++    open_brace = False
++
++    for char in value:
++        if escaped:
++            pattern.append(char)
++            escaped = False
++            continue
++
++        if char == "\\":
++            pattern.append(char)
++            escaped = True
++            continue
++
++        if char == "[" and not in_character_class:
++            in_character_class = True
++        elif char == "]" and in_character_class:
++            in_character_class = False
++        elif char == "{" and not in_character_class:
++            open_brace = True
++        elif char == "}" and open_brace and not in_character_class:
++            open_brace = False
++
++        if char == "," and not in_character_class and not open_brace:
++            joined_pattern = "".join(pattern).strip()
++            if joined_pattern:
++                patterns.append(joined_pattern)
++            pattern = []
++        else:
++            pattern.append(char)
++
++    joined_pattern = "".join(pattern).strip()
++    if joined_pattern:
++        patterns.append(joined_pattern)
++    return patterns
++
++
+ def _regexp_csv_transfomer(value: str) -> Sequence[Pattern[str]]:
+     """Transforms a comma separated list of regular expressions."""
+     patterns: list[Pattern[str]] = []
+-    for pattern in _csv_transformer(value):
++    for pattern in _split_regex_csv(value):
+         patterns.append(_regex_transformer(pattern))
+     return patterns
+ 

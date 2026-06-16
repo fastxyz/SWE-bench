@@ -1,0 +1,61 @@
+diff --git a/pylint/checkers/variables.py b/pylint/checkers/variables.py
+index 3ddafd599..ce1e868a9 100644
+--- a/pylint/checkers/variables.py
++++ b/pylint/checkers/variables.py
+@@ -300,6 +300,22 @@ def _fix_dot_imports(not_consumed):
+     return sorted(names.items(), key=lambda a: a[1].fromlineno)
+ 
+ 
++def _qualified_names_from_attribute(attribute):
++    """Return dotted prefixes represented by an Attribute node."""
++    names = [attribute.attrname]
++    expr = attribute.expr
++    while isinstance(expr, astroid.Attribute):
++        names.append(expr.attrname)
++        expr = expr.expr
++
++    if not isinstance(expr, astroid.Name):
++        return ()
++
++    names.append(expr.name)
++    names.reverse()
++    return tuple(".".join(names[:index]) for index in range(1, len(names) + 1))
++
++
+ def _find_frame_imports(name, frame):
+     """
+     Detect imports in the frame, with the required
+@@ -1826,6 +1842,16 @@ class VariablesChecker(BaseChecker):
+             self._type_annotation_names.append(type_annotation.name)
+             return
+ 
++        if isinstance(type_annotation, astroid.Attribute):
++            self._type_annotation_names.extend(
++                annotation.name
++                for annotation in type_annotation.nodes_of_class(astroid.Name)
++            )
++            self._type_annotation_names.extend(
++                _qualified_names_from_attribute(type_annotation)
++            )
++            return
++
+         if not isinstance(type_annotation, astroid.Subscript):
+             return
+ 
+@@ -1835,12 +1861,15 @@ class VariablesChecker(BaseChecker):
+             and type_annotation.value.expr.name == TYPING_MODULE
+         ):
+             self._type_annotation_names.append(TYPING_MODULE)
+-            return
+ 
+         self._type_annotation_names.extend(
+             annotation.name
+             for annotation in type_annotation.nodes_of_class(astroid.Name)
+         )
++        for annotation in type_annotation.nodes_of_class(astroid.Attribute):
++            self._type_annotation_names.extend(
++                _qualified_names_from_attribute(annotation)
++            )
+ 
+     def _store_type_annotation_names(self, node):
+         type_annotation = node.type_annotation

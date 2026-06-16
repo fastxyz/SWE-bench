@@ -1,0 +1,93 @@
+diff --git a/pylint/pyreverse/inspector.py b/pylint/pyreverse/inspector.py
+index 8fa122022..fcff5e93f 100644
+--- a/pylint/pyreverse/inspector.py
++++ b/pylint/pyreverse/inspector.py
+@@ -189,6 +189,59 @@ class Linker(IdGeneratorMixIn, utils.LocalsVisitor):
+     link_class = visit_classdef
+     link_function = visit_functiondef
+ 
++    @staticmethod
++    def _infer_node(node):
++        if node is None:
++            return set()
++        try:
++            return set(node.infer())
++        except astroid.InferenceError:
++            return set()
++
++    @staticmethod
++    def _annotation_from_annassign(node):
++        parent = node.parent
++        if isinstance(parent, astroid.AnnAssign) and parent.target is node:
++            return parent.annotation
++        return None
++
++    @staticmethod
++    def _annotation_from_argument(function_node, name):
++        arguments = function_node.args
++        annotated_args = (
++            (
++                getattr(arguments, "posonlyargs", ()),
++                arguments.posonlyargs_annotations or (),
++            ),
++            (arguments.args, arguments.annotations or ()),
++            (arguments.kwonlyargs, arguments.kwonlyargs_annotations or ()),
++        )
++        for args, annotations in annotated_args:
++            for index, arg in enumerate(args):
++                if arg.name != name:
++                    continue
++                if index < len(annotations):
++                    return annotations[index]
++                return None
++        if arguments.vararg == name:
++            return arguments.varargannotation
++        if arguments.kwarg == name:
++            return arguments.kwargannotation
++        return None
++
++    @staticmethod
++    def _infer_assignattr_annotation(node):
++        values = Linker._infer_node(Linker._annotation_from_annassign(node))
++        assign_type = node.assign_type()
++        value = getattr(assign_type, "value", None)
++        if not isinstance(value, astroid.Name):
++            return values
++        frame = node.frame()
++        if not isinstance(frame, astroid.FunctionDef):
++            return values
++        annotation = Linker._annotation_from_argument(frame, value.name)
++        return values | Linker._infer_node(annotation)
++
+     def visit_assignname(self, node):
+         """visit an astroid.AssignName node
+ 
+@@ -218,8 +271,10 @@ class Linker(IdGeneratorMixIn, utils.LocalsVisitor):
+                     self.visit_module(frame)
+ 
+             current = frame.locals_type[node.name]
+-            values = set(node.infer())
+-            frame.locals_type[node.name] = list(set(current) | values)
++            values = self._infer_node(node)
++            values.update(self._infer_node(self._annotation_from_annassign(node)))
++            if values:
++                frame.locals_type[node.name] = list(set(current) | values)
+         except astroid.InferenceError:
+             pass
+ 
+@@ -229,12 +284,11 @@ class Linker(IdGeneratorMixIn, utils.LocalsVisitor):
+ 
+         handle instance_attrs_type
+         """
+-        try:
+-            values = set(node.infer())
++        values = Linker._infer_node(node)
++        values.update(Linker._infer_assignattr_annotation(node))
++        if values:
+             current = set(parent.instance_attrs_type[node.attrname])
+             parent.instance_attrs_type[node.attrname] = list(current | values)
+-        except astroid.InferenceError:
+-            pass
+ 
+     def visit_import(self, node):
+         """visit an astroid.Import node

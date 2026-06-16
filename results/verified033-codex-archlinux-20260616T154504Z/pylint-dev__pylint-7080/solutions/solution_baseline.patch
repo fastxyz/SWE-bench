@@ -1,0 +1,56 @@
+diff --git a/pylint/lint/expand_modules.py b/pylint/lint/expand_modules.py
+index 5cacc0371..19deddc68 100644
+--- a/pylint/lint/expand_modules.py
++++ b/pylint/lint/expand_modules.py
+@@ -46,6 +46,18 @@ def _is_in_ignore_list_re(element: str, ignore_list_re: list[Pattern[str]]) -> b
+     return any(file_pattern.match(element) for file_pattern in ignore_list_re)
+ 
+ 
++def _is_in_ignore_list_re_with_normalized_path(
++    element: str, ignore_list_re: list[Pattern[str]]
++) -> bool:
++    """Determines if the element is matched in a regex ignore-list as a path."""
++    if _is_in_ignore_list_re(element, ignore_list_re):
++        return True
++    normalized_element = os.path.normpath(element).replace("\\", "/")
++    return normalized_element != element and _is_in_ignore_list_re(
++        normalized_element, ignore_list_re
++    )
++
++
+ def _is_ignored_file(
+     element: str,
+     ignore_list: list[str],
+@@ -56,7 +68,7 @@ def _is_ignored_file(
+     return (
+         basename in ignore_list
+         or _is_in_ignore_list_re(basename, ignore_list_re)
+-        or _is_in_ignore_list_re(element, ignore_list_paths_re)
++        or _is_in_ignore_list_re_with_normalized_path(element, ignore_list_paths_re)
+     )
+ 
+ 
+@@ -108,6 +120,10 @@ def expand_modules(
+                 errors.append({"key": "fatal", "mod": modname, "ex": ex})
+                 continue
+         filepath = os.path.normpath(filepath)
++        if os.path.exists(filepath) and _is_ignored_file(
++            filepath, ignore_list, ignore_list_re, ignore_list_paths_re
++        ):
++            continue
+         modparts = (modname or something).split(".")
+         try:
+             spec = modutils.file_info_from_modpath(
+@@ -140,9 +156,9 @@ def expand_modules(
+             ):
+                 if filepath == subfilepath:
+                     continue
+-                if _is_in_ignore_list_re(
+-                    os.path.basename(subfilepath), ignore_list_re
+-                ) or _is_in_ignore_list_re(subfilepath, ignore_list_paths_re):
++                if _is_ignored_file(
++                    subfilepath, ignore_list, ignore_list_re, ignore_list_paths_re
++                ):
+                     continue
+ 
+                 modpath = _modpath_from_file(

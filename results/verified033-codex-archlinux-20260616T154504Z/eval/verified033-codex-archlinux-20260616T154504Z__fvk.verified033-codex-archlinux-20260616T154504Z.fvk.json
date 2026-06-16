@@ -1,0 +1,51 @@
+{
+    "total_instances": 10,
+    "submitted_instances": 10,
+    "completed_instances": 10,
+    "resolved_instances": 5,
+    "unresolved_instances": 5,
+    "empty_patch_instances": 0,
+    "error_instances": 0,
+    "completed_ids": [
+        "pylint-dev__pylint-4551",
+        "pylint-dev__pylint-4604",
+        "pylint-dev__pylint-4661",
+        "pylint-dev__pylint-4970",
+        "pylint-dev__pylint-6386",
+        "pylint-dev__pylint-6528",
+        "pylint-dev__pylint-6903",
+        "pylint-dev__pylint-7080",
+        "pylint-dev__pylint-7277",
+        "pylint-dev__pylint-8898"
+    ],
+    "incomplete_ids": [],
+    "empty_patch_ids": [],
+    "submitted_ids": [
+        "pylint-dev__pylint-4551",
+        "pylint-dev__pylint-4604",
+        "pylint-dev__pylint-4661",
+        "pylint-dev__pylint-4970",
+        "pylint-dev__pylint-6386",
+        "pylint-dev__pylint-6528",
+        "pylint-dev__pylint-6903",
+        "pylint-dev__pylint-7080",
+        "pylint-dev__pylint-7277",
+        "pylint-dev__pylint-8898"
+    ],
+    "resolved_ids": [
+        "pylint-dev__pylint-6386",
+        "pylint-dev__pylint-6903",
+        "pylint-dev__pylint-7080",
+        "pylint-dev__pylint-7277",
+        "pylint-dev__pylint-8898"
+    ],
+    "unresolved_ids": [
+        "pylint-dev__pylint-4551",
+        "pylint-dev__pylint-4604",
+        "pylint-dev__pylint-4661",
+        "pylint-dev__pylint-4970",
+        "pylint-dev__pylint-6528"
+    ],
+    "error_ids": [],
+    "schema_version": 2
+}
