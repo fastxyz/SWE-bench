@@ -288,6 +288,13 @@ def write_run_manifest(
             "setting_sources": config.SETTING_SOURCES,
         }
 
+    instance_set = extra.get("instance_set", config.DEFAULT_INSTANCE_SET)
+    dataset_value = (
+        config.dataset_identity(instance_set)
+        if instance_set in config.REGISTRY
+        else config.DATASET_NAME
+    )
+
     manifest = {
         "run_id": run_id,
         "created_utc": _utc_now_iso(),
@@ -295,7 +302,7 @@ def write_run_manifest(
         "agent": agent,
         version_key: agent_version,
         "invocation": invocation,
-        "dataset": config.DATASET_NAME,
+        "dataset": dataset_value,
         "template_hashes": prompting.template_hashes(),
         "fvk_bench_version": fvk_bench.__version__,
         "git": {

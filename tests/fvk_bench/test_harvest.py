@@ -414,6 +414,23 @@ def test_run_manifest_codex_fields(tmp_path, monkeypatch):
 # Test 5: harvested files not gitignored in the real results dir
 # ---------------------------------------------------------------------------
 
+def test_run_manifest_records_portable_dataset_identity(tmp_path):
+    import json
+    from fvk_bench import harvest
+    out = harvest.write_run_manifest(
+        run_id="t-ml", results_dir=tmp_path,
+        extra={"instance_set": "multilingual300", "arms": ["baseline"], "agent": "codex"},
+    )
+    m = json.loads(out.read_text())
+    assert m["dataset"] == "SWE-bench/SWE-bench_Multilingual"  # portable logical name
+    assert not m["dataset"].startswith("/")                   # never an absolute path
+    assert m["instance_set"] == "multilingual300"             # extra merged through
+
+
+# ---------------------------------------------------------------------------
+# Test 5: harvested files not gitignored in the real results dir
+# ---------------------------------------------------------------------------
+
 def test_harvested_files_not_gitignored(tmp_path, monkeypatch):
     """Patch files and transcript gz files inside results/ are NOT gitignored."""
     tmp_home = tmp_path / "home"
