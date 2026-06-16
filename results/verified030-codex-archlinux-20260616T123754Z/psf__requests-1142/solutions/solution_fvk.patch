@@ -1,0 +1,23 @@
+diff --git a/requests/models.py b/requests/models.py
+index 99260453..1db9e06a 100644
+--- a/requests/models.py
++++ b/requests/models.py
+@@ -190,7 +190,7 @@ class Request(RequestHooksMixin):
+ 
+ 
+         # Default empty dicts for dict params.
+-        data = [] if data is None else data
++        data = {} if data is None else data
+         files = [] if files is None else files
+         headers = {} if headers is None else headers
+         params = {} if params is None else params
+@@ -386,6 +386,9 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
+         self.body = body
+ 
+     def prepare_content_length(self, body):
++        if body is None and self.method == 'GET':
++            return
++
+         self.headers['Content-Length'] = '0'
+         if hasattr(body, 'seek') and hasattr(body, 'tell'):
+             body.seek(0, 2)

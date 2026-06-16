@@ -1,0 +1,44 @@
+diff --git a/xarray/core/variable.py b/xarray/core/variable.py
+index 45553eb9..d2187c01 100644
+--- a/xarray/core/variable.py
++++ b/xarray/core/variable.py
+@@ -24,7 +24,17 @@ import pandas as pd
+ 
+ import xarray as xr  # only for Dataset and DataArray
+ 
+-from . import arithmetic, common, dtypes, duck_array_ops, indexing, nputils, ops, utils
++from . import (
++    arithmetic,
++    common,
++    dtypes,
++    duck_array_ops,
++    indexing,
++    nputils,
++    ops,
++    pdcompat,
++    utils,
++)
+ from .indexing import (
+     BasicIndexer,
+     OuterIndexer,
+@@ -192,8 +202,8 @@ def as_compatible_data(data, fastpath=False):
+     - If data does not have the necessary attributes, convert it to ndarray.
+     - If data has dtype=datetime64, ensure that it has ns precision. If it's a
+       pandas.Timestamp, convert it to datetime64.
+-    - If data is already a pandas or xarray object (other than an Index), just
+-      use the values.
++    - If data is already a pandas object or xarray.DataArray, just use the
++      values.
+ 
+     Finally, wrap it up with an adapter if necessary.
+     """
+@@ -218,7 +228,8 @@ def as_compatible_data(data, fastpath=False):
+         data = np.timedelta64(getattr(data, "value", data), "ns")
+ 
+     # we don't want nested self-described arrays
+-    data = getattr(data, "values", data)
++    if isinstance(data, (pd.Series, pd.DataFrame, pdcompat.Panel, xr.DataArray)):
++        data = data.values
+ 
+     if isinstance(data, np.ma.MaskedArray):
+         mask = np.ma.getmaskarray(data)
