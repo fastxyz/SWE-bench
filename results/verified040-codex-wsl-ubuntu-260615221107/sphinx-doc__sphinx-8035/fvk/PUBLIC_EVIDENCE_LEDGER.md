@@ -1,0 +1,14 @@
+# Public Evidence Ledger
+
+| ID | Source | Evidence | Semantic obligation | Status |
+| --- | --- | --- | --- | --- |
+| E1 | `benchmark/PROBLEM.md` | "Support defining specific `:private-members:` for autodoc" | `private-members` accepts more than a boolean flag. | Encoded by `parseMembers(optCsv(...)) => selNames(...)`. |
+| E2 | `benchmark/PROBLEM.md` | "current behavior is to document all private members, but what if I would only like to document 1 or 2?" | A finite private selector must keep selected private members and reject unselected private members in all-members mode. | Encoded by `keepPrivate(true, selNames(...), ...)` claims. |
+| E3 | `benchmark/PROBLEM.md` | "take arguments, similarly to how `:members:` currently works" | Reuse `members` comma-list parsing shape and explicit member-list behavior. | Encoded by option-spec change to `members_option` and merge claims. |
+| E4 | `repo/doc/usage/extensions/autodoc.rst` | "`:members: eat, slurp`" and "only these will then be documented" | A comma-separated explicit list represents selected names. | Encoded by `parseMembers(optCsv(...))`. |
+| E5 | `repo/doc/usage/extensions/autodoc.rst` | "Private members ... will be included if the `private-members` option is given." | Bare `private-members` remains compatible and includes all eligible private members. | Encoded by `parseMembers(optBare) => selAll` and `keepPrivate(... selAll ...) => true`. |
+| E6 | `repo/doc/usage/extensions/autodoc.rst` | "The option can now take arguments ... the special members to document." | Existing analogous `special-members` supports list arguments and informs compatibility for private list merging. | Encoded by shared `mergeMembers` claims and source helper. |
+| E7 | `repo/doc/usage/extensions/autodoc.rst` | "`None` or `True` ... equivalent to giving only the option name" | Default options with `None`/`True` must still map to all private members. | Encoded by `parseMembers(optBare)` and `parseMembers(optTrue)`. |
+| E8 | `repo/sphinx/ext/autodoc/__init__.py` comments/docstring | Members are skipped if private except if explicitly given or `private-members` is set. | Explicit member requests for private names remain valid even without `private-members`. | Encoded by `keepPrivate(false, ...)` claim and preserved code path. |
+| E9 | `repo/sphinx/ext/autodoc/__init__.py` filter order | Mocked objects and `exclude-members` are checked before private filtering. | Exclude/mock precedence must be preserved for selected private names. | Encoded by excluded/mock `keepPrivate` claims. |
+| E10 | `repo/doc/usage/extensions/autodoc.rst` | `:meta private:` and `:meta public:` descriptions | Private classification includes metadata as well as name shape; public metadata can override underscores. | Preserved by not changing classification logic. |

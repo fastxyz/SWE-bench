@@ -1,0 +1,18 @@
+diff --git a/sphinx/util/docfields.py b/sphinx/util/docfields.py
+index c07bc7f66..f03ed0c41 100644
+--- a/sphinx/util/docfields.py
++++ b/sphinx/util/docfields.py
+@@ -325,9 +325,10 @@ class DocFieldTransformer:
+                 except ValueError:
+                     pass
+                 else:
+-                    types.setdefault(typename, {})[argname] = \
+-                        [nodes.Text(argtype)]
+-                    fieldarg = argname
++                    if not argtype.endswith(','):
++                        types.setdefault(typename, {})[argname] = \
++                            [nodes.Text(argtype)]
++                        fieldarg = argname
+ 
+             translatable_content = nodes.inline(field_body.rawsource,
+                                                 translatable=True)

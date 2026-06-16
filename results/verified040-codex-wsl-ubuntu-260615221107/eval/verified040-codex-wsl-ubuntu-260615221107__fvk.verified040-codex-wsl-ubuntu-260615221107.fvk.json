@@ -1,0 +1,51 @@
+{
+    "total_instances": 10,
+    "submitted_instances": 10,
+    "completed_instances": 10,
+    "resolved_instances": 5,
+    "unresolved_instances": 5,
+    "empty_patch_instances": 0,
+    "error_instances": 0,
+    "completed_ids": [
+        "sphinx-doc__sphinx-7454",
+        "sphinx-doc__sphinx-7462",
+        "sphinx-doc__sphinx-7590",
+        "sphinx-doc__sphinx-7748",
+        "sphinx-doc__sphinx-7757",
+        "sphinx-doc__sphinx-7889",
+        "sphinx-doc__sphinx-7910",
+        "sphinx-doc__sphinx-7985",
+        "sphinx-doc__sphinx-8035",
+        "sphinx-doc__sphinx-8056"
+    ],
+    "incomplete_ids": [],
+    "empty_patch_ids": [],
+    "submitted_ids": [
+        "sphinx-doc__sphinx-7454",
+        "sphinx-doc__sphinx-7462",
+        "sphinx-doc__sphinx-7590",
+        "sphinx-doc__sphinx-7748",
+        "sphinx-doc__sphinx-7757",
+        "sphinx-doc__sphinx-7889",
+        "sphinx-doc__sphinx-7910",
+        "sphinx-doc__sphinx-7985",
+        "sphinx-doc__sphinx-8035",
+        "sphinx-doc__sphinx-8056"
+    ],
+    "resolved_ids": [
+        "sphinx-doc__sphinx-7454",
+        "sphinx-doc__sphinx-7757",
+        "sphinx-doc__sphinx-7889",
+        "sphinx-doc__sphinx-7910",
+        "sphinx-doc__sphinx-8035"
+    ],
+    "unresolved_ids": [
+        "sphinx-doc__sphinx-7462",
+        "sphinx-doc__sphinx-7590",
+        "sphinx-doc__sphinx-7748",
+        "sphinx-doc__sphinx-7985",
+        "sphinx-doc__sphinx-8056"
+    ],
+    "error_ids": [],
+    "schema_version": 2
+}

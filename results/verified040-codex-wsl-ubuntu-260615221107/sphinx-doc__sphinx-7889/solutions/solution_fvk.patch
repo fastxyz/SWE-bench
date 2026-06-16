@@ -1,0 +1,41 @@
+diff --git a/sphinx/ext/autodoc/mock.py b/sphinx/ext/autodoc/mock.py
+index 98a3a3a96..8faad46e1 100644
+--- a/sphinx/ext/autodoc/mock.py
++++ b/sphinx/ext/autodoc/mock.py
+@@ -52,7 +52,7 @@ class _MockObject:
+     def __mro_entries__(self, bases: Tuple) -> Tuple:
+         return (self.__class__,)
+ 
+-    def __getitem__(self, key: str) -> "_MockObject":
++    def __getitem__(self, key: Any) -> "_MockObject":
+         return _make_subclass(key, self.__display_name__, self.__class__)()
+ 
+     def __getattr__(self, key: str) -> "_MockObject":
+@@ -68,14 +68,26 @@ class _MockObject:
+         return self.__display_name__
+ 
+ 
+-def _make_subclass(name: str, module: str, superclass: Any = _MockObject,
++def _make_subclass(name: Any, module: str, superclass: Any = _MockObject,
+                    attributes: Any = None) -> Any:
++    name = _make_subclass_name(name)
+     attrs = {'__module__': module, '__display_name__': module + '.' + name}
+     attrs.update(attributes or {})
+ 
+     return type(name, (superclass,), attrs)
+ 
+ 
++def _make_subclass_name(name: Any) -> str:
++    if isinstance(name, str):
++        return name
++
++    name_attr = getattr(name, '__name__', None)
++    if isinstance(name_attr, str):
++        return name_attr
++    else:
++        return repr(name)
++
++
+ class _MockModule(ModuleType):
+     """Used by autodoc_mock_imports."""
+     __file__ = os.devnull

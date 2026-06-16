@@ -1,0 +1,309 @@
+{
+  "run_id": "verified040-codex-wsl-ubuntu-260615221107",
+  "arms": [
+    "baseline",
+    "fvk"
+  ],
+  "instances": {
+    "sphinx-doc__sphinx-7454": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecee7-0d98-77d1-a441-19edef471dd4",
+        "num_turns": null,
+        "duration_seconds": 135.79347074300313,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "27/27"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecee7-0d98-77d1-a441-19edef471dd4",
+        "num_turns": null,
+        "duration_seconds": 319.9463375270061,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "27/27"
+        }
+      }
+    },
+    "sphinx-doc__sphinx-7462": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecee7-0dab-78a3-9f13-04e5df3f6541",
+        "num_turns": null,
+        "duration_seconds": 105.79008803400211,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "1/2",
+          "ptp": "49/49"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecee7-0dab-78a3-9f13-04e5df3f6541",
+        "num_turns": null,
+        "duration_seconds": 417.68752673099516,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "1/2",
+          "ptp": "49/49"
+        }
+      }
+    },
+    "sphinx-doc__sphinx-7590": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecee7-0dae-74a2-8e94-4f1967981937",
+        "num_turns": null,
+        "duration_seconds": 253.41494658699958,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "24/24"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecee7-0dae-74a2-8e94-4f1967981937",
+        "num_turns": null,
+        "duration_seconds": 455.37877750400366,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "24/24"
+        }
+      }
+    },
+    "sphinx-doc__sphinx-7748": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019eceee-130e-72e2-adef-b3200c020f0f",
+        "num_turns": null,
+        "duration_seconds": 345.8734228059984,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/2",
+          "ptp": "12/12"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019eceee-130e-72e2-adef-b3200c020f0f",
+        "num_turns": null,
+        "duration_seconds": 458.05629444499937,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/2",
+          "ptp": "12/12"
+        }
+      }
+    },
+    "sphinx-doc__sphinx-7757": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019eceef-1b38-7503-a8ac-7d6d0effc7ed",
+        "num_turns": null,
+        "duration_seconds": 106.9162481500025,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "33/33"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019eceef-1b38-7503-a8ac-7d6d0effc7ed",
+        "num_turns": null,
+        "duration_seconds": 469.0994587620007,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "33/33"
+        }
+      }
+    },
+    "sphinx-doc__sphinx-7889": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecef1-f07d-75a1-afb4-68bc4ef2bf0f",
+        "num_turns": null,
+        "duration_seconds": 214.41496738900605,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "5/5"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecef1-f07d-75a1-afb4-68bc4ef2bf0f",
+        "num_turns": null,
+        "duration_seconds": 397.01023539099697,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "5/5"
+        }
+      }
+    },
+    "sphinx-doc__sphinx-7910": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecef7-f75f-7c23-ab4a-176ae5de0e35",
+        "num_turns": null,
+        "duration_seconds": 315.7239126610002,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "16/16"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecef7-f75f-7c23-ab4a-176ae5de0e35",
+        "num_turns": null,
+        "duration_seconds": 352.58645643899945,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "16/16"
+        }
+      }
+    },
+    "sphinx-doc__sphinx-7985": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecefa-6a43-7160-bcd3-595f829af72c",
+        "num_turns": null,
+        "duration_seconds": 481.6253015399998,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/2",
+          "ptp": "3/3"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecefa-6a43-7160-bcd3-595f829af72c",
+        "num_turns": null,
+        "duration_seconds": 568.9514246899998,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/2",
+          "ptp": "3/3"
+        }
+      }
+    },
+    "sphinx-doc__sphinx-8035": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecefb-565f-7d41-b5c5-4de07cb5f1e5",
+        "num_turns": null,
+        "duration_seconds": 254.25825249500485,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "2/2"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecefb-565f-7d41-b5c5-4de07cb5f1e5",
+        "num_turns": null,
+        "duration_seconds": 386.10839692200534,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "2/2"
+        }
+      }
+    },
+    "sphinx-doc__sphinx-8056": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecf02-3cfc-7a11-91b1-aab10fd0730a",
+        "num_turns": null,
+        "duration_seconds": 240.766907078003,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "40/40"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecf02-3cfc-7a11-91b1-aab10fd0730a",
+        "num_turns": null,
+        "duration_seconds": 396.6207364610018,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "40/40"
+        }
+      }
+    }
+  },
+  "aggregates": {
+    "arms": {
+      "baseline": {
+        "resolved": 6,
+        "evaluated": 10
+      },
+      "fvk": {
+        "resolved": 5,
+        "evaluated": 10
+      }
+    },
+    "flips": {
+      "baseline_to_fvk": {
+        "up": [],
+        "down": [
+          "sphinx-doc__sphinx-8056"
+        ]
+      }
+    }
+  }
+}

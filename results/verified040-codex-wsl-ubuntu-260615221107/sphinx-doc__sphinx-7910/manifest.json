@@ -1,0 +1,72 @@
+{
+  "run_id": "verified040-codex-wsl-ubuntu-260615221107",
+  "instance_id": "sphinx-doc__sphinx-7910",
+  "baseline_session_id": "019ecef7-f75f-7c23-ab4a-176ae5de0e35",
+  "core_hash_post_baseline": "27b1652760986ef2ba4906646c436d4785cfd4cb96693f21bdec61ee6ac31738",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ecef7-f75f-7c23-ab4a-176ae5de0e35",
+      "attempts": 1,
+      "started_at": "2026-06-16T05:46:57.601436+00:00",
+      "ended_at": "2026-06-16T05:52:13.329877+00:00",
+      "num_turns": null,
+      "duration_seconds": 315.7239126610002,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "exec_command": 27,
+          "apply_patch": 1
+        },
+        "violations": [],
+        "exec_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 106
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ecef7-f75f-7c23-ab4a-176ae5de0e35",
+      "attempts": 1,
+      "started_at": "2026-06-16T05:52:13.730935+00:00",
+      "ended_at": "2026-06-16T05:58:06.319844+00:00",
+      "num_turns": null,
+      "duration_seconds": 352.58645643899945,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "exec_command": 58,
+          "apply_patch": 5
+        },
+        "violations": [],
+        "exec_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 243
+      }
+    },
+    "control": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    }
+  },
+  "agent": "codex",
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "b7c2dd08d551bc15b1a3f1af5beab7dbf555521a2e7047fbd2b2ef7a18b6679a",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": null,
+    "fvk": null,
+    "control": null
+  }
+}

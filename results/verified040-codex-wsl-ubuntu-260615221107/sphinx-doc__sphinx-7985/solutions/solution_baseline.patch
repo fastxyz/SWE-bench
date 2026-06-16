@@ -1,0 +1,184 @@
+diff --git a/sphinx/builders/linkcheck.py b/sphinx/builders/linkcheck.py
+index dd5317087..0a2de4e8d 100644
+--- a/sphinx/builders/linkcheck.py
++++ b/sphinx/builders/linkcheck.py
+@@ -9,14 +9,15 @@
+ """
+ 
+ import json
++import posixpath
+ import queue
+ import re
+ import socket
+ import threading
+ from html.parser import HTMLParser
+ from os import path
+-from typing import Any, Dict, List, Set, Tuple
+-from urllib.parse import unquote, urlparse
++from typing import Any, Dict, List, Optional, Set, Tuple
++from urllib.parse import quote, unquote, urlparse
+ 
+ from docutils import nodes
+ from docutils.nodes import Node
+@@ -30,6 +31,7 @@ from sphinx.util.console import (  # type: ignore
+     purple, red, darkgreen, darkgray, turquoise
+ )
+ from sphinx.util.nodes import get_node_line
++from sphinx.util.osutil import os_path
+ from sphinx.util.requests import is_ssl_error
+ 
+ 
+@@ -80,10 +82,21 @@ class CheckExternalLinksBuilder(Builder):
+     Checks for broken external links.
+     """
+     name = 'linkcheck'
++    link_suffix = '.html'
+     epilog = __('Look for any errors in the above output or in '
+                 '%(outdir)s/output.txt')
+ 
+     def init(self) -> None:
++        html_link_suffix = self.get_builder_config('link_suffix', 'html')
++        if html_link_suffix is not None:
++            self.link_suffix = html_link_suffix
++        else:
++            html_file_suffix = self.get_builder_config('file_suffix', 'html')
++            if html_file_suffix is not None:
++                self.link_suffix = html_file_suffix
++            else:
++                self.link_suffix = '.html'
++
+         self.to_ignore = [re.compile(x) for x in self.app.config.linkcheck_ignore]
+         self.anchors_ignore = [re.compile(x)
+                                for x in self.app.config.linkcheck_anchors_ignore]
+@@ -92,6 +105,8 @@ class CheckExternalLinksBuilder(Builder):
+         self.good = set()       # type: Set[str]
+         self.broken = {}        # type: Dict[str, str]
+         self.redirected = {}    # type: Dict[str, Tuple[str, int]]
++        self._local_uri_to_docname = {}  # type: Dict[str, str]
++        self._has_broken = False
+         # set a timeout for non-responding servers
+         socket.setdefaulttimeout(5.0)
+         # create output file
+@@ -212,17 +227,18 @@ class CheckExternalLinksBuilder(Builder):
+             # check for various conditions without bothering the network
+             if len(uri) == 0 or uri.startswith(('#', 'mailto:', 'ftp:')):
+                 return 'unchecked', '', 0
+-            elif not uri.startswith(('http:', 'https:')):
+-                return 'local', '', 0
++            for rex in self.to_ignore:
++                if rex.match(uri):
++                    return 'ignored', '', 0
++
++            if not uri.startswith(('http:', 'https:')):
++                return self._check_local_link(uri, docname)
+             elif uri in self.good:
+                 return 'working', 'old', 0
+             elif uri in self.broken:
+                 return 'broken', self.broken[uri], 0
+             elif uri in self.redirected:
+                 return 'redirected', self.redirected[uri][0], self.redirected[uri][1]
+-            for rex in self.to_ignore:
+-                if rex.match(uri):
+-                    return 'ignored', '', 0
+ 
+             # need to actually check the URI
+             for _ in range(self.app.config.linkcheck_retries):
+@@ -280,6 +296,7 @@ class CheckExternalLinksBuilder(Builder):
+                                location=(filename, lineno))
+             else:
+                 logger.info(red('broken    ') + uri + red(' - ' + info))
++            self._has_broken = True
+             self.write_entry('broken', docname, filename, lineno, uri + ': ' + info)
+             self.write_linkstat(linkstat)
+         elif status == 'redirected':
+@@ -300,13 +317,71 @@ class CheckExternalLinksBuilder(Builder):
+             self.write_linkstat(linkstat)
+ 
+     def get_target_uri(self, docname: str, typ: str = None) -> str:
+-        return ''
++        return quote(docname) + self.link_suffix
+ 
+     def get_outdated_docs(self) -> Set[str]:
+         return self.env.found_docs
+ 
+     def prepare_writing(self, docnames: Set[str]) -> None:
+-        return
++        self._local_uri_to_docname.clear()
++        for docname in self.env.found_docs:
++            uri = self.get_target_uri(docname)
++            self._local_uri_to_docname[uri] = docname
++            self._local_uri_to_docname[unquote(uri)] = docname
++
++    def _check_local_link(self, uri: str, docname: str) -> Tuple[str, str, int]:
++        if not self.app.config.linkcheck_local_links:
++            return 'local', '', 0
++
++        target = self._resolve_local_uri(uri, docname)
++        if target is None:
++            return 'local', '', 0
++
++        exists = self._local_target_exists(target)
++        if exists is None or exists:
++            return 'local', '', 0
++        else:
++            return 'broken', __('local file not found'), 0
++
++    def _resolve_local_uri(self, uri: str, docname: str) -> Optional[str]:
++        parsed = urlparse(uri)
++        if parsed.scheme or parsed.netloc:
++            return None
++
++        target = unquote(parsed.path)
++        if not target:
++            return ''
++        elif target.startswith('/'):
++            target = target[1:]
++        else:
++            base = posixpath.dirname(self.get_target_uri(docname))
++            target = posixpath.join(base, target)
++
++        target = posixpath.normpath(target)
++        if target == '.':
++            return ''
++        else:
++            return target
++
++    def _local_target_exists(self, target: str) -> Optional[bool]:
++        if not target:
++            return True
++        elif target in self._local_uri_to_docname:
++            return True
++
++        encoded = quote(unquote(target))
++        if encoded in self._local_uri_to_docname:
++            return True
++        elif target == '..' or target.startswith('../'):
++            return None
++
++        rel_target = os_path(unquote(target))
++        full_target = path.abspath(path.join(self.srcdir, rel_target))
++        srcdir = path.abspath(self.srcdir)
++        if full_target == srcdir or full_target.startswith(srcdir + path.sep):
++            return path.exists(full_target)
++        else:
++            return None
+ 
+     def write_doc(self, docname: str, doctree: Node) -> None:
+         logger.info('')
+@@ -334,7 +409,7 @@ class CheckExternalLinksBuilder(Builder):
+             self.process_result(self.rqueue.get())
+             done += 1
+ 
+-        if self.broken:
++        if self._has_broken:
+             self.app.statuscode = 1
+ 
+     def write_entry(self, what: str, docname: str, filename: str, line: int,
+@@ -362,6 +437,7 @@ def setup(app: Sphinx) -> Dict[str, Any]:
+     app.add_config_value('linkcheck_timeout', None, None, [int])
+     app.add_config_value('linkcheck_workers', 5, None)
+     app.add_config_value('linkcheck_anchors', True, None)
++    app.add_config_value('linkcheck_local_links', True, None)
+     # Anchors starting with ! are ignored since they are
+     # commonly used for dynamic pages
+     app.add_config_value('linkcheck_anchors_ignore', ["^!"], None)
