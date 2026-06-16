@@ -1,0 +1,262 @@
+diff --git a/django/db/models/sql/query.py b/django/db/models/sql/query.py
+index 9735ce10c8..b4ff1177c2 100644
+--- a/django/db/models/sql/query.py
++++ b/django/db/models/sql/query.py
+@@ -32,11 +32,7 @@ from django.db.models.expressions import (
+ from django.db.models.fields import Field
+ from django.db.models.fields.related_lookups import MultiColSource
+ from django.db.models.lookups import Lookup
+-from django.db.models.query_utils import (
+-    Q,
+-    check_rel_lookup_compatibility,
+-    refs_expression,
+-)
++from django.db.models.query_utils import Q, check_rel_lookup_compatibility
+ from django.db.models.sql.constants import INNER, LOUTER, ORDER_DIR, SINGLE
+ from django.db.models.sql.datastructures import BaseTable, Empty, Join, MultiJoin
+ from django.db.models.sql.where import AND, OR, ExtraWhere, NothingNode, WhereNode
+@@ -250,6 +246,10 @@ class Query(BaseExpression):
+         self.where = WhereNode()
+         # Maps alias -> Annotation Expression.
+         self.annotations = {}
++        # Maps annotation aliases to the table aliases they reference.
++        self._annotation_aliases = {}
++        self._annotation_dependencies = {}
++        self._annotation_lookup_refs = set()
+         # These are for extensions. The contents are more or less appended
+         # verbatim to the appropriate clause.
+         self.extra = {}  # Maps col_alias -> (col_sql, params).
+@@ -327,6 +327,15 @@ class Query(BaseExpression):
+         obj.table_map = self.table_map.copy()
+         obj.where = self.where.clone()
+         obj.annotations = self.annotations.copy()
++        obj._annotation_aliases = {
++            annotation: aliases.copy()
++            for annotation, aliases in self._annotation_aliases.items()
++        }
++        obj._annotation_dependencies = {
++            annotation: dependencies.copy()
++            for annotation, dependencies in self._annotation_dependencies.items()
++        }
++        obj._annotation_lookup_refs = self._annotation_lookup_refs.copy()
+         if self.annotation_select_mask is not None:
+             obj.annotation_select_mask = self.annotation_select_mask.copy()
+         if self.combined_queries:
+@@ -550,6 +559,11 @@ class Query(BaseExpression):
+         Perform a COUNT() query using the current filter constraints.
+         """
+         obj = self.clone()
++        if not obj.combinator:
++            obj.prune_unused_annotations(
++                preserve_selected=obj.distinct,
++                preserve_ordering=obj.is_sliced or bool(obj.distinct_fields),
++            )
+         obj.add_annotation(Count("*"), alias="__count", is_summary=True)
+         return obj.get_aggregation(using, ["__count"])["__count"]
+ 
+@@ -559,6 +573,8 @@ class Query(BaseExpression):
+     def exists(self, limit=True):
+         q = self.clone()
+         if not (q.distinct and q.is_sliced):
++            if not q.combinator:
++                q.prune_unused_annotations()
+             if q.group_by is True:
+                 q.add_fields(
+                     (f.attname for f in self.model._meta.concrete_fields), False
+@@ -909,6 +925,13 @@ class Query(BaseExpression):
+             key: col.relabeled_clone(change_map)
+             for key, col in self.annotations.items()
+         }
++        self._annotation_aliases = {
++            annotation: {
++                change_map.get(alias, alias): count
++                for alias, count in aliases.items()
++            }
++            for annotation, aliases in self._annotation_aliases.items()
++        }
+ 
+         # 2. Rename the alias in the internal table/alias datastructures.
+         for old_alias, new_alias in change_map.items():
+@@ -1101,6 +1124,7 @@ class Query(BaseExpression):
+     def add_annotation(self, annotation, alias, is_summary=False, select=True):
+         """Add a single annotation expression to the Query."""
+         self.check_alias(alias)
++        refs_before = self.alias_refcount.copy()
+         annotation = annotation.resolve_expression(
+             self, allow_joins=True, reuse=None, summarize=is_summary
+         )
+@@ -1108,7 +1132,14 @@ class Query(BaseExpression):
+             self.append_annotation_mask([alias])
+         else:
+             self.set_annotation_mask(set(self.annotation_select).difference({alias}))
++        annotation_dependencies = self._annotation_refs(annotation)
+         self.annotations[alias] = annotation
++        self._annotation_dependencies[alias] = annotation_dependencies
++        self._annotation_aliases[alias] = {
++            table_alias: count - refs_before.get(table_alias, 0)
++            for table_alias, count in self.alias_refcount.items()
++            if count > refs_before.get(table_alias, 0)
++        }
+ 
+     def resolve_expression(self, query, *args, **kwargs):
+         clone = self.clone()
+@@ -1198,10 +1229,13 @@ class Query(BaseExpression):
+         """
+         lookup_splitted = lookup.split(LOOKUP_SEP)
+         if self.annotations:
+-            expression, expression_lookups = refs_expression(
+-                lookup_splitted, self.annotations
+-            )
+-            if expression:
++            annotation_ref = self._annotation_ref_from_name(lookup)
++            if annotation_ref:
++                expression = self.annotations[annotation_ref]
++                expression_lookups = lookup_splitted[
++                    len(annotation_ref.split(LOOKUP_SEP)) :
++                ]
++                self._annotation_lookup_refs.add(annotation_ref)
+                 return expression_lookups, (), expression
+         _, field, _, lookup_parts = self.names_to_path(lookup_splitted, self.get_meta())
+         field_parts = lookup_splitted[0 : len(lookup_splitted) - len(lookup_parts)]
+@@ -2372,6 +2406,141 @@ class Query(BaseExpression):
+         if self.annotation_select_mask is not None:
+             self.set_annotation_mask(self.annotation_select_mask.union(names))
+ 
++    def remove_annotation(self, alias):
++        """Remove an annotation and the joins it added to the query."""
++        self.annotations.pop(alias, None)
++        self._annotation_dependencies.pop(alias, None)
++        self._annotation_lookup_refs.discard(alias)
++        self._annotation_select_cache = None
++        if self.annotation_select_mask is not None:
++            self.annotation_select_mask.discard(alias)
++        for table_alias, count in self._annotation_aliases.pop(alias, {}).items():
++            if table_alias in self.alias_refcount:
++                self.unref_alias(
++                    table_alias, min(count, self.alias_refcount[table_alias])
++                )
++
++    def _annotation_ref_from_name(self, name):
++        lookup_parts = name.split(LOOKUP_SEP)
++        for n in range(1, len(lookup_parts) + 1):
++            level_n_lookup = LOOKUP_SEP.join(lookup_parts[:n])
++            if level_n_lookup in self.annotations:
++                return level_n_lookup
++        return None
++
++    def _annotation_refs(self, *expressions):
++        annotation_refs = set()
++        annotation_by_id = {
++            id(annotation): alias for alias, annotation in self.annotations.items()
++        }
++        seen = set()
++        expressions = list(expressions)
++        while expressions:
++            expr = expressions.pop()
++            if expr is None:
++                continue
++            if isinstance(expr, str):
++                if annotation_ref := self._annotation_ref_from_name(expr):
++                    annotation_refs.add(annotation_ref)
++                continue
++            expr_id = id(expr)
++            if expr_id in seen:
++                continue
++            seen.add(expr_id)
++            if isinstance(expr, F):
++                if annotation_ref := self._annotation_ref_from_name(expr.name):
++                    annotation_refs.add(annotation_ref)
++            elif isinstance(expr, Ref) and expr.refs in self.annotations:
++                annotation_refs.add(expr.refs)
++            if annotation_ref := annotation_by_id.get(expr_id):
++                annotation_refs.add(annotation_ref)
++            if hasattr(expr, "get_source_expressions"):
++                expressions.extend(expr.get_source_expressions())
++        return annotation_refs
++
++    def _annotation_refs_from_names(self, names):
++        annotation_refs = set()
++        for name in names:
++            if annotation_ref := self._annotation_ref_from_name(name):
++                annotation_refs.add(annotation_ref)
++        return annotation_refs
++
++    def _annotation_refs_from_ordering(self):
++        annotation_refs = set()
++        for expr in self.order_by:
++            if isinstance(expr, str):
++                if expr == "?":
++                    continue
++                if expr.startswith("-"):
++                    expr = expr[1:]
++                annotation_refs.update(self._annotation_refs_from_names([expr]))
++            else:
++                annotation_refs.update(self._annotation_refs(expr))
++        return annotation_refs
++
++    def _annotation_uses_multivalued_join(self, alias):
++        return any(
++            (
++                (join := self.alias_map.get(table_alias))
++                and (join_field := getattr(join, "join_field", None))
++                and (
++                    getattr(join_field, "one_to_many", False)
++                    or getattr(join_field, "many_to_many", False)
++                )
++            )
++            for table_alias in self._annotation_aliases.get(alias, ())
++        )
++
++    def _resolve_annotation_dependencies(self, annotation_refs):
++        annotation_refs = set(annotation_refs)
++        queue = list(annotation_refs)
++        while queue:
++            alias = queue.pop()
++            annotation = self.annotations.get(alias)
++            if annotation is None:
++                continue
++            dependencies = self._annotation_dependencies.get(alias, set())
++            dependencies = dependencies.union(self._annotation_refs(annotation))
++            for annotation_ref in dependencies:
++                if annotation_ref not in annotation_refs:
++                    annotation_refs.add(annotation_ref)
++                    queue.append(annotation_ref)
++        return annotation_refs
++
++    def prune_unused_annotations(
++        self, preserve_selected=False, preserve_ordering=False
++    ):
++        """
++        Remove annotations that can't affect the query result.
++
++        The pruning is intended for terminal existence and count queries where
++        the selected annotation values aren't returned.
++        """
++        if not self.annotations:
++            return
++        annotation_refs = set(self._annotation_lookup_refs)
++        annotation_refs.update(self._annotation_refs(self.where))
++        if isinstance(self.group_by, tuple):
++            annotation_refs.update(self._annotation_refs(*self.group_by))
++        annotation_refs.update(self._annotation_refs_from_names(self.distinct_fields))
++        if preserve_ordering:
++            annotation_refs.update(self._annotation_refs_from_ordering())
++        selected_annotations = set(self.annotation_select)
++        if preserve_selected:
++            annotation_refs.update(selected_annotations)
++        else:
++            annotation_refs.update(
++                alias
++                for alias in selected_annotations
++                if not self.annotations[alias].contains_aggregate
++                and self._annotation_uses_multivalued_join(alias)
++            )
++        annotation_refs = self._resolve_annotation_dependencies(annotation_refs)
++        for alias in set(self.annotations).difference(annotation_refs):
++            self.remove_annotation(alias)
++        if self.group_by is True and not self.annotations:
++            self.group_by = None
++
+     def set_extra_mask(self, names):
+         """
+         Set the mask of extra select items that will be returned by SELECT.

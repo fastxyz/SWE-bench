@@ -1,0 +1,26 @@
+diff --git a/django/core/management/base.py b/django/core/management/base.py
+index abc6f79a15..7b1bc2ca28 100644
+--- a/django/core/management/base.py
++++ b/django/core/management/base.py
+@@ -65,6 +65,21 @@ class CommandParser(ArgumentParser):
+             self.error(self.missing_args_message)
+         return super().parse_args(args, namespace)
+ 
++    def add_subparsers(self, **kwargs):
++        parser_class = kwargs.get("parser_class", type(self))
++        if isinstance(parser_class, type) and issubclass(parser_class, CommandParser):
++            command_parser_class = parser_class
++            called_from_command_line = self.called_from_command_line
++
++            def parser_class_wrapper(**parser_kwargs):
++                parser_kwargs.setdefault(
++                    "called_from_command_line", called_from_command_line
++                )
++                return command_parser_class(**parser_kwargs)
++
++            kwargs["parser_class"] = parser_class_wrapper
++        return super().add_subparsers(**kwargs)
++
+     def error(self, message):
+         if self.called_from_command_line:
+             super().error(message)

@@ -1,0 +1,48 @@
+diff --git a/django/db/models/query.py b/django/db/models/query.py
+index be8580f2c4..dbadd1c0d2 100644
+--- a/django/db/models/query.py
++++ b/django/db/models/query.py
+@@ -798,6 +798,10 @@ class QuerySet(AltersData):
+         fields = opts.concrete_fields
+         objs = list(objs)
+         self._prepare_for_bulk_create(objs)
++        if on_conflict == OnConflict.UPDATE and update_fields:
++            update_fields = [opts.get_field(name) for name in update_fields]
++        if on_conflict == OnConflict.UPDATE and unique_fields:
++            unique_fields = [opts.get_field(name) for name in unique_fields]
+         with transaction.atomic(using=self.db, savepoint=False):
+             objs_with_pk, objs_without_pk = partition(lambda o: o.pk is None, objs)
+             if objs_with_pk:
+diff --git a/django/db/models/sql/compiler.py b/django/db/models/sql/compiler.py
+index 0562a71dd1..8e27929e0a 100644
+--- a/django/db/models/sql/compiler.py
++++ b/django/db/models/sql/compiler.py
+@@ -6,7 +6,7 @@ from itertools import chain
+ 
+ from django.core.exceptions import EmptyResultSet, FieldError, FullResultSet
+ from django.db import DatabaseError, NotSupportedError
+-from django.db.models.constants import LOOKUP_SEP
++from django.db.models.constants import LOOKUP_SEP, OnConflict
+ from django.db.models.expressions import F, OrderBy, RawSQL, Ref, Value
+ from django.db.models.functions import Cast, Random
+ from django.db.models.lookups import Lookup
+@@ -1722,11 +1722,17 @@ class SQLInsertCompiler(SQLCompiler):
+ 
+         placeholder_rows, param_rows = self.assemble_as_sql(fields, value_rows)
+ 
++        if self.query.on_conflict == OnConflict.UPDATE:
++            update_fields = [f.column for f in self.query.update_fields]
++            unique_fields = [f.column for f in self.query.unique_fields]
++        else:
++            update_fields = self.query.update_fields
++            unique_fields = self.query.unique_fields
+         on_conflict_suffix_sql = self.connection.ops.on_conflict_suffix_sql(
+             fields,
+             self.query.on_conflict,
+-            self.query.update_fields,
+-            self.query.unique_fields,
++            update_fields,
++            unique_fields,
+         )
+         if (
+             self.returning_fields
