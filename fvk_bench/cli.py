@@ -267,11 +267,7 @@ def _cmd_vendor_instances(args) -> int:
     except Exception as exc:  # noqa: BLE001 — network/datasets errors are arbitrary
         print(f"error: vendoring failed: {exc}")
         return 1
-    out_path = (
-        config.INSTANCES_JSON
-        if args.instance_set == "fvk45"
-        else config.VERIFIED_INSTANCES_JSON
-    )
+    out_path = config.REGISTRY[args.instance_set].data_file
     print(f"vendored {count} instances -> {out_path}")
     return 0
 
