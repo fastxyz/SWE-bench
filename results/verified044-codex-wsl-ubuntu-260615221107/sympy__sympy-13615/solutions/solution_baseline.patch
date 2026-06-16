@@ -1,0 +1,103 @@
+diff --git a/sympy/sets/fancysets.py b/sympy/sets/fancysets.py
+index 4a61f1f42c..cb985e703b 100644
+--- a/sympy/sets/fancysets.py
++++ b/sympy/sets/fancysets.py
+@@ -1,6 +1,6 @@
+ from __future__ import print_function, division
+ 
+-from sympy.logic.boolalg import And
++from sympy.logic.boolalg import And, Or
+ from sympy.core.add import Add
+ from sympy.core.basic import Basic
+ from sympy.core.compatibility import as_int, with_metaclass, range, PY3
+@@ -1391,11 +1391,17 @@ def _contains(self, other):
+         # self in rectangular form
+         if not self.polar:
+             re, im = other if isTuple else other.as_real_imag()
++            unknown = []
+             for element in self.psets:
+-                if And(element.args[0]._contains(re),
+-                        element.args[1]._contains(im)):
+-                    return True
+-            return False
++                c = And(element.args[0].contains(re),
++                        element.args[1].contains(im))
++                if c is S.true:
++                    return S.true
++                elif c is not S.false:
++                    unknown.append(c)
++            if unknown:
++                return Or(*unknown)
++            return S.false
+ 
+         # self in polar form
+         elif self.polar:
+@@ -1405,11 +1411,17 @@ def _contains(self, other):
+                 r, theta = S.Zero, S.Zero
+             else:
+                 r, theta = Abs(other), arg(other)
++            unknown = []
+             for element in self.psets:
+-                if And(element.args[0]._contains(r),
+-                        element.args[1]._contains(theta)):
+-                    return True
+-            return False
++                c = And(element.args[0].contains(r),
++                        element.args[1].contains(theta))
++                if c is S.true:
++                    return S.true
++                elif c is not S.false:
++                    unknown.append(c)
++            if unknown:
++                return Or(*unknown)
++            return S.false
+ 
+     def _intersect(self, other):
+ 
+diff --git a/sympy/sets/sets.py b/sympy/sets/sets.py
+index 917717bb74..91b95c5153 100644
+--- a/sympy/sets/sets.py
++++ b/sympy/sets/sets.py
+@@ -217,7 +217,24 @@ def _complement(self, other):
+             return S.EmptySet
+ 
+         elif isinstance(other, FiniteSet):
+-            return FiniteSet(*[el for el in other if self.contains(el) != True])
++            known = []
++            unknown = []
++            for el in other:
++                c = sympify(self.contains(el))
++                if c is S.true:
++                    pass
++                elif c is S.false:
++                    known.append(el)
++                else:
++                    unknown.append(el)
++
++            if not unknown:
++                return FiniteSet(*known)
++
++            unknown = Complement(FiniteSet(*unknown), self, evaluate=False)
++            if not known:
++                return unknown
++            return Union(FiniteSet(*known), unknown)
+ 
+     def symmetric_difference(self, other):
+         """
+@@ -1965,6 +1982,16 @@ def _complement(self, other):
+                 c = sympify(self.contains(i))
+                 if c is not S.true:
+                     not_true.append(i)
++            for i in self:
++                if not i.has(Symbol) or i in unk.args:
++                    continue
++                for j in not_true:
++                    if not j.has(Symbol):
++                        continue
++                    c = sympify(Eq(i, j, evaluate=True))
++                    if c is not S.true and c is not S.false:
++                        unk = unk + FiniteSet(i)
++                        break
+             return Complement(FiniteSet(*not_true), unk)
+ 
+         return Set._complement(self, other)

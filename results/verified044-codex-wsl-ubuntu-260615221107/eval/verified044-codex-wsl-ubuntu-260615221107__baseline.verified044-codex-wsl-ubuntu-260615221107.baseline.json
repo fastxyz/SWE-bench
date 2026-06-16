@@ -1,0 +1,51 @@
+{
+    "total_instances": 10,
+    "submitted_instances": 10,
+    "completed_instances": 10,
+    "resolved_instances": 6,
+    "unresolved_instances": 4,
+    "empty_patch_instances": 0,
+    "error_instances": 0,
+    "completed_ids": [
+        "sympy__sympy-13031",
+        "sympy__sympy-13091",
+        "sympy__sympy-13372",
+        "sympy__sympy-13480",
+        "sympy__sympy-13551",
+        "sympy__sympy-13615",
+        "sympy__sympy-13647",
+        "sympy__sympy-13757",
+        "sympy__sympy-13798",
+        "sympy__sympy-13852"
+    ],
+    "incomplete_ids": [],
+    "empty_patch_ids": [],
+    "submitted_ids": [
+        "sympy__sympy-13031",
+        "sympy__sympy-13091",
+        "sympy__sympy-13372",
+        "sympy__sympy-13480",
+        "sympy__sympy-13551",
+        "sympy__sympy-13615",
+        "sympy__sympy-13647",
+        "sympy__sympy-13757",
+        "sympy__sympy-13798",
+        "sympy__sympy-13852"
+    ],
+    "resolved_ids": [
+        "sympy__sympy-13031",
+        "sympy__sympy-13372",
+        "sympy__sympy-13480",
+        "sympy__sympy-13551",
+        "sympy__sympy-13647",
+        "sympy__sympy-13757"
+    ],
+    "unresolved_ids": [
+        "sympy__sympy-13091",
+        "sympy__sympy-13615",
+        "sympy__sympy-13798",
+        "sympy__sympy-13852"
+    ],
+    "error_ids": [],
+    "schema_version": 2
+}
