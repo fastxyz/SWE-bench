@@ -1,0 +1,73 @@
+diff --git a/seaborn/_core/plot.py b/seaborn/_core/plot.py
+index 4f0290a4..216a6e04 100644
+--- a/seaborn/_core/plot.py
++++ b/seaborn/_core/plot.py
+@@ -25,7 +25,7 @@ from seaborn._marks.base import Mark
+ from seaborn._stats.base import Stat
+ from seaborn._core.data import PlotData
+ from seaborn._core.moves import Move
+-from seaborn._core.scales import Scale
++from seaborn._core.scales import Scale, Nominal
+ from seaborn._core.subplots import Subplots
+ from seaborn._core.groupby import GroupBy
+ from seaborn._core.properties import PROPERTIES, Property
+@@ -1238,7 +1238,6 @@ class Plotter:
+             # This only affects us when sharing *paired* axes. This is a novel/niche
+             # behavior, so we will raise rather than hack together a workaround.
+             if axis is not None and Version(mpl.__version__) < Version("3.4.0"):
+-                from seaborn._core.scales import Nominal
+                 paired_axis = axis in p._pair_spec.get("structure", {})
+                 cat_scale = isinstance(scale, Nominal)
+                 ok_dim = {"x": "col", "y": "row"}[axis]
+@@ -1625,16 +1624,32 @@ class Plotter:
+                 base_legend = legend
+                 self._figure.legends.append(legend)
+ 
++    def _nominal_axis_length(self, ax: Axes, axis: str) -> int:
++        """Infer the number of categories on a nominal coordinate axis."""
++        axis_obj = getattr(ax, f"{axis}axis")
++        units = getattr(axis_obj, "units", None)
++        mapping = getattr(units, "_mapping", None)
++        if mapping is not None:
++            return len(mapping)
++
++        return len(getattr(ax, f"get_{axis}ticks")())
++
+     def _finalize_figure(self, p: Plot) -> None:
+ 
+         for sub in self._subplots:
+             ax = sub["ax"]
+             for axis in "xy":
+                 axis_key = sub[axis]
++                axis_obj = getattr(ax, f"{axis}axis")
++                scale = self._scales.get(axis_key)
++                nominal_axis = isinstance(scale, Nominal)
++
++                if nominal_axis:
++                    axis_obj.grid(False)
+ 
+                 # Axis limits
+                 if axis_key in p._limits:
+-                    convert_units = getattr(ax, f"{axis}axis").convert_units
++                    convert_units = axis_obj.convert_units
+                     a, b = p._limits[axis_key]
+                     lo = a if a is None else convert_units(a)
+                     hi = b if b is None else convert_units(b)
+@@ -1643,6 +1658,17 @@ class Plotter:
+                     if isinstance(b, str):
+                         hi = cast(float, hi) + 0.5
+                     ax.set(**{f"{axis}lim": (lo, hi)})
++                    if nominal_axis and axis == "y" and not ax.yaxis_inverted():
++                        ax.invert_yaxis()
++
++                elif nominal_axis:
++                    n = self._nominal_axis_length(ax, axis)
++                    if n:
++                        set_lim = getattr(ax, f"set_{axis}lim")
++                        if axis == "x":
++                            set_lim(-.5, n - .5, auto=None)
++                        else:
++                            set_lim(n - .5, -.5, auto=None)
+ 
+         engine_default = None if p._target is not None else "tight"
+         layout_engine = p._layout_spec.get("engine", engine_default)

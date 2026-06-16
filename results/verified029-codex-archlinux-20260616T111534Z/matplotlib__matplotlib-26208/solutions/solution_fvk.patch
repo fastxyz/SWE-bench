@@ -1,0 +1,24 @@
+diff --git a/lib/matplotlib/axes/_base.py b/lib/matplotlib/axes/_base.py
+index 5203e3232c..1fc32384ee 100644
+--- a/lib/matplotlib/axes/_base.py
++++ b/lib/matplotlib/axes/_base.py
+@@ -1233,6 +1233,9 @@ class _AxesBase(martist.Artist):
+         self._sharex = other
+         self.xaxis.major = other.xaxis.major  # Ticker instances holding
+         self.xaxis.minor = other.xaxis.minor  # locator and formatter.
++        if not self.xaxis.have_units():
++            self.xaxis.converter = other.xaxis.converter
++            self.xaxis.units = other.xaxis.units
+         x0, x1 = other.get_xlim()
+         self.set_xlim(x0, x1, emit=False, auto=other.get_autoscalex_on())
+         self.xaxis._scale = other.xaxis._scale
+@@ -1252,6 +1255,9 @@ class _AxesBase(martist.Artist):
+         self._sharey = other
+         self.yaxis.major = other.yaxis.major  # Ticker instances holding
+         self.yaxis.minor = other.yaxis.minor  # locator and formatter.
++        if not self.yaxis.have_units():
++            self.yaxis.converter = other.yaxis.converter
++            self.yaxis.units = other.yaxis.units
+         y0, y1 = other.get_ylim()
+         self.set_ylim(y0, y1, emit=False, auto=other.get_autoscaley_on())
+         self.yaxis._scale = other.yaxis._scale

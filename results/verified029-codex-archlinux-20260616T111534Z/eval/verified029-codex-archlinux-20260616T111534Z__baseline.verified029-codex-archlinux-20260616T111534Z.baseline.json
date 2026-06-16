@@ -1,0 +1,51 @@
+{
+    "total_instances": 10,
+    "submitted_instances": 10,
+    "completed_instances": 10,
+    "resolved_instances": 8,
+    "unresolved_instances": 2,
+    "empty_patch_instances": 0,
+    "error_instances": 0,
+    "completed_ids": [
+        "matplotlib__matplotlib-25775",
+        "matplotlib__matplotlib-25960",
+        "matplotlib__matplotlib-26113",
+        "matplotlib__matplotlib-26208",
+        "matplotlib__matplotlib-26291",
+        "matplotlib__matplotlib-26342",
+        "matplotlib__matplotlib-26466",
+        "mwaskom__seaborn-3069",
+        "mwaskom__seaborn-3187",
+        "pallets__flask-5014"
+    ],
+    "incomplete_ids": [],
+    "empty_patch_ids": [],
+    "submitted_ids": [
+        "matplotlib__matplotlib-25775",
+        "matplotlib__matplotlib-25960",
+        "matplotlib__matplotlib-26113",
+        "matplotlib__matplotlib-26208",
+        "matplotlib__matplotlib-26291",
+        "matplotlib__matplotlib-26342",
+        "matplotlib__matplotlib-26466",
+        "mwaskom__seaborn-3069",
+        "mwaskom__seaborn-3187",
+        "pallets__flask-5014"
+    ],
+    "resolved_ids": [
+        "matplotlib__matplotlib-25775",
+        "matplotlib__matplotlib-25960",
+        "matplotlib__matplotlib-26113",
+        "matplotlib__matplotlib-26208",
+        "matplotlib__matplotlib-26291",
+        "matplotlib__matplotlib-26342",
+        "matplotlib__matplotlib-26466",
+        "pallets__flask-5014"
+    ],
+    "unresolved_ids": [
+        "mwaskom__seaborn-3069",
+        "mwaskom__seaborn-3187"
+    ],
+    "error_ids": [],
+    "schema_version": 2
+}

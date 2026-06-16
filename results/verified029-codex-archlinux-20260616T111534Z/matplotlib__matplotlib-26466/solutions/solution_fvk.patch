@@ -1,0 +1,50 @@
+diff --git a/lib/matplotlib/offsetbox.py b/lib/matplotlib/offsetbox.py
+index bb117c38ce..638724ea73 100644
+--- a/lib/matplotlib/offsetbox.py
++++ b/lib/matplotlib/offsetbox.py
+@@ -1306,7 +1306,7 @@ or callable, default: value of *xycoords*
+         self.offsetbox = offsetbox
+         self.arrowprops = arrowprops.copy() if arrowprops is not None else None
+         self.set_fontsize(fontsize)
+-        self.xybox = xybox if xybox is not None else xy
++        self.xybox = tuple(xybox) if xybox is not None else self.xy
+         self.boxcoords = boxcoords if boxcoords is not None else xycoords
+         self._box_alignment = box_alignment
+ 
+diff --git a/lib/matplotlib/patches.py b/lib/matplotlib/patches.py
+index 92dc55940b..8afeef8f8b 100644
+--- a/lib/matplotlib/patches.py
++++ b/lib/matplotlib/patches.py
+@@ -4481,8 +4481,8 @@ class ConnectionPatch(FancyArrowPatch):
+         if coordsB is None:
+             coordsB = coordsA
+         # we'll draw ourself after the artist we annotate by default
+-        self.xy1 = xyA
+-        self.xy2 = xyB
++        self.xy1 = tuple(xyA)
++        self.xy2 = tuple(xyB)
+         self.coords1 = coordsA
+         self.coords2 = coordsB
+ 
+diff --git a/lib/matplotlib/text.py b/lib/matplotlib/text.py
+index d4922fc517..b3693bc677 100644
+--- a/lib/matplotlib/text.py
++++ b/lib/matplotlib/text.py
+@@ -1389,7 +1389,7 @@ class OffsetFrom:
+             The screen units to use (pixels or points) for the offset input.
+         """
+         self._artist = artist
+-        self._ref_coord = ref_coord
++        self._ref_coord = tuple(ref_coord)
+         self.set_unit(unit)
+ 
+     def set_unit(self, unit):
+@@ -1456,7 +1456,7 @@ class _AnnotationBase:
+                  xycoords='data',
+                  annotation_clip=None):
+ 
+-        self.xy = xy
++        self.xy = tuple(xy)
+         self.xycoords = xycoords
+         self.set_annotation_clip(annotation_clip)
+ 

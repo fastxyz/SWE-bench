@@ -1,0 +1,44 @@
+diff --git a/seaborn/_core/scales.py b/seaborn/_core/scales.py
+index 55874bf2..e6e37093 100644
+--- a/seaborn/_core/scales.py
++++ b/seaborn/_core/scales.py
+@@ -36,6 +36,7 @@ from pandas import Series
+ 
+ from seaborn._core.rules import categorical_order
+ from seaborn._core.typing import Default, default
++from seaborn.utils import _add_formatter_offset
+ 
+ from typing import TYPE_CHECKING
+ if TYPE_CHECKING:
+@@ -379,6 +380,7 @@ class ContinuousBase(Scale):
+             locs = axis.major.locator()
+             locs = locs[(vmin <= locs) & (locs <= vmax)]
+             labels = axis.major.formatter.format_ticks(locs)
++            labels = _add_formatter_offset(labels, axis.major.formatter)
+             new._legend = list(locs), list(labels)
+ 
+         return new
+diff --git a/seaborn/utils.py b/seaborn/utils.py
+index 2407853c..4bdf61f4 100644
+--- a/seaborn/utils.py
++++ b/seaborn/utils.py
+@@ -706,10 +706,19 @@ def locator_to_legend_entries(locator, limits, dtype):
+     # formatted_levels = formatter.format_ticks(raw_levels)
+     formatter.set_locs(raw_levels)
+     formatted_levels = [formatter(x) for x in raw_levels]
++    formatted_levels = _add_formatter_offset(formatted_levels, formatter)
+ 
+     return raw_levels, formatted_levels
+ 
+ 
++def _add_formatter_offset(labels, formatter):
++    """Add formatter offset text to legend labels when it is in use."""
++    offset = formatter.get_offset()
++    if offset:
++        labels = [f"{label} {offset}".strip() for label in labels]
++    return labels
++
++
+ def relative_luminance(color):
+     """Calculate the relative luminance of a color according to W3C standards
+ 
