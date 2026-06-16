@@ -1,0 +1,31 @@
+diff --git a/sympy/polys/densetools.py b/sympy/polys/densetools.py
+index f057824642..eec78676a5 100644
+--- a/sympy/polys/densetools.py
++++ b/sympy/polys/densetools.py
+@@ -16,7 +16,7 @@
+     dup_exquo_ground, dmp_exquo_ground,
+ )
+ from sympy.polys.densebasic import (
+-    dup_strip, dmp_strip,
++    dup_strip, dmp_strip, _rec_strip,
+     dup_convert, dmp_convert,
+     dup_degree, dmp_degree,
+     dmp_to_dict,
+@@ -1198,6 +1198,8 @@ def dup_clear_denoms(f, K0, K1=None, convert=False):
+     if not K1.is_one(common):
+         f = dup_mul_ground(f, common, K0)
+ 
++    f = dup_strip(f)
++
+     if not convert:
+         return common, f
+     else:
+@@ -1252,6 +1254,8 @@ def dmp_clear_denoms(f, u, K0, K1=None, convert=False):
+     if not K1.is_one(common):
+         f = dmp_mul_ground(f, common, u, K0)
+ 
++    f = _rec_strip(f, u)
++
+     if not convert:
+         return common, f
+     else:
