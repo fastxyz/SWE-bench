@@ -1,0 +1,307 @@
+{
+  "run_id": "verified041-codex-wsl-ubuntu-260615221107",
+  "arms": [
+    "baseline",
+    "fvk"
+  ],
+  "instances": {
+    "sphinx-doc__sphinx-8120": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecf12-0866-70c1-93d1-18255be868ce",
+        "num_turns": null,
+        "duration_seconds": 188.31152144199586,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "44/44"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecf12-0866-70c1-93d1-18255be868ce",
+        "num_turns": null,
+        "duration_seconds": 422.7482852750036,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "44/44"
+        }
+      }
+    },
+    "sphinx-doc__sphinx-8265": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecf12-0860-7452-b9e2-edc297592188",
+        "num_turns": null,
+        "duration_seconds": 345.68097582799965,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "22/22"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecf12-0860-7452-b9e2-edc297592188",
+        "num_turns": null,
+        "duration_seconds": 332.6592635429988,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "22/22"
+        }
+      }
+    },
+    "sphinx-doc__sphinx-8269": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecf12-0884-75f3-b125-6ced2bc9deb4",
+        "num_turns": null,
+        "duration_seconds": 99.6415245859971,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "5/5"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecf12-0884-75f3-b125-6ced2bc9deb4",
+        "num_turns": null,
+        "duration_seconds": 347.2547461199938,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "5/5"
+        }
+      }
+    },
+    "sphinx-doc__sphinx-8459": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecf18-eab6-7ff1-9e55-29092414f688",
+        "num_turns": null,
+        "duration_seconds": 129.94669281400274,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "17/17"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecf18-eab6-7ff1-9e55-29092414f688",
+        "num_turns": null,
+        "duration_seconds": 361.95142030800343,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "17/17"
+        }
+      }
+    },
+    "sphinx-doc__sphinx-8475": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecf1b-6d2c-7dc1-8eaa-695f5587f6cf",
+        "num_turns": null,
+        "duration_seconds": 81.05093692600349,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "17/17"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecf1b-6d2c-7dc1-8eaa-695f5587f6cf",
+        "num_turns": null,
+        "duration_seconds": 376.3106933100062,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "17/17"
+        }
+      }
+    },
+    "sphinx-doc__sphinx-8548": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecf1c-73ee-7f72-ac20-46fdc774eb46",
+        "num_turns": null,
+        "duration_seconds": 508.30909879200044,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "5/5"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecf1c-73ee-7f72-ac20-46fdc774eb46",
+        "num_turns": null,
+        "duration_seconds": 413.18812502700166,
+        "empty_patch": false,
+        "eval": {
+          "resolved": false,
+          "ftp": "0/1",
+          "ptp": "5/5"
+        }
+      }
+    },
+    "sphinx-doc__sphinx-8551": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecf20-7e60-70d3-8106-5f1a58026844",
+        "num_turns": null,
+        "duration_seconds": 224.4121843940011,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "32/32"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecf20-7e60-70d3-8106-5f1a58026844",
+        "num_turns": null,
+        "duration_seconds": 436.74785504500323,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "32/32"
+        }
+      }
+    },
+    "sphinx-doc__sphinx-8593": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecf22-7a71-7730-b947-59d82e140ce6",
+        "num_turns": null,
+        "duration_seconds": 200.2290846379983,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "1/1"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecf22-7a71-7730-b947-59d82e140ce6",
+        "num_turns": null,
+        "duration_seconds": 424.40682406900305,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "1/1"
+        }
+      }
+    },
+    "sphinx-doc__sphinx-8595": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecf2a-9672-7071-a1cd-5caa27f3fd2f",
+        "num_turns": null,
+        "duration_seconds": 125.57194838000578,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "0/0"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecf2a-9672-7071-a1cd-5caa27f3fd2f",
+        "num_turns": null,
+        "duration_seconds": 356.1201219650029,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "0/0"
+        }
+      }
+    },
+    "sphinx-doc__sphinx-8621": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecf2a-a6d4-79c0-be51-8c45755c8b6d",
+        "num_turns": null,
+        "duration_seconds": 310.43511698699876,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "31/31"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecf2a-a6d4-79c0-be51-8c45755c8b6d",
+        "num_turns": null,
+        "duration_seconds": 567.566529908996,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "31/31"
+        }
+      }
+    }
+  },
+  "aggregates": {
+    "arms": {
+      "baseline": {
+        "resolved": 8,
+        "evaluated": 10
+      },
+      "fvk": {
+        "resolved": 8,
+        "evaluated": 10
+      }
+    },
+    "flips": {
+      "baseline_to_fvk": {
+        "up": [],
+        "down": []
+      }
+    }
+  }
+}

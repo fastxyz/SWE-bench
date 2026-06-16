@@ -44,3 +44,4 @@
 | verified038-codex-wsl-ubuntu-260615221107 | wsl-ubuntu | gpt-5.5 | 10 | 10/10 | 10/10 | — | 2026-06-16T04:31:58.941765+00:00 |
 | verified039-codex-wsl-ubuntu-260615221107 | wsl-ubuntu | gpt-5.5 | 10 | 7/10 | 7/10 | — | 2026-06-16T05:20:51.961678+00:00 |
 | verified040-codex-wsl-ubuntu-260615221107 | wsl-ubuntu | gpt-5.5 | 10 | 6/10 | 5/10 | — | 2026-06-16T06:08:48.384787+00:00 |
+| verified041-codex-wsl-ubuntu-260615221107 | wsl-ubuntu | gpt-5.5 | 10 | 8/10 | 8/10 | — | 2026-06-16T06:56:57.538295+00:00 |

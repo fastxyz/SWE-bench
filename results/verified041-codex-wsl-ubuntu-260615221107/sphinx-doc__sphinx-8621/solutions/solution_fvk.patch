@@ -1,0 +1,80 @@
+diff --git a/sphinx/builders/html/transforms.py b/sphinx/builders/html/transforms.py
+index c91da57e9..b30d99387 100644
+--- a/sphinx/builders/html/transforms.py
++++ b/sphinx/builders/html/transforms.py
+@@ -8,8 +8,7 @@
+     :license: BSD, see LICENSE for details.
+ """
+ 
+-import re
+-from typing import Any, Dict
++from typing import Any, Dict, List, Tuple
+ 
+ from docutils import nodes
+ 
+@@ -37,26 +36,52 @@ class KeyboardTransform(SphinxPostTransform):
+     """
+     default_priority = 400
+     builders = ('html',)
+-    pattern = re.compile(r'(-|\+|\^|\s+)')
++    key_separators = '-+^'
++
++    def is_separator(self, char: str) -> bool:
++        return char.isspace() or char in self.key_separators
++
++    def split_keys(self, text: str) -> List[Tuple[str, str]]:
++        parts = []  # type: List[Tuple[str, str]]
++        pos = 0
++        while pos < len(text):
++            start = pos
++            if text[pos] in self.key_separators:
++                pos += 1
++            while pos < len(text) and not self.is_separator(text[pos]):
++                pos += 1
++            parts.append(('key', text[start:pos]))
++
++            if pos == len(text):
++                break
++            elif text[pos].isspace():
++                start = pos
++                while pos < len(text) and text[pos].isspace():
++                    pos += 1
++                parts.append(('sep', text[start:pos]))
++            elif pos + 1 < len(text):
++                parts.append(('sep', text[pos]))
++                pos += 1
++            else:
++                # A trailing separator character is a key, not a separator.
++                parts[-1] = ('key', parts[-1][1] + text[pos])
++                pos += 1
++
++        return parts
+ 
+     def run(self, **kwargs: Any) -> None:
+         matcher = NodeMatcher(nodes.literal, classes=["kbd"])
+         for node in self.document.traverse(matcher):  # type: nodes.literal
+-            parts = self.pattern.split(node[-1].astext())
+-            if len(parts) == 1:
++            parts = self.split_keys(node[-1].astext())
++            if len(parts) <= 1:
+                 continue
+ 
+             node.pop()
+-            while parts:
+-                key = parts.pop(0)
+-                node += nodes.literal('', key, classes=["kbd"])
+-
+-                try:
+-                    # key separator (ex. -, +, ^)
+-                    sep = parts.pop(0)
+-                    node += nodes.Text(sep)
+-                except IndexError:
+-                    pass
++            for kind, value in parts:
++                if kind == 'key':
++                    node += nodes.literal('', value, classes=["kbd"])
++                else:
++                    node += nodes.Text(value)
+ 
+ 
+ def setup(app: Sphinx) -> Dict[str, Any]:

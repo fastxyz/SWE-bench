@@ -1,0 +1,198 @@
+diff --git a/sphinx/ext/autodoc/__init__.py b/sphinx/ext/autodoc/__init__.py
+index ddfd2b365..c977dcc31 100644
+--- a/sphinx/ext/autodoc/__init__.py
++++ b/sphinx/ext/autodoc/__init__.py
+@@ -26,8 +26,8 @@ from sphinx.config import ENUM, Config
+ from sphinx.deprecation import (RemovedInSphinx40Warning, RemovedInSphinx50Warning,
+                                 RemovedInSphinx60Warning)
+ from sphinx.environment import BuildEnvironment
+-from sphinx.ext.autodoc.importer import (get_class_members, get_module_members,
+-                                         get_object_members, import_object)
++from sphinx.ext.autodoc.importer import (get_class_attr_doc, get_class_members,
++                                         get_module_members, get_object_members, import_object)
+ from sphinx.ext.autodoc.mock import mock
+ from sphinx.locale import _, __
+ from sphinx.pycode import ModuleAnalyzer, PycodeError
+@@ -584,6 +584,16 @@ class Documenter:
+         else:
+             return 'docstring of %s' % fullname
+ 
++    def get_attribute_comment(self) -> Optional[List[str]]:
++        """Get doc-comment for an attribute from the parsed source."""
++        if self.analyzer and self.objpath:
++            attr_docs = self.analyzer.find_attr_docs()
++            key = ('.'.join(self.objpath[:-1]), self.objpath[-1])
++            if key in attr_docs:
++                return list(attr_docs[key])
++
++        return None
++
+     def add_content(self, more_content: Optional[StringList], no_docstring: bool = False
+                     ) -> None:
+         """Add content from docstrings, attribute documentation and user."""
+@@ -594,18 +604,13 @@ class Documenter:
+ 
+         # set sourcename and add content from attribute documentation
+         sourcename = self.get_sourcename()
+-        if self.analyzer:
+-            attr_docs = self.analyzer.find_attr_docs()
+-            if self.objpath:
+-                key = ('.'.join(self.objpath[:-1]), self.objpath[-1])
+-                if key in attr_docs:
+-                    no_docstring = True
+-                    # make a copy of docstring for attributes to avoid cache
+-                    # the change of autodoc-process-docstring event.
+-                    docstrings = [list(attr_docs[key])]
++        attr_doc = self.get_attribute_comment()
++        if attr_doc is not None:
++            no_docstring = True
++            docstrings = [attr_doc]
+ 
+-                    for i, line in enumerate(self.process_doc(docstrings)):
+-                        self.add_line(line, sourcename, i)
++            for i, line in enumerate(self.process_doc(docstrings)):
++                self.add_line(line, sourcename, i)
+ 
+         # add content from docstrings
+         if not no_docstring:
+@@ -715,6 +720,7 @@ class Documenter:
+             if isinstance(obj, ObjectMember) and obj.docstring:
+                 # hack for ClassDocumenter to inject docstring via ObjectMember
+                 doc = obj.docstring
++                isattr = True
+ 
+             has_doc = bool(doc)
+ 
+@@ -2160,25 +2166,17 @@ class UninitializedInstanceAttributeMixin(DataDocumenterMixinBase):
+                 self.attr = None  #: This is a target of this mix-in.
+     """
+ 
+-    def get_attribute_comment(self, parent: Any) -> Optional[List[str]]:
+-        try:
+-            for cls in inspect.getmro(parent):
+-                try:
+-                    module = safe_getattr(cls, '__module__')
+-                    qualname = safe_getattr(cls, '__qualname__')
++    def get_attribute_comment(self, parent: Any = None) -> Optional[List[str]]:
++        if parent is None:
++            comment = super().get_attribute_comment()  # type: ignore
++            if comment is not None:
++                return comment
++            parent = self.parent
+ 
+-                    analyzer = ModuleAnalyzer.for_module(module)
+-                    analyzer.analyze()
+-                    if qualname and self.objpath:
+-                        key = (qualname, self.objpath[-1])
+-                        if key in analyzer.attr_docs:
+-                            return list(analyzer.attr_docs[key])
+-                except (AttributeError, PycodeError):
+-                    pass
+-        except (AttributeError, PycodeError):
+-            pass
+-
+-        return None
++        if parent and self.objpath:
++            return get_class_attr_doc(parent, self.objpath[-1], self.analyzer)
++        else:
++            return None
+ 
+     def is_uninitialized_instance_attribute(self, parent: Any) -> bool:
+         """Check the subject is an attribute defined in __init__()."""
+diff --git a/sphinx/ext/autodoc/importer.py b/sphinx/ext/autodoc/importer.py
+index d6e73d36a..cdb15a471 100644
+--- a/sphinx/ext/autodoc/importer.py
++++ b/sphinx/ext/autodoc/importer.py
+@@ -14,6 +14,7 @@ import warnings
+ from typing import Any, Callable, Dict, List, Mapping, NamedTuple, Optional, Tuple
+ 
+ from sphinx.deprecation import RemovedInSphinx40Warning, deprecated_alias
++from sphinx.errors import PycodeError
+ from sphinx.pycode import ModuleAnalyzer
+ from sphinx.util import logging
+ from sphinx.util.inspect import (getannotations, getmro, getslots, isclass, isenumclass,
+@@ -251,6 +252,52 @@ class ClassAttribute:
+         self.docstring = docstring
+ 
+ 
++def _get_class_attr_docs(cls: Any, analyzer: ModuleAnalyzer = None) -> Dict[str, List[str]]:
++    """Get attribute doc-comments for the given class."""
++    module = safe_getattr(cls, '__module__', None)
++    qualname = safe_getattr(cls, '__qualname__', None)
++    if module is None or qualname is None:
++        return {}
++
++    try:
++        if analyzer and analyzer.modname == module:
++            module_analyzer = analyzer
++        else:
++            module_analyzer = ModuleAnalyzer.for_module(module)
++
++        attr_docs = module_analyzer.find_attr_docs()
++        return {name: docstring for (namespace, name), docstring in attr_docs.items()
++                if namespace == qualname}
++    except PycodeError:
++        return {}
++
++
++def get_class_attr_doc(subject: Any, attrname: str,
++                       analyzer: ModuleAnalyzer = None) -> Optional[List[str]]:
++    """Get an attribute doc-comment for a class or its bases."""
++    for cls in getmro(subject):
++        attr_docs = _get_class_attr_docs(cls, analyzer)
++        if attrname in attr_docs:
++            return list(attr_docs[attrname])
++
++    return None
++
++
++def _get_class_member_owner(subject: Any, name: str) -> Any:
++    """Get the class that defines the given member."""
++    for cls in getmro(subject):
++        if name in safe_getattr(cls, '__dict__', {}):
++            return cls
++
++        try:
++            if name in getannotations(cls):
++                return cls
++        except AttributeError:
++            pass
++
++    return None
++
++
+ def get_class_members(subject: Any, objpath: List[str], attrgetter: Callable,
+                       analyzer: ModuleAnalyzer = None) -> Dict[str, ClassAttribute]:
+     """Get members and attributes of target class."""
+@@ -293,7 +340,8 @@ def get_class_members(subject: Any, objpath: List[str], attrgetter: Callable,
+                 if name in obj_dict:
+                     members[unmangled] = ClassAttribute(subject, unmangled, value)
+                 else:
+-                    members[unmangled] = ClassAttribute(None, unmangled, value)
++                    owner = _get_class_member_owner(subject, name)
++                    members[unmangled] = ClassAttribute(owner, unmangled, value)
+         except AttributeError:
+             continue
+ 
+@@ -308,12 +356,15 @@ def get_class_members(subject: Any, objpath: List[str], attrgetter: Callable,
+             pass
+ 
+     if analyzer:
+-        # append instance attributes (cf. self.attr1) if analyzer knows
+-        namespace = '.'.join(objpath)
+-        for (ns, name), docstring in analyzer.attr_docs.items():
+-            if namespace == ns and name not in members:
+-                members[name] = ClassAttribute(subject, name, INSTANCEATTR,
+-                                               '\n'.join(docstring))
++        for cls in getmro(subject):
++            for name, docstring in _get_class_attr_docs(cls, analyzer).items():
++                doc = '\n'.join(docstring)
++                if name in members:
++                    if members[name].class_ == cls and members[name].docstring is None:
++                        members[name].docstring = doc
++                elif cls == subject:
++                    # append instance attributes (cf. self.attr1) if analyzer knows
++                    members[name] = ClassAttribute(subject, name, INSTANCEATTR, doc)
+ 
+     return members
+ 

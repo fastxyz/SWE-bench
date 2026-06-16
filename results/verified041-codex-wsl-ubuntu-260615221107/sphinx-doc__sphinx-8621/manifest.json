@@ -1,0 +1,77 @@
+{
+  "run_id": "verified041-codex-wsl-ubuntu-260615221107",
+  "instance_id": "sphinx-doc__sphinx-8621",
+  "baseline_session_id": "019ecf2a-a6d4-79c0-be51-8c45755c8b6d",
+  "core_hash_post_baseline": "5ddd09bd6224ac698163fd2f68324e2f0dcc5cad4f67175e13154db46ebc6aa6",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ecf2a-a6d4-79c0-be51-8c45755c8b6d",
+      "attempts": 1,
+      "started_at": "2026-06-16T06:42:19.348802+00:00",
+      "ended_at": "2026-06-16T06:47:29.785461+00:00",
+      "num_turns": null,
+      "duration_seconds": 310.43511698699876,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "exec_command": 29,
+          "apply_patch": 4
+        },
+        "violations": [],
+        "exec_warnings": [
+          "{\"cmd\":\"rg -n \\\"python_requires|Programming Language :: Python :: 3|typing\\\" repo/setup.py repo/setup.cfg repo/tox.ini | head -100\",\"workdir\":\"/home/patrickmao/.swe-fvk-runs/verified041-codex-wsl-ubun"
+        ],
+        "unparseable_lines": 0,
+        "lines": 137
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ecf2a-a6d4-79c0-be51-8c45755c8b6d",
+      "attempts": 1,
+      "started_at": "2026-06-16T06:47:29.882987+00:00",
+      "ended_at": "2026-06-16T06:56:57.451831+00:00",
+      "num_turns": null,
+      "duration_seconds": 567.566529908996,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "exec_command": 63,
+          "apply_patch": 10,
+          "update_plan": 6
+        },
+        "violations": [],
+        "exec_warnings": [
+          "{\"cmd\":\"rg -n \\\"python_requires|Programming Language :: Python :: 3|typing\\\" repo/setup.py repo/setup.cfg repo/tox.ini | head -100\",\"workdir\":\"/home/patrickmao/.swe-fvk-runs/verified041-codex-wsl-ubun"
+        ],
+        "unparseable_lines": 0,
+        "lines": 316
+      }
+    },
+    "control": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    }
+  },
+  "agent": "codex",
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "b7c2dd08d551bc15b1a3f1af5beab7dbf555521a2e7047fbd2b2ef7a18b6679a",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": null,
+    "fvk": null,
+    "control": null
+  }
+}

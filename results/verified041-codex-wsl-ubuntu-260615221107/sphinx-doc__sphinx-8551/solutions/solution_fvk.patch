@@ -1,0 +1,25 @@
+diff --git a/sphinx/domains/python.py b/sphinx/domains/python.py
+index 79d7e4f46..ae3e4df75 100644
+--- a/sphinx/domains/python.py
++++ b/sphinx/domains/python.py
+@@ -271,7 +271,8 @@ class PyXrefMixin:
+                   contnode: Node = None, env: BuildEnvironment = None) -> Node:
+         result = super().make_xref(rolename, domain, target,  # type: ignore
+                                    innernode, contnode, env)
+-        result['refspecific'] = True
++        if target.startswith('.'):
++            result['refspecific'] = True
+         if target.startswith(('.', '~')):
+             prefix, result['reftarget'] = target[0], target[1:]
+             if prefix == '.':
+@@ -1349,6 +1350,10 @@ class PythonDomain(Domain):
+         return make_refnode(builder, fromdocname, module.docname, module.node_id,
+                             contnode, title)
+ 
++    def process_field_xref(self, pnode: pending_xref) -> None:
++        pnode['py:module'] = self.env.ref_context.get('py:module')
++        pnode['py:class'] = self.env.ref_context.get('py:class')
++
+     def get_objects(self) -> Iterator[Tuple[str, str, str, str, str, int]]:
+         for modname, mod in self.modules.items():
+             yield (modname, modname, 'module', mod.docname, mod.node_id, 0)
