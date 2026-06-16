@@ -275,3 +275,11 @@ def test_vendor_verified500_writes_all_dataset_rows(monkeypatch, tmp_path):
     written = json.loads(text)
     assert written[0]["instance_id"] == "repo__repo-000"
     assert written[-1]["instance_id"] == "repo__repo-499"
+
+
+def test_instance_set_path_and_count_from_registry():
+    from fvk_bench import config, instances
+    assert instances._instance_set_path("multilingual300") == config.MULTILINGUAL_INSTANCES_JSON
+    assert instances._expected_count("multilingual300") == 300
+    assert instances._instance_set_path("verified500") == config.VERIFIED_INSTANCES_JSON
+    assert instances._expected_count("verified500") == 500

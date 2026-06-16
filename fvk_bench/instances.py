@@ -59,23 +59,21 @@ def submodule_instance_ids() -> list[str]:
 
 
 def _instance_set_path(instance_set: str) -> Path:
-    if instance_set == "fvk45":
-        return config.INSTANCES_JSON
-    if instance_set == "verified500":
-        return config.VERIFIED_INSTANCES_JSON
-    raise RuntimeError(
-        f"unknown instance set {instance_set!r}; choose from {', '.join(config.INSTANCE_SETS)}"
-    )
+    try:
+        return config.REGISTRY[instance_set].data_file
+    except KeyError:
+        raise RuntimeError(
+            f"unknown instance set {instance_set!r}; choose from {', '.join(config.INSTANCE_SETS)}"
+        )
 
 
 def _expected_count(instance_set: str) -> int:
-    if instance_set == "fvk45":
-        return 45
-    if instance_set == "verified500":
-        return 500
-    raise RuntimeError(
-        f"unknown instance set {instance_set!r}; choose from {', '.join(config.INSTANCE_SETS)}"
-    )
+    try:
+        return config.REGISTRY[instance_set].expected_count
+    except KeyError:
+        raise RuntimeError(
+            f"unknown instance set {instance_set!r}; choose from {', '.join(config.INSTANCE_SETS)}"
+        )
 
 
 def _visible_row(row: dict) -> dict:
@@ -153,7 +151,7 @@ def load_instances(
             f"Invalid field type in {path}: {exc}"
         ) from exc
 
-    if instance_set == "verified500":
+    if config.REGISTRY[instance_set].id_source == "count":
         expected_count = _expected_count(instance_set)
         if len(instances) != expected_count:
             raise RuntimeError(
@@ -216,7 +214,12 @@ def vendor_instances(
     out_path = Path(out_path)
     target_ids = set(submodule_instance_ids()) if instance_set == "fvk45" else None
 
-    ds = datasets.load_dataset(config.DATASET_NAME, split="test")
+    iset = config.REGISTRY[instance_set]
+    if iset.dataset_local:
+        pq = str((config.REPO_ROOT / iset.dataset_local / "test.parquet").resolve())
+        ds = datasets.load_dataset("parquet", data_files=pq, split="train")
+    else:
+        ds = datasets.load_dataset(iset.dataset_identity, split="test")
 
     rows = []
     for row in ds:

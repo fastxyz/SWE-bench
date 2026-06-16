@@ -6,6 +6,7 @@ specification, not just implementation detail.
 """
 
 import os
+from dataclasses import dataclass
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
@@ -18,10 +19,6 @@ MAX_TURNS: dict[str, int] = {"baseline": 200, "fvk": 200, "control": 200}
 TOOLS: str = "Read,Write,Edit,Glob,Grep"  # passed verbatim to `claude --tools`; restricts actual built-in tool surface (NOT a permission list)
 ARMS: tuple[str, ...] = ("baseline", "fvk", "control")
 ARM_TIMEOUT_SECONDS: int = 4 * 3600
-DATASET_NAME: str = "princeton-nlp/SWE-bench_Verified"
-INSTANCE_SETS: tuple[str, ...] = ("fvk45", "verified500")
-DEFAULT_INSTANCE_SET: str = "fvk45"
-
 assert set(MAX_TURNS) == set(ARMS), "MAX_TURNS keys must match ARMS"
 
 # ---------------------------------------------------------------------------
@@ -52,6 +49,75 @@ VERIFIED_INSTANCES_JSON: Path = PACKAGE_DIR / "data" / "instances_verified500.js
 REPRO_SUBMODULE: Path = REPO_ROOT / "third_party" / "swebench-fvk-reproducibility"
 FVK_SUBMODULE: Path = REPO_ROOT / "third_party" / "formal-verification-kit"
 RESULTS_DIR: Path = REPO_ROOT / "results"
+MULTILINGUAL_INSTANCES_JSON: Path = PACKAGE_DIR / "data" / "instances_multilingual300.json"
+
+# ---------------------------------------------------------------------------
+# Instance-set registry (single source of truth for each runnable set)
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class InstanceSet:
+    """One runnable instance set. Authoritative description of a benchmark set."""
+
+    name: str
+    dataset_identity: str       # portable logical name recorded in run manifests
+    dataset_local: str | None   # repo-relative dir holding test.parquet, or None (HF)
+    expected_count: int
+    data_file: Path             # vendored *visible* metadata JSON (agent inputs)
+    id_source: str              # "submodule45" | "count"
+    batch_scheme: str           # "fvk45_fixed5" | "verified_sorted10" | "multilingual_sorted10"
+
+
+REGISTRY: dict[str, "InstanceSet"] = {
+    "fvk45": InstanceSet(
+        name="fvk45",
+        dataset_identity="princeton-nlp/SWE-bench_Verified",
+        dataset_local=None,
+        expected_count=45,
+        data_file=INSTANCES_JSON,
+        id_source="submodule45",
+        batch_scheme="fvk45_fixed5",
+    ),
+    "verified500": InstanceSet(
+        name="verified500",
+        dataset_identity="princeton-nlp/SWE-bench_Verified",
+        dataset_local=None,
+        expected_count=500,
+        data_file=VERIFIED_INSTANCES_JSON,
+        id_source="count",
+        batch_scheme="verified_sorted10",
+    ),
+    "multilingual300": InstanceSet(
+        name="multilingual300",
+        dataset_identity="SWE-bench/SWE-bench_Multilingual",
+        dataset_local="third_party/swe-bench-multilingual",
+        expected_count=300,
+        data_file=MULTILINGUAL_INSTANCES_JSON,
+        id_source="count",
+        batch_scheme="multilingual_sorted10",
+    ),
+}
+
+INSTANCE_SETS: tuple[str, ...] = tuple(REGISTRY)
+DEFAULT_INSTANCE_SET: str = "fvk45"
+
+def resolve_dataset(instance_set: str) -> str:
+    """Return the dataset arg for the harness/loader for ``instance_set``.
+
+    Sets with a local mirror return the absolute submodule dir (the harness loads
+    ``<dir>/test.parquet``); others return the HuggingFace dataset name.
+    """
+    s = REGISTRY[instance_set]
+    if s.dataset_local:
+        return str((REPO_ROOT / s.dataset_local).resolve())
+    return s.dataset_identity
+
+
+def dataset_identity(instance_set: str) -> str:
+    """Return the portable logical dataset name recorded in run manifests."""
+    return REGISTRY[instance_set].dataset_identity
+
 
 # ---------------------------------------------------------------------------
 # Session / runner constants

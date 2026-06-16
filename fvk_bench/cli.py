@@ -65,6 +65,22 @@ def _manifest_arms(run_dir: Path) -> tuple[str, ...]:
     return config.ARMS
 
 
+def _manifest_dataset(run_dir: Path) -> str:
+    """Resolve the dataset for a completed run, portably, from its manifest."""
+    manifest_path = run_dir / "run_manifest.json"
+    if manifest_path.is_file():
+        try:
+            m = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except ValueError:
+            m = {}
+        iset = m.get("instance_set")
+        if iset in config.REGISTRY:
+            return config.resolve_dataset(iset)
+        if m.get("dataset"):  # legacy manifest recorded a literal dataset name
+            return m["dataset"]
+    return config.resolve_dataset(config.DEFAULT_INSTANCE_SET)
+
+
 def _resolve_selection(args, known: dict) -> list[str] | None:
     """Resolve the --instances|--all|--batch selection against the loaded set."""
     if args.all:
@@ -151,7 +167,8 @@ def _cmd_list(args) -> int:
         }
     else:
         ordered_ids = tuple(all_ids)
-        for name in batches.verified_batch_names():
+        scheme = config.REGISTRY[args.instance_set].batch_scheme
+        for name in batches.batch_names_for_scheme(scheme):
             try:
                 for iid in batches.batch_instances(name, instance_ids=ordered_ids):
                     batch_of[iid] = name
@@ -250,11 +267,7 @@ def _cmd_vendor_instances(args) -> int:
     except Exception as exc:  # noqa: BLE001 — network/datasets errors are arbitrary
         print(f"error: vendoring failed: {exc}")
         return 1
-    out_path = (
-        config.INSTANCES_JSON
-        if args.instance_set == "fvk45"
-        else config.VERIFIED_INSTANCES_JSON
-    )
+    out_path = config.REGISTRY[args.instance_set].data_file
     print(f"vendored {count} instances -> {out_path}")
     return 0
 
@@ -410,7 +423,9 @@ def _cmd_validate_gold(args) -> int:
 
     print(f"gold check: evaluating official patches for {len(ids)} instance(s)...")
     results = evaluate.gold_eval(
-        args.run_id, ids, max_workers=args.max_workers, results_dir=config.RESULTS_DIR
+        args.run_id, ids,
+        dataset=config.resolve_dataset(args.instance_set),
+        max_workers=args.max_workers, results_dir=config.RESULTS_DIR,
     )
     resolved = 0
     for iid in sorted(results):
@@ -447,6 +462,7 @@ def _cmd_evaluate(args) -> int:
         if arm_list is None:
             return 1
 
+    dataset = _manifest_dataset(run_dir)
     successes = failures = 0
     for arm in arm_list:
         predictions_path, ids = evaluate.build_predictions(run_dir, arm)
@@ -457,6 +473,7 @@ def _cmd_evaluate(args) -> int:
         print(f"[{arm}] {len(ids)} prediction(s) -> {predictions_path}")
         rc = evaluate.run_official_eval(
             args.run_id, arm, ids,
+            dataset=dataset,
             results_dir=results_dir, max_workers=args.max_workers,
         )
         if rc == 0:
@@ -515,7 +532,7 @@ def _add_instance_selection(sub: argparse.ArgumentParser) -> None:
     )
     group.add_argument(
         "--batch", metavar="NAME",
-        help=f"process one batch ({', '.join(sorted(batches.BATCHES))}, or verified001..verified050)",
+        help=f"process one batch ({', '.join(sorted(batches.BATCHES))}, verified001..verified050, or multilingual001..multilingual030)",
     )
 
 
@@ -539,7 +556,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_instance_set(p)
     p.add_argument("--run-id", help="annotate each instance with its arm statuses from this run")
     p.add_argument("--batch", metavar="NAME",
-                   help=f"only list one batch ({', '.join(sorted(batches.BATCHES))}, or verified001..verified050)")
+                   help=f"only list one batch ({', '.join(sorted(batches.BATCHES))}, verified001..verified050, or multilingual001..multilingual030)")
     p.set_defaults(func=_cmd_list)
 
     p = sub.add_parser("doctor", help="preflight checks (and optional session canary)")

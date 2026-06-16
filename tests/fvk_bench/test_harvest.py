@@ -359,7 +359,7 @@ def test_run_manifest_fields(tmp_path, monkeypatch):
     assert inv["permission_mode"] == config.PERMISSION_MODE
     assert inv["setting_sources"] == config.SETTING_SOURCES
 
-    assert m["dataset"] == config.DATASET_NAME
+    assert m["dataset"] == config.dataset_identity("verified500")
 
     th = m["template_hashes"]
     assert set(th.keys()) == {"baseline", "fvk", "control"}
@@ -408,6 +408,23 @@ def test_run_manifest_codex_fields(tmp_path, monkeypatch):
         "sandbox": config.CODEX_SANDBOX,
         "max_turns": config.MAX_TURNS,
     }
+
+
+# ---------------------------------------------------------------------------
+# Portable dataset identity recorded in run manifest
+# ---------------------------------------------------------------------------
+
+def test_run_manifest_records_portable_dataset_identity(tmp_path):
+    import json
+    from fvk_bench import harvest
+    out = harvest.write_run_manifest(
+        run_id="t-ml", results_dir=tmp_path,
+        extra={"instance_set": "multilingual300", "arms": ["baseline"], "agent": "codex"},
+    )
+    m = json.loads(out.read_text())
+    assert m["dataset"] == "SWE-bench/SWE-bench_Multilingual"  # portable logical name
+    assert not m["dataset"].startswith("/")                   # never an absolute path
+    assert m["instance_set"] == "multilingual300"             # extra merged through
 
 
 # ---------------------------------------------------------------------------

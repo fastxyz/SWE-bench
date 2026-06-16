@@ -6,9 +6,11 @@ against the actual CLI; commands are copy-pasteable.
 
 ## 1. What this is
 
-A controlled benchmark on SWE-bench Verified instances. The default instance set is the
-original 45-problem FVK subset; the full 500-problem Verified set is available with
-`--instance-set verified500`. Each run may request any subset of the three arms.
+A controlled benchmark on SWE-bench instances. The default instance set is the original
+45-problem FVK subset (`fvk45`); the full 500-problem SWE-bench Verified set is available
+with `--instance-set verified500`; and the 300-problem SWE-bench Multilingual set (9
+languages) is available with `--instance-set multilingual300`. Each run may request any
+subset of the three arms.
 **baseline**: a fresh agent session reads a real GitHub issue and fixes the checked-out
 repo. **fvk**: a second session resumes the frozen baseline transcript
 (`--resume --fork-session`) and audits the fix using the Formal Verification Kit
@@ -52,11 +54,15 @@ python -m venv .venv
 That single `pip install -e .` is sufficient: it installs the `swebench` package (the
 evaluation harness) and all dependencies, including `datasets`. You do not need HuggingFace
 access to run sessions — the 45 instances' public metadata is committed at
-`fvk_bench/data/instances.json`, and the full 500-instance metadata is committed at
-`fvk_bench/data/instances_verified500.json`. The `datasets` library is only exercised if
-you re-vendor either file (`vendor-instances`) or when the eval harness fetches the
-dataset at evaluation time. The two submodules under `third_party/` provide the
-45-problem list and the FVK materials, so `git submodule update --init` is mandatory.
+`fvk_bench/data/instances.json`, the full 500-instance metadata at
+`fvk_bench/data/instances_verified500.json`, and the 300-instance multilingual metadata at
+`fvk_bench/data/instances_multilingual300.json`. For `fvk45` and `verified500`, the
+`datasets` library is only exercised if you re-vendor the metadata files (`vendor-instances`)
+or when the eval harness fetches the dataset at evaluation time. For `multilingual300`, eval
+is **fully offline** — the dataset ships as a git submodule at `third_party/swe-bench-multilingual`
+(containing `test.parquet`), so no HuggingFace access is needed at runtime. The submodules
+under `third_party/` provide the 45-problem list, the FVK materials, and the multilingual
+dataset, so `git submodule update --init` is mandatory and now also pulls the dataset submodule.
 
 ## 4. Sanity check
 
@@ -189,9 +195,8 @@ network. `--max-parallel 3` brings this to a few hours, machine and rate limits 
 **Interrupted?** Rerun the exact same `run` command — completed arms are skipped. Failed arms
 rerun only when you add `--retry-failed` (every attempt is recorded in the instance manifest).
 
-**Letting a Claude session drive a batch.** If you'd rather hand the whole flow to your own
-Claude Code session, use the ready-made prompt in [START-PROMPT.md](START-PROMPT.md) — fill
-in the instance set, batch name, arms, and parallelism cap and paste it.
+**Letting a session drive a batch.** See the "Letting a session drive a batch" subsection
+below for a ready-made prompt you can paste into your own Claude Code session.
 
 ### Full Verified 500 overnight batches
 
@@ -240,6 +245,124 @@ Because the run manifest records `arms: ["baseline", "fvk"]`, `evaluate` and `re
 not expect or show the skipped `control` arm. The aggregate report for these runs includes
 baseline→fvk flips; baseline→control flips and fvk-vs-control delta are intentionally
 absent.
+
+### SWE-bench Multilingual 300 overnight batches
+
+The SWE-bench Multilingual set is exposed as `--instance-set multilingual300`: 300 instances
+across 9 languages (C, C++, Go, Java, JavaScript, TypeScript, PHP, Ruby, Rust), divided into
+thirty generated 10-instance batches: `multilingual001` through `multilingual030`. Both
+`--agent claude` and `--agent codex` work with this set.
+
+**Offline eval.** The dataset ships as a git submodule at `third_party/swe-bench-multilingual`
+(containing `test.parquet`). `git submodule update --init` pulls it; no HuggingFace access is
+needed at runtime. The first `evaluate` call for a multilingual run may build Docker images
+locally if prebuilt images for the target language toolchain aren't pullable — budget extra
+time for the first batch on a fresh machine.
+
+First verify the metadata and inspect a batch:
+
+```bash
+.venv/bin/python -m fvk_bench list --instance-set multilingual300 --batch multilingual001
+```
+
+Then run each batch with its own run id, commit, and push immediately after `report`. The loop
+below mirrors the verified500 pattern; `--arms baseline,fvk` and `--max-parallel 3` are the
+recommended settings for an overnight run:
+
+```bash
+set -euo pipefail
+
+for n in $(seq -f "%03g" 1 30); do
+  batch="multilingual${n}"
+  run_id="${batch}-codex-$(hostname)-$(date +%y%m%d%H%M%S)"
+
+  .venv/bin/python -m fvk_bench validate-gold \
+    --instance-set multilingual300 --run-id "$run_id" --batch "$batch" \
+    --max-workers 3
+  .venv/bin/python -m fvk_bench run \
+    --instance-set multilingual300 --run-id "$run_id" --batch "$batch" \
+    --agent codex --arms baseline,fvk --max-parallel 3
+  .venv/bin/python -m fvk_bench evaluate --run-id "$run_id" --arms baseline,fvk
+  .venv/bin/python -m fvk_bench report --run-id "$run_id"
+
+  git add "results/$run_id" results/INDEX.md
+  git commit -m "results: ${batch} codex baseline fvk"
+  git push
+done
+```
+
+The four-command flow for a single multilingual batch:
+
+```bash
+.venv/bin/python -m fvk_bench validate-gold --instance-set multilingual300 --run-id mlNNN-$(hostname) --batch multilingualNNN --max-workers 3
+.venv/bin/python -m fvk_bench run --instance-set multilingual300 --run-id mlNNN-$(hostname) --batch multilingualNNN --agent codex --arms baseline,fvk --max-parallel 3
+.venv/bin/python -m fvk_bench evaluate --run-id mlNNN-$(hostname) --arms baseline,fvk
+.venv/bin/python -m fvk_bench report --run-id mlNNN-$(hostname)
+```
+
+This produces 30 separate `results/<run-id>/` directories. Because the run manifest records
+`arms: ["baseline", "fvk"]`, `evaluate` and `report` do not expect or show the `control` arm.
+
+### Letting a session drive a batch
+
+If you'd rather hand the whole flow to a Claude Code session, fill in the parameters below
+and paste the prompt into your local Claude Code session.
+
+**Parameters:**
+- `{instance-set}` — `fvk45`, `verified500`, or `multilingual300`.
+- `{batch}` — `batch1`...`batch5` for `fvk45`; `verified001`...`verified050` for
+  `verified500`; `multilingual001`...`multilingual030` for `multilingual300`.
+- `{arms}` — usually `baseline,fvk,control` for the 45-set experiment, or `baseline,fvk`
+  for a two-arm `verified500` or `multilingual300` run.
+- `{max-parallel}` — how many problems may run at the same time. `3` is a good default for
+  10-instance batches. Parallel runs are faster but share your machine and subscription rate
+  limits.
+- `{agent}` — `claude` (default) or `codex`.
+- `{run-id}` — computed once at the start as `{batch}-{agent}-$(hostname)-$(date +%y%m%d%H%M%S)`,
+  reused for every command.
+
+**What to expect:** these runs take a long time. While the benchmark runs, your Claude
+session may look stale or idle; it is not stuck — it is waiting for background sessions and
+tests to finish. Send `status?` at any time and it will reply with a progress report.
+
+```text
+I have the fastxyz/SWE-bench repo cloned locally on main, with Claude Code installed and
+logged in. Run one benchmark batch end to end.
+
+Read START.md at the repo root and follow it exactly. Parameters for this run:
+- instance set: {instance-set}
+- batch: {batch}
+- arms: {arms}
+- max parallel instances: {max-parallel}
+- agent: {agent}
+- run id: {batch}-{agent}-$(hostname)-$(date +%y%m%d%H%M%S)
+  (compute the run id once at the start and reuse the exact same string for every
+  command below — the agent keeps Claude and Codex runs distinct, the timestamp keeps
+  it unique so concurrent runs never collide)
+
+Carry out, in order:
+1. Setup + sanity: `git submodule update --init`, create .venv and `pip install -e .`,
+   then `python -m fvk_bench doctor --agent {agent} --canary`. Stop and show me the
+   output if any hard check fails or the canary is not clean.
+2. `validate-gold --instance-set {instance-set}` for this batch — every selected instance
+   must resolve before continuing.
+3. `run` the batch with `--instance-set {instance-set}`, `--batch {batch}`,
+   `--agent {agent}`, `--arms {arms}`, and `--max-parallel {max-parallel}`. This takes
+   hours: run it in the background and monitor until every requested arm of every instance
+   is completed. If an arm fails with a transient error (e.g. API overload), rerun the same
+   command with `--retry-failed`. Never edit anything under fvk_bench/ (prompts, config) —
+   that would break comparability across machines.
+4. `evaluate`, then `report`.
+5. Commit ONLY the new results/<run-id>/ directory plus results/INDEX.md to main and push
+   before starting any later batch.
+
+This will take hours. While work is running in the background, stay on it and do not give
+up; whenever I send `status?`, reply with a concise progress report: per-instance arm
+statuses, what is currently running, and elapsed time.
+
+When done, report: the scores.md aggregates (per-arm resolved counts, flips), any arms
+that failed or needed retries, and total wall-clock time.
+```
 
 ## 7. What gets recorded
 
