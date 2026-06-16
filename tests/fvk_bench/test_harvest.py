@@ -411,7 +411,7 @@ def test_run_manifest_codex_fields(tmp_path, monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# Test 5: harvested files not gitignored in the real results dir
+# Portable dataset identity recorded in run manifest
 # ---------------------------------------------------------------------------
 
 def test_run_manifest_records_portable_dataset_identity(tmp_path):

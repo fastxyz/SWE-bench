@@ -50,7 +50,6 @@ REPRO_SUBMODULE: Path = REPO_ROOT / "third_party" / "swebench-fvk-reproducibilit
 FVK_SUBMODULE: Path = REPO_ROOT / "third_party" / "formal-verification-kit"
 RESULTS_DIR: Path = REPO_ROOT / "results"
 MULTILINGUAL_INSTANCES_JSON: Path = PACKAGE_DIR / "data" / "instances_multilingual300.json"
-MULTILINGUAL_SUBMODULE: Path = REPO_ROOT / "third_party" / "swe-bench-multilingual"
 
 # ---------------------------------------------------------------------------
 # Instance-set registry (single source of truth for each runnable set)
