@@ -259,6 +259,8 @@ needed at runtime. The first `evaluate` call for a multilingual run may build Do
 locally if prebuilt images for the target language toolchain aren't pullable — budget extra
 time for the first batch on a fresh machine.
 
+**Upstream-drift caveat.** Occasionally an instance fails `validate-gold` because its official gold patch no longer resolves in the prebuilt image due to upstream toolchain/dependency drift outside this repo's control (observed: `tokio-rs__tokio-4384`, Rust — the pinned image's Cargo is too old for an updated transitive crate); such an instance's scores are uninterpretable and should be noted and skipped, not counted as an agent failure, and the rest of the batch is unaffected.
+
 First verify the metadata and inspect a batch:
 
 ```bash
