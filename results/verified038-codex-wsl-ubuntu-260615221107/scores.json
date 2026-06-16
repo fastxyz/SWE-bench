@@ -1,0 +1,307 @@
+{
+  "run_id": "verified038-codex-wsl-ubuntu-260615221107",
+  "arms": [
+    "baseline",
+    "fvk"
+  ],
+  "instances": {
+    "scikit-learn__scikit-learn-14894": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece91-a9a6-7e71-a6de-2da7beef245a",
+        "num_turns": null,
+        "duration_seconds": 107.21956506700008,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "85/85"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece91-a9a6-7e71-a6de-2da7beef245a",
+        "num_turns": null,
+        "duration_seconds": 390.5419637149971,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "85/85"
+        }
+      }
+    },
+    "scikit-learn__scikit-learn-14983": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece91-aa10-7c92-8723-1036ee0c6369",
+        "num_turns": null,
+        "duration_seconds": 163.17395278900221,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "105/105"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece91-aa10-7c92-8723-1036ee0c6369",
+        "num_turns": null,
+        "duration_seconds": 403.4361353480017,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "105/105"
+        }
+      }
+    },
+    "scikit-learn__scikit-learn-15100": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece91-aa0b-71a3-9d54-c86299b64734",
+        "num_turns": null,
+        "duration_seconds": 78.8002523590003,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "93/93"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece91-aa0b-71a3-9d54-c86299b64734",
+        "num_turns": null,
+        "duration_seconds": 384.71611740799926,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "93/93"
+        }
+      }
+    },
+    "scikit-learn__scikit-learn-25102": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece98-d6d1-72e1-a9f8-ca1c6ae787a3",
+        "num_turns": null,
+        "duration_seconds": 330.9403673630004,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "59/59"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece98-d6d1-72e1-a9f8-ca1c6ae787a3",
+        "num_turns": null,
+        "duration_seconds": 379.91488811900126,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "59/59"
+        }
+      }
+    },
+    "scikit-learn__scikit-learn-25232": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece99-5c46-70d1-91bd-47384d19fc6e",
+        "num_turns": null,
+        "duration_seconds": 251.22755624300044,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "214/214"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece99-5c46-70d1-91bd-47384d19fc6e",
+        "num_turns": null,
+        "duration_seconds": 314.34790592399804,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "214/214"
+        }
+      }
+    },
+    "scikit-learn__scikit-learn-25747": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece9a-6971-7442-ac6c-e1b0abb1e9f7",
+        "num_turns": null,
+        "duration_seconds": 159.51843240199742,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "14/14"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ece9a-6971-7442-ac6c-e1b0abb1e9f7",
+        "num_turns": null,
+        "duration_seconds": 407.06021652300115,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "14/14"
+        }
+      }
+    },
+    "scikit-learn__scikit-learn-25931": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecea2-1acd-7ca1-bae9-7fffda2991d3",
+        "num_turns": null,
+        "duration_seconds": 118.63825958599773,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "21/21"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecea2-1acd-7ca1-bae9-7fffda2991d3",
+        "num_turns": null,
+        "duration_seconds": 408.3907757870038,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "21/21"
+        }
+      }
+    },
+    "scikit-learn__scikit-learn-25973": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecea3-2bed-7172-8f62-e9d85caac47b",
+        "num_turns": null,
+        "duration_seconds": 152.10523511899373,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "72/72"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecea3-2bed-7172-8f62-e9d85caac47b",
+        "num_turns": null,
+        "duration_seconds": 495.1632911580018,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "72/72"
+        }
+      }
+    },
+    "scikit-learn__scikit-learn-26194": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecea3-ca0d-7120-831f-f11202ff6c7c",
+        "num_turns": null,
+        "duration_seconds": 209.23016066599666,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "186/186"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019ecea3-ca0d-7120-831f-f11202ff6c7c",
+        "num_turns": null,
+        "duration_seconds": 654.2310663850003,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "2/2",
+          "ptp": "186/186"
+        }
+      }
+    },
+    "scikit-learn__scikit-learn-26323": {
+      "baseline": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019eceaa-41cd-7683-9e4b-b70b47a4b5a2",
+        "num_turns": null,
+        "duration_seconds": 136.86190318599984,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "188/188"
+        }
+      },
+      "fvk": {
+        "status": "completed",
+        "reason": null,
+        "session_id": "019eceaa-41cd-7683-9e4b-b70b47a4b5a2",
+        "num_turns": null,
+        "duration_seconds": 456.7701324650043,
+        "empty_patch": false,
+        "eval": {
+          "resolved": true,
+          "ftp": "1/1",
+          "ptp": "188/188"
+        }
+      }
+    }
+  },
+  "aggregates": {
+    "arms": {
+      "baseline": {
+        "resolved": 10,
+        "evaluated": 10
+      },
+      "fvk": {
+        "resolved": 10,
+        "evaluated": 10
+      }
+    },
+    "flips": {
+      "baseline_to_fvk": {
+        "up": [],
+        "down": []
+      }
+    }
+  }
+}

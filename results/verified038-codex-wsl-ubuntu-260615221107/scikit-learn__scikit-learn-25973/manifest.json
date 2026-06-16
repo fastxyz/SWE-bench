@@ -1,0 +1,74 @@
+{
+  "run_id": "verified038-codex-wsl-ubuntu-260615221107",
+  "instance_id": "scikit-learn__scikit-learn-25973",
+  "baseline_session_id": "019ecea3-2bed-7172-8f62-e9d85caac47b",
+  "core_hash_post_baseline": "d4ce7a9aa3981d3d7638e266ada3098f9902faecfdf145c970d5d3749fa063be",
+  "arms": {
+    "baseline": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ecea3-2bed-7172-8f62-e9d85caac47b",
+      "attempts": 1,
+      "started_at": "2026-06-16T04:14:20.471748+00:00",
+      "ended_at": "2026-06-16T04:16:52.579498+00:00",
+      "num_turns": null,
+      "duration_seconds": 152.10523511899373,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "update_plan": 6,
+          "exec_command": 27,
+          "apply_patch": 2
+        },
+        "violations": [],
+        "exec_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 141
+      }
+    },
+    "fvk": {
+      "status": "completed",
+      "reason": null,
+      "session_id": "019ecea3-2bed-7172-8f62-e9d85caac47b",
+      "attempts": 1,
+      "started_at": "2026-06-16T04:16:52.672766+00:00",
+      "ended_at": "2026-06-16T04:25:07.838612+00:00",
+      "num_turns": null,
+      "duration_seconds": 495.1632911580018,
+      "audit": {
+        "ok": true,
+        "tool_uses": {
+          "update_plan": 12,
+          "exec_command": 66,
+          "apply_patch": 6
+        },
+        "violations": [],
+        "exec_warnings": [],
+        "unparseable_lines": 0,
+        "lines": 327
+      }
+    },
+    "control": {
+      "status": "pending",
+      "reason": null,
+      "session_id": null,
+      "attempts": 0,
+      "started_at": null,
+      "ended_at": null,
+      "num_turns": null,
+      "duration_seconds": null,
+      "audit": null
+    }
+  },
+  "agent": "codex",
+  "template_hashes": {
+    "baseline": "44d9c4714f0b7dfe75f08b49393109724bcbec5130770a1aae9b21c083b76ea1",
+    "fvk": "b7c2dd08d551bc15b1a3f1af5beab7dbf555521a2e7047fbd2b2ef7a18b6679a",
+    "control": "6383c441293ebf7b09ed99bf7e639cd753c615a9e8f61ec7e3d959f434993082"
+  },
+  "raw_envelopes": {
+    "baseline": null,
+    "fvk": null,
+    "control": null
+  }
+}
