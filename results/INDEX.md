@@ -14,6 +14,7 @@
 | fvk-r3bc-sympy13852-XC-MINI-PRO-AHP | XC-MINI-PRO-AHP | claude-opus-4-8 | 1 | 0/1 | 0/1 | 0/0 | 2026-06-15T08:28:20.845564+00:00 |
 | multilingual001-codex-XC-MINI-PRO-AHP-260616231854 | XC-MINI-PRO-AHP | gpt-5.5 | 10 | 8/10 | 8/10 | — | 2026-06-16T18:07:34.719253+00:00 |
 | multilingual002-codex-XC-MINI-PRO-AHP-260616231854 | XC-MINI-PRO-AHP | gpt-5.5 | 10 | 7/10 | 7/10 | — | 2026-06-16T21:31:14.341296+00:00 |
+| multilingual003-codex-XC-MINI-PRO-AHP-260616231854 | XC-MINI-PRO-AHP | gpt-5.5 | 10 | 7/10 | 7/10 | — | 2026-06-16T22:37:54.762508+00:00 |
 | repro5x-XC-MINI-PRO-AHP-s1 | XC-MINI-PRO-AHP | claude-opus-4-8 | 6 | 0/6 | 0/0 | 0/0 | 2026-06-15T02:53:17.375243+00:00 |
 | repro5x-XC-MINI-PRO-AHP-s2 | XC-MINI-PRO-AHP | claude-opus-4-8 | 6 | 0/6 | 0/0 | 0/0 | 2026-06-15T02:51:00.546293+00:00 |
 | repro5x-XC-MINI-PRO-AHP-s3 | XC-MINI-PRO-AHP | claude-opus-4-8 | 6 | 0/6 | 0/0 | 0/0 | 2026-06-15T03:19:53.657646+00:00 |

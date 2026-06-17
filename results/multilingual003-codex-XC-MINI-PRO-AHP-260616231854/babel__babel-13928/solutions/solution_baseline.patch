@@ -1,0 +1,12 @@
+diff --git a/packages/babel-parser/src/parser/expression.js b/packages/babel-parser/src/parser/expression.js
+index 689f3795f8..63b06f6b4e 100644
+--- a/packages/babel-parser/src/parser/expression.js
++++ b/packages/babel-parser/src/parser/expression.js
+@@ -2386,6 +2386,7 @@ export default class ExpressionParser extends LValParser {
+       // https://tc39.es/ecma262/#prod-ExpressionBody
+       node.body = this.parseMaybeAssign();
+       this.checkParams(node, false, allowExpression, false);
++      this.expressionScope.exit();
+     } else {
+       const oldStrict = this.state.strict;
+       // Start a new scope with regard to labels

@@ -1,0 +1,60 @@
+diff --git a/dist/axios.js b/dist/axios.js
+index b016b54..cc373e4 100644
+--- a/dist/axios.js
++++ b/dist/axios.js
+@@ -1576,6 +1576,10 @@
+       return value;
+     }
+ 
++    if (utils.isArray(value)) {
++      return value.map(normalizeValue);
++    }
++
+     return String(value);
+   }
+ 
+diff --git a/dist/esm/axios.js b/dist/esm/axios.js
+index abff302..3467022 100644
+--- a/dist/esm/axios.js
++++ b/dist/esm/axios.js
+@@ -1525,6 +1525,10 @@ function normalizeValue(value) {
+     return value;
+   }
+ 
++  if (utils.isArray(value)) {
++    return value.map(normalizeValue);
++  }
++
+   return String(value);
+ }
+ 
+diff --git a/dist/node/axios.cjs b/dist/node/axios.cjs
+index 6f145cb..d909ecb 100644
+--- a/dist/node/axios.cjs
++++ b/dist/node/axios.cjs
+@@ -1451,6 +1451,10 @@ function normalizeValue(value) {
+     return value;
+   }
+ 
++  if (utils.isArray(value)) {
++    return value.map(normalizeValue);
++  }
++
+   return String(value);
+ }
+ 
+diff --git a/lib/core/AxiosHeaders.js b/lib/core/AxiosHeaders.js
+index 9d56538..5ebdcda 100644
+--- a/lib/core/AxiosHeaders.js
++++ b/lib/core/AxiosHeaders.js
+@@ -15,6 +15,10 @@ function normalizeValue(value) {
+     return value;
+   }
+ 
++  if (utils.isArray(value)) {
++    return value.map(normalizeValue);
++  }
++
+   return String(value);
+ }
+ 

@@ -1,0 +1,32 @@
+{
+    "axios__axios-4738": {
+        "patch_is_None": false,
+        "patch_exists": true,
+        "patch_successfully_applied": true,
+        "resolved": true,
+        "tests_status": {
+            "FAIL_TO_PASS": {
+                "success": [
+                    "supports http with nodejs should respect the timeoutErrorMessage property"
+                ],
+                "failure": []
+            },
+            "PASS_TO_PASS": {
+                "success": [
+                    "supports http with nodejs should throw an error if the timeout property is not parsable as a number",
+                    "supports http with nodejs should parse the timeout property",
+                    "supports http with nodejs should respect the timeout property"
+                ],
+                "failure": []
+            },
+            "FAIL_TO_FAIL": {
+                "success": [],
+                "failure": []
+            },
+            "PASS_TO_FAIL": {
+                "success": [],
+                "failure": []
+            }
+        }
+    }
+}

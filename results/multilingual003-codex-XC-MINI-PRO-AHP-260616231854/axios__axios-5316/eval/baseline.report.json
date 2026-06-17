@@ -1,0 +1,31 @@
+{
+    "axios__axios-5316": {
+        "patch_is_None": false,
+        "patch_exists": true,
+        "patch_successfully_applied": true,
+        "resolved": false,
+        "tests_status": {
+            "FAIL_TO_PASS": {
+                "success": [],
+                "failure": [
+                    "supports http with nodejs FormData SpecCompliant FormData should allow passing FormData"
+                ]
+            },
+            "PASS_TO_PASS": {
+                "success": [],
+                "failure": [
+                    "supports http with nodejs FormData form-data instance (https://www.npmjs.com/package/form-data) should allow passing FormData",
+                    "supports http with nodejs FormData toFormData helper should properly serialize nested objects for parsing with multer.js (express.js)"
+                ]
+            },
+            "FAIL_TO_FAIL": {
+                "success": [],
+                "failure": []
+            },
+            "PASS_TO_FAIL": {
+                "success": [],
+                "failure": []
+            }
+        }
+    }
+}

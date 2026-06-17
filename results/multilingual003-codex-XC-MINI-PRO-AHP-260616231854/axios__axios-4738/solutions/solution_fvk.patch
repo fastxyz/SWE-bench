@@ -1,0 +1,16 @@
+diff --git a/lib/adapters/http.js b/lib/adapters/http.js
+index 8d3588b..931b9c8 100755
+--- a/lib/adapters/http.js
++++ b/lib/adapters/http.js
+@@ -420,9 +420,10 @@ module.exports = function httpAdapter(config) {
+       // ClientRequest.setTimeout will be fired on the specify milliseconds, and can make sure that abort() will be fired after connect.
+       req.setTimeout(timeout, function handleRequestTimeout() {
+         req.abort();
++        var timeoutErrorMessage = config.timeoutErrorMessage || 'timeout of ' + timeout + 'ms exceeded';
+         var transitional = config.transitional || transitionalDefaults;
+         reject(new AxiosError(
+-          'timeout of ' + timeout + 'ms exceeded',
++          timeoutErrorMessage,
+           transitional.clarifyTimeoutError ? AxiosError.ETIMEDOUT : AxiosError.ECONNABORTED,
+           config,
+           req

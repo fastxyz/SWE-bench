@@ -1,0 +1,56 @@
+diff --git a/dist/node/axios.cjs b/dist/node/axios.cjs
+index 2836ac1..e8939ef 100644
+--- a/dist/node/axios.cjs
++++ b/dist/node/axios.cjs
+@@ -2575,6 +2575,7 @@ const isBrotliSupported = utils$1.isFunction(zlib__default["default"].createBrot
+ const {http: httpFollow, https: httpsFollow} = followRedirects__default["default"];
+ 
+ const isHttps = /https:?/;
++const isProtocolRelativeURL = /^[\u0000-\u0020]*[\\/]{2}/;
+ 
+ const supportedProtocols = platform.protocols.map(protocol => {
+   return protocol + ':';
+@@ -2763,6 +2764,15 @@ const httpAdapter = isHttpAdapterSupported && function httpAdapter(config) {
+ 
+     // Parse url
+     const fullPath = buildFullPath(config.baseURL, config.url);
++
++    if (isProtocolRelativeURL.test(fullPath)) {
++      return reject(new AxiosError(
++        'Invalid URL',
++        AxiosError.ERR_INVALID_URL,
++        config
++      ));
++    }
++
+     const parsed = new URL(fullPath, 'http://localhost');
+     const protocol = parsed.protocol || supportedProtocols[0];
+ 
+diff --git a/lib/adapters/http.js b/lib/adapters/http.js
+index 7c982fa..d1b58fa 100755
+--- a/lib/adapters/http.js
++++ b/lib/adapters/http.js
+@@ -41,6 +41,7 @@ const isBrotliSupported = utils.isFunction(zlib.createBrotliDecompress);
+ const {http: httpFollow, https: httpsFollow} = followRedirects;
+ 
+ const isHttps = /https:?/;
++const isProtocolRelativeURL = /^[\u0000-\u0020]*[\\/]{2}/;
+ 
+ const supportedProtocols = platform.protocols.map(protocol => {
+   return protocol + ':';
+@@ -229,6 +230,15 @@ export default isHttpAdapterSupported && function httpAdapter(config) {
+ 
+     // Parse url
+     const fullPath = buildFullPath(config.baseURL, config.url);
++
++    if (isProtocolRelativeURL.test(fullPath)) {
++      return reject(new AxiosError(
++        'Invalid URL',
++        AxiosError.ERR_INVALID_URL,
++        config
++      ));
++    }
++
+     const parsed = new URL(fullPath, 'http://localhost');
+     const protocol = parsed.protocol || supportedProtocols[0];
+ 

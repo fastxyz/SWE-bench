@@ -1,0 +1,210 @@
+diff --git a/lib/adapters/http.js b/lib/adapters/http.js
+index 2d9c5e1..052adbc 100755
+--- a/lib/adapters/http.js
++++ b/lib/adapters/http.js
+@@ -15,6 +15,7 @@ import AxiosError from '../core/AxiosError.js';
+ import CanceledError from '../cancel/CanceledError.js';
+ import platform from '../platform/index.js';
+ import fromDataURI from '../helpers/fromDataURI.js';
++import formDataToStream, {isSpecCompliantForm} from '../helpers/formDataToStream.js';
+ import stream from 'stream';
+ import AxiosHeaders from '../core/AxiosHeaders.js';
+ import AxiosTransformStream from '../helpers/AxiosTransformStream.js';
+@@ -246,6 +247,10 @@ export default isHttpAdapterSupported && function httpAdapter(config) {
+     // support for https://www.npmjs.com/package/form-data api
+     if (utils.isFormData(data) && utils.isFunction(data.getHeaders)) {
+       headers.set(data.getHeaders());
++    } else if (utils.isFormData(data) && isSpecCompliantForm(data)) {
++      data = formDataToStream(data, (formHeaders) => {
++        headers.set(formHeaders);
++      });
+     } else if (data && !utils.isStream(data)) {
+       if (Buffer.isBuffer(data)) {
+         // Nothing to do...
+diff --git a/lib/helpers/formDataToStream.js b/lib/helpers/formDataToStream.js
+new file mode 100644
+index 0000000..aac34da
+--- /dev/null
++++ b/lib/helpers/formDataToStream.js
+@@ -0,0 +1,181 @@
++'use strict';
++
++import stream from 'stream';
++import utils from '../utils.js';
++
++const BOUNDARY_ALPHABET = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
++const CRLF = '\r\n';
++const CRLF_BYTES = Buffer.from(CRLF);
++const CRLF_BYTES_COUNT = 2;
++
++const isSpecCompliantForm = thing => {
++  return thing && utils.isFunction(thing.append) && thing[Symbol.toStringTag] === 'FormData' && utils.isFunction(thing[Symbol.iterator]);
++};
++
++const escapeName = name => {
++  return String(name).replace(/[\r\n"]/g, match => ({
++    '\r': '%0D',
++    '\n': '%0A',
++    '"': '%22'
++  }[match]));
++};
++
++const generateString = (size = 25) => {
++  let str = '';
++  const {length} = BOUNDARY_ALPHABET;
++
++  while (size--) {
++    str += BOUNDARY_ALPHABET[Math.random() * length | 0];
++  }
++
++  return str;
++};
++
++const write = (writable, chunk) => {
++  if (writable.destroyed || writable.write(chunk)) {
++    return Promise.resolve();
++  }
++
++  return new Promise((resolve, reject) => {
++    const onDrain = () => {
++      cleanup();
++      resolve();
++    };
++
++    const onError = err => {
++      cleanup();
++      reject(err);
++    };
++
++    const onClose = () => {
++      cleanup();
++      resolve();
++    };
++
++    const cleanup = () => {
++      writable.off('drain', onDrain);
++      writable.off('error', onError);
++      writable.off('close', onClose);
++    };
++
++    writable.once('drain', onDrain);
++    writable.once('error', onError);
++    writable.once('close', onClose);
++  });
++};
++
++async function writeBlob(blob, writable) {
++  if (utils.isFunction(blob.stream)) {
++    const readable = blob.stream();
++
++    if (!utils.isFunction(readable.getReader)) {
++      await write(writable, Buffer.from(await blob.arrayBuffer()));
++      return;
++    }
++
++    const reader = readable.getReader();
++    try {
++      while (true) {
++        const {done, value} = await reader.read();
++        if (done) {
++          break;
++        }
++        await write(writable, value);
++      }
++    } finally {
++      utils.isFunction(reader.releaseLock) && reader.releaseLock();
++    }
++
++    return;
++  }
++
++  await write(writable, Buffer.from(await blob.arrayBuffer()));
++}
++
++class FormDataPart {
++  constructor(name, value) {
++    const isStringValue = utils.isString(value);
++    const filename = !isStringValue && value.name ? escapeName(value.name) : 'blob';
++
++    let headers = `Content-Disposition: form-data; name="${escapeName(name)}"${
++      !isStringValue ? `; filename="${filename}"` : ''
++    }${CRLF}`;
++
++    if (!isStringValue) {
++      headers += `Content-Type: ${value.type || 'application/octet-stream'}${CRLF}`;
++    }
++
++    this.headers = Buffer.from(headers + CRLF);
++    this.contentLength = isStringValue ? Buffer.byteLength(value) : value.size;
++    this.size = this.headers.byteLength + this.contentLength + CRLF_BYTES_COUNT;
++    this.name = name;
++    this.value = value;
++  }
++
++  async writeTo(writable) {
++    await write(writable, this.headers);
++
++    if (utils.isString(this.value)) {
++      await write(writable, Buffer.from(this.value));
++    } else {
++      await writeBlob(this.value, writable);
++    }
++
++    await write(writable, CRLF_BYTES);
++  }
++}
++
++export {isSpecCompliantForm};
++
++export default function formDataToStream(form, headersHandler, options) {
++  const {
++    tag = 'form-data-boundary',
++    size = 25,
++    boundary = tag + '-' + generateString(size)
++  } = options || {};
++
++  if (!isSpecCompliantForm(form)) {
++    throw TypeError('FormData instance required');
++  }
++
++  if (boundary.length < 1 || boundary.length > 70) {
++    throw Error('boundary must be 1-70 characters long');
++  }
++
++  const boundaryBytes = Buffer.from('--' + boundary + CRLF);
++  const footerBytes = Buffer.from('--' + boundary + '--' + CRLF);
++  let contentLength = footerBytes.byteLength;
++  const parts = Array.from(form).map(([name, value]) => {
++    const part = new FormDataPart(name, value);
++    contentLength += boundaryBytes.byteLength + part.size;
++    return part;
++  });
++
++  contentLength = utils.toFiniteNumber(contentLength);
++
++  const computedHeaders = {
++    'Content-Type': `multipart/form-data; boundary=${boundary}`
++  };
++
++  if (Number.isFinite(contentLength)) {
++    computedHeaders['Content-Length'] = contentLength;
++  }
++
++  headersHandler && headersHandler(computedHeaders);
++
++  const readable = new stream.PassThrough();
++
++  (async () => {
++    for (const part of parts) {
++      await write(readable, boundaryBytes);
++      await part.writeTo(readable);
++    }
++
++    await write(readable, footerBytes);
++    readable.end();
++  })().catch(err => {
++    readable.destroy(err);
++  });
++
++  return readable;
++}

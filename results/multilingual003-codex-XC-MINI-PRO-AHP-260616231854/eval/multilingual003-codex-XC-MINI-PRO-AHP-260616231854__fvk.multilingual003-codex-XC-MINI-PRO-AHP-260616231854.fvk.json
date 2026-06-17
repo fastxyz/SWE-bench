@@ -1,0 +1,51 @@
+{
+    "total_instances": 10,
+    "submitted_instances": 10,
+    "completed_instances": 10,
+    "resolved_instances": 7,
+    "unresolved_instances": 3,
+    "empty_patch_instances": 0,
+    "error_instances": 0,
+    "completed_ids": [
+        "astral-sh__ruff-15626",
+        "axios__axios-4731",
+        "axios__axios-4738",
+        "axios__axios-5085",
+        "axios__axios-5316",
+        "axios__axios-5892",
+        "axios__axios-6539",
+        "babel__babel-13928",
+        "babel__babel-14532",
+        "babel__babel-15445"
+    ],
+    "incomplete_ids": [],
+    "empty_patch_ids": [],
+    "submitted_ids": [
+        "astral-sh__ruff-15626",
+        "axios__axios-4731",
+        "axios__axios-4738",
+        "axios__axios-5085",
+        "axios__axios-5316",
+        "axios__axios-5892",
+        "axios__axios-6539",
+        "babel__babel-13928",
+        "babel__babel-14532",
+        "babel__babel-15445"
+    ],
+    "resolved_ids": [
+        "astral-sh__ruff-15626",
+        "axios__axios-4731",
+        "axios__axios-4738",
+        "axios__axios-5085",
+        "axios__axios-5892",
+        "babel__babel-13928",
+        "babel__babel-14532"
+    ],
+    "unresolved_ids": [
+        "axios__axios-5316",
+        "axios__axios-6539",
+        "babel__babel-15445"
+    ],
+    "error_ids": [],
+    "schema_version": 2
+}

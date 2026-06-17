@@ -1,0 +1,168 @@
+diff --git a/crates/ruff_linter/src/rules/flake8_simplify/rules/ast_unary_op.rs b/crates/ruff_linter/src/rules/flake8_simplify/rules/ast_unary_op.rs
+index afc2ab3f11..4d5f423f2b 100644
+--- a/crates/ruff_linter/src/rules/flake8_simplify/rules/ast_unary_op.rs
++++ b/crates/ruff_linter/src/rules/flake8_simplify/rules/ast_unary_op.rs
+@@ -1,10 +1,12 @@
+ use ruff_python_ast::{self as ast, Arguments, CmpOp, Expr, ExprContext, Stmt, UnaryOp};
++use ruff_python_semantic::analyze::type_inference::{PythonType, ResolvedPythonType};
++use ruff_python_semantic::analyze::typing;
+ use ruff_text_size::{Ranged, TextRange};
+ 
+-use ruff_diagnostics::{AlwaysFixableViolation, Diagnostic, Edit, Fix};
++use ruff_diagnostics::{AlwaysFixableViolation, Applicability, Diagnostic, Edit, Fix};
+ use ruff_macros::{derive_message_formats, ViolationMetadata};
+ use ruff_python_ast::name::Name;
+-use ruff_python_semantic::ScopeKind;
++use ruff_python_semantic::{ScopeKind, SemanticModel};
+ 
+ use crate::checkers::ast::Checker;
+ 
+@@ -25,6 +27,12 @@ use crate::checkers::ast::Checker;
+ /// a != b
+ /// ```
+ ///
++/// ## Fix safety
++/// This rule's fix is marked as unsafe unless both operands are known to
++/// compare to a boolean value. User-defined and third-party equality operators
++/// can return arbitrary objects, so replacing `not a == b` with `a != b` may
++/// change runtime behavior.
++///
+ /// ## References
+ /// - [Python documentation: Comparisons](https://docs.python.org/3/reference/expressions.html#comparisons)
+ #[derive(ViolationMetadata)]
+@@ -62,6 +70,12 @@ impl AlwaysFixableViolation for NegateEqualOp {
+ /// a == b
+ /// ```
+ ///
++/// ## Fix safety
++/// This rule's fix is marked as unsafe unless both operands are known to
++/// compare to a boolean value. User-defined and third-party inequality
++/// operators can return arbitrary objects, so replacing `not a != b` with
++/// `a == b` may change runtime behavior.
++///
+ /// ## References
+ /// - [Python documentation: Comparisons](https://docs.python.org/3/reference/expressions.html#comparisons)
+ #[derive(ViolationMetadata)]
+@@ -133,6 +147,86 @@ fn is_exception_check(stmt: &Stmt) -> bool {
+     matches!(body.as_slice(), [Stmt::Raise(_)])
+ }
+ 
++fn python_type_eq_ne_returns_bool(python_type: PythonType) -> bool {
++    matches!(
++        python_type,
++        PythonType::String
++            | PythonType::Bytes
++            | PythonType::Number(_)
++            | PythonType::None
++            | PythonType::Ellipsis
++            | PythonType::Dict
++            | PythonType::List
++            | PythonType::Set
++            | PythonType::Tuple
++            | PythonType::Generator
++    )
++}
++
++fn expr_eq_ne_returns_bool(expr: &Expr, semantic: &SemanticModel) -> bool {
++    match ResolvedPythonType::from(expr) {
++        ResolvedPythonType::Atom(python_type) => python_type_eq_ne_returns_bool(python_type),
++        ResolvedPythonType::Union(python_types) => python_types
++            .iter()
++            .copied()
++            .all(python_type_eq_ne_returns_bool),
++        ResolvedPythonType::Unknown | ResolvedPythonType::TypeError => expr
++            .as_call_expr()
++            .and_then(|call| semantic.resolve_builtin_symbol(&call.func))
++            .is_some_and(|symbol| {
++                matches!(
++                    symbol,
++                    "bool"
++                        | "int"
++                        | "float"
++                        | "complex"
++                        | "str"
++                        | "bytes"
++                        | "bytearray"
++                        | "dict"
++                        | "list"
++                        | "set"
++                        | "frozenset"
++                        | "tuple"
++                        | "range"
++                        | "slice"
++                        | "object"
++                )
++            }),
++    }
++}
++
++fn operand_eq_ne_returns_bool(expr: &Expr, semantic: &SemanticModel) -> bool {
++    let Expr::Name(name) = expr else {
++        return expr_eq_ne_returns_bool(expr, semantic);
++    };
++
++    let Some(binding) = semantic.only_binding(name).map(|id| semantic.binding(id)) else {
++        return false;
++    };
++
++    typing::is_int(binding, semantic)
++        || typing::is_float(binding, semantic)
++        || typing::is_dict(binding, semantic)
++        || typing::is_list(binding, semantic)
++        || typing::is_set(binding, semantic)
++        || typing::is_tuple(binding, semantic)
++        || typing::find_binding_value(binding, semantic)
++            .is_some_and(|value| expr_eq_ne_returns_bool(value, semantic))
++}
++
++fn negated_comparison_fix_applicability(
++    left: &Expr,
++    right: &Expr,
++    semantic: &SemanticModel,
++) -> Applicability {
++    if operand_eq_ne_returns_bool(left, semantic) && operand_eq_ne_returns_bool(right, semantic) {
++        Applicability::Safe
++    } else {
++        Applicability::Unsafe
++    }
++}
++
+ /// SIM201
+ pub(crate) fn negation_with_equal_op(
+     checker: &mut Checker,
+@@ -181,10 +275,13 @@ pub(crate) fn negation_with_equal_op(
+         comparators: comparators.clone(),
+         range: TextRange::default(),
+     };
+-    diagnostic.set_fix(Fix::safe_edit(Edit::range_replacement(
+-        checker.generator().expr(&node.into()),
+-        expr.range(),
+-    )));
++    diagnostic.set_fix(Fix::applicable_edit(
++        Edit::range_replacement(
++            checker.generator().expr(&node.into()),
++            expr.range(),
++        ),
++        negated_comparison_fix_applicability(left, &comparators[0], checker.semantic()),
++    ));
+     checker.diagnostics.push(diagnostic);
+ }
+ 
+@@ -236,10 +333,13 @@ pub(crate) fn negation_with_not_equal_op(
+         comparators: comparators.clone(),
+         range: TextRange::default(),
+     };
+-    diagnostic.set_fix(Fix::safe_edit(Edit::range_replacement(
+-        checker.generator().expr(&node.into()),
+-        expr.range(),
+-    )));
++    diagnostic.set_fix(Fix::applicable_edit(
++        Edit::range_replacement(
++            checker.generator().expr(&node.into()),
++            expr.range(),
++        ),
++        negated_comparison_fix_applicability(left, &comparators[0], checker.semantic()),
++    ));
+     checker.diagnostics.push(diagnostic);
+ }
+ 

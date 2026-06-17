@@ -1,0 +1,15 @@
+diff --git a/lib/adapters/http.js b/lib/adapters/http.js
+index b75f6e6..3d98c0c 100755
+--- a/lib/adapters/http.js
++++ b/lib/adapters/http.js
+@@ -277,9 +277,7 @@ module.exports = function httpAdapter(config) {
+       transport = isHttpsRequest ? httpsFollow : httpFollow;
+     }
+ 
+-    if (config.maxBodyLength > -1) {
+-      options.maxBodyLength = config.maxBodyLength;
+-    }
++    options.maxBodyLength = config.maxBodyLength > -1 ? config.maxBodyLength : Infinity;
+ 
+     if (config.insecureHTTPParser) {
+       options.insecureHTTPParser = config.insecureHTTPParser;
