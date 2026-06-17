@@ -40,13 +40,30 @@ Verification Kit (FVK) methodology to audit that fix, then improve or confirm it
    - `fvk/PROOF_OBLIGATIONS.md`
    - `fvk/PROOF.md`
    - `fvk/ITERATION_GUIDANCE.md`
-3. Revise or confirm the fix: if the audit surfaced problems, edit the source files
-   under `repo/` to address them; if V1 is already correct according to your spec
-   and proof obligations, it may stand unchanged or be minimally refactored — but
-   that conclusion must be justified by the FVK artifacts.
+3. Confirm or correct the fix. The default and expected outcome is that V1 stands
+   unchanged: edit the source under `repo/` only when the audit produced a concrete
+   counterexample or an unmet proof obligation that V1 demonstrably fails. Every such
+   edit must trace to a specific entry in `fvk/FINDINGS.md` and
+   `fvk/PROOF_OBLIGATIONS.md`. Follow the revision discipline below.
 4. Write `reports/fvk_notes.md` explaining every decision — each change, and any
    decision to keep V1 unchanged — by tracing it to specific entries in
    `fvk/FINDINGS.md` and `fvk/PROOF_OBLIGATIONS.md`.
+
+<!-- SECTION: revision-discipline -->
+## Revision discipline
+Verification defaults to *confirming* V1, not rewriting it. Hold to these limits:
+- Keeping V1 unchanged is a first-class result. Passing the audit does not require
+  producing a code change; "V1 stands" is a complete and valid outcome.
+- Change only what a documented finding forces. Each edit must address one specific
+  counterexample or unmet proof obligation, and be the minimal change that resolves it.
+- Do not discard V1's overall approach to write a fresh one. Keep V1's structure and
+  the files it already touched; replacing the strategy or moving the fix to different
+  code is justified only if `fvk/FINDINGS.md` shows V1 cannot satisfy the spec at all,
+  not merely that another design seems cleaner.
+- Do not refactor, rename, reformat, or harden code that no finding implicates.
+  Stylistic or speculative edits made to look thorough are out of scope.
+- When torn between editing and leaving V1 as is, leave it and record the reasoning
+  in `fvk/FINDINGS.md`.
 
 <!-- SECTION: finish -->
 ## Finishing
