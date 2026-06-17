@@ -1,0 +1,36 @@
+diff --git a/sympy/logic/boolalg.py b/sympy/logic/boolalg.py
+index a375580f6f..60cc381033 100644
+--- a/sympy/logic/boolalg.py
++++ b/sympy/logic/boolalg.py
+@@ -181,6 +181,17 @@ def as_set(self):
+                                       " implemented for multivariate"
+                                       " expressions")
+ 
++    def _eval_as_set(self):
++        from sympy.sets.conditionset import ConditionSet
++
++        free = self.free_symbols
++        if len(free) == 1:
++            return ConditionSet(free.pop(), self)
++
++        raise NotImplementedError("Sorry, as_set has not yet been"
++                                  " implemented for multivariate"
++                                  " expressions")
++
+     @property
+     def binary_symbols(self):
+         from sympy.core.relational import Eq, Ne
+diff --git a/sympy/sets/contains.py b/sympy/sets/contains.py
+index b2d4268d12..570feb51bd 100644
+--- a/sympy/sets/contains.py
++++ b/sympy/sets/contains.py
+@@ -45,4 +45,8 @@ def binary_symbols(self):
+             isinstance(i, (Eq, Ne))])
+ 
+     def as_set(self):
+-        raise NotImplementedError()
++        if self.args[0].is_Symbol:
++            from .conditionset import ConditionSet
++            return ConditionSet(self.args[0], self)
++
++        return super().as_set()
