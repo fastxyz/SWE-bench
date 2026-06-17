@@ -51,7 +51,12 @@ Verification Kit (FVK) methodology to audit that fix, then improve or confirm it
 
 <!-- SECTION: revision-discipline -->
 ## Revision discipline
-Verification defaults to *confirming* V1, not rewriting it. Hold to these limits:
+Verification defaults to *confirming* V1, not rewriting it. Avoiding regressions is the
+overriding priority: when it conflicts with any other goal, it wins. Hold to these limits:
+- Never introduce a regression. Before applying any edit, establish in `fvk/FINDINGS.md`
+  that it cannot break behavior V1 already handles correctly: name the existing scenarios
+  the edit touches and argue each still holds afterward. An edit you cannot show to be
+  regression-free must not be applied — leave V1 as is.
 - Keeping V1 unchanged is a first-class result. Passing the audit does not require
   producing a code change; "V1 stands" is a complete and valid outcome.
 - Change only what a documented finding forces. Each edit must address one specific
