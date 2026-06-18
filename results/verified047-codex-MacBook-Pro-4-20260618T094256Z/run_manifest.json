@@ -1,0 +1,57 @@
+{
+  "run_id": "verified047-codex-MacBook-Pro-4-20260618T094256Z",
+  "created_utc": "2026-06-18T10:30:54.166865+00:00",
+  "host": {
+    "hostname": "MacBook-Pro-4.local",
+    "os": "macOS-26.5.1-arm64-arm-64bit",
+    "arch": "arm64",
+    "python": "3.10.5"
+  },
+  "agent": "codex",
+  "codex_version": "codex-cli 0.140.0",
+  "invocation": {
+    "model": "gpt-5.5",
+    "effort": "xhigh",
+    "sandbox": "workspace-write",
+    "max_turns": {
+      "baseline": 200,
+      "fvk": 200,
+      "control": 200
+    }
+  },
+  "dataset": "princeton-nlp/SWE-bench_Verified",
+  "template_hashes": {
+    "baseline": "7ca686d7a9bf9746069fd5abc4fc97a57ce7979a141a21a6dbcd45f9d4451cb5",
+    "fvk": "8da6de3190d816ebf603e68d26da992ed2e6ef29784ee11001c3b3ea4267690c",
+    "control": "d23631f4aca42461ecc557c2da87c1ed3f4db5fef6c98b10ca68f93181bf3490"
+  },
+  "fvk_bench_version": "0.1.0",
+  "git": {
+    "repo_sha": "ede19d8d23cdf1212f88c607290352f54ddf7541",
+    "submodules": {
+      "third_party/formal-verification-kit": "984e1cc0850f7ce4c28f6ed66a4cdf63a9fc25f8",
+      "third_party/swe-bench-multilingual": "f08240bde99473837fbd4c87d7f5153efa01b32b",
+      "third_party/swebench-fvk-reproducibility": "983557904cca9cc54a15425f2ab0eb6524521155"
+    }
+  },
+  "max_parallel": 3,
+  "arms": [
+    "baseline",
+    "fvk"
+  ],
+  "instance_set": "verified500",
+  "instances": [
+    "sympy__sympy-17318",
+    "sympy__sympy-17630",
+    "sympy__sympy-17655",
+    "sympy__sympy-18189",
+    "sympy__sympy-18199",
+    "sympy__sympy-18211",
+    "sympy__sympy-18698",
+    "sympy__sympy-18763",
+    "sympy__sympy-19040",
+    "sympy__sympy-19346"
+  ],
+  "claude_bin": "claude",
+  "codex_bin": "codex"
+}

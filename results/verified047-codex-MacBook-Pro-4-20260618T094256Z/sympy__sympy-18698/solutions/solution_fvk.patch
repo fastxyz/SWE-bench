@@ -1,0 +1,38 @@
+diff --git a/sympy/polys/polytools.py b/sympy/polys/polytools.py
+index c9e77a901f..833ec01391 100644
+--- a/sympy/polys/polytools.py
++++ b/sympy/polys/polytools.py
+@@ -5890,6 +5890,22 @@ def key(obj):
+     return sorted(factors, key=key)
+ 
+ 
++def _combine_factors(factors):
++    """Combine factors with the same generators and multiplicity. """
++    combined, order = {}, []
++
++    for factor, exp in factors:
++        key = (factor.gens, exp)
++
++        if key in combined:
++            combined[key] *= factor
++        else:
++            combined[key] = factor
++            order.append(key)
++
++    return [(combined[key], key[1]) for key in order]
++
++
+ def _factors_product(factors):
+     """Multiply a list of ``(expr, exp)`` pairs. """
+     return Mul(*[f.as_expr()**k for f, k in factors])
+@@ -5995,6 +6011,10 @@ def _generic_factor_list(expr, gens, args, method):
+                     f, _ = _poly_from_expr(f, _opt)
+                     factors[i] = (f, k)
+ 
++        if method == 'sqf':
++            fp = _combine_factors(fp)
++            fq = _combine_factors(fq)
++
+         fp = _sorted_factors(fp, method)
+         fq = _sorted_factors(fq, method)
+ 

@@ -1,0 +1,50 @@
+diff --git a/sympy/printing/repr.py b/sympy/printing/repr.py
+index c936a692c0..d2189d6595 100644
+--- a/sympy/printing/repr.py
++++ b/sympy/printing/repr.py
+@@ -11,6 +11,7 @@
+ 
+ from sympy.core.function import AppliedUndef
+ from sympy.core.mul import Mul
++from sympy.utilities import default_sort_key
+ from mpmath.libmp import repr_dps, to_str as mlib_to_str
+ 
+ from .printer import Printer
+@@ -141,6 +142,19 @@ def _print_EmptySet(self, expr):
+     def _print_EmptySequence(self, expr):
+         return 'EmptySequence'
+ 
++    def _print_dict(self, expr):
++        keys = sorted(expr.keys(), key=default_sort_key)
++        items = []
++
++        for key in keys:
++            item = "%s: %s" % (self._print(key), self._print(expr[key]))
++            items.append(item)
++
++        return "{%s}" % ", ".join(items)
++
++    def _print_Dict(self, expr):
++        return "%s(%s)" % (expr.__class__.__name__, self._print_dict(expr))
++
+     def _print_list(self, expr):
+         return "[%s]" % self.reprify(expr, ", ")
+ 
+@@ -241,6 +255,17 @@ def _print_Predicate(self, expr):
+     def _print_AppliedPredicate(self, expr):
+         return "%s(%s, %s)" % (expr.__class__.__name__, expr.func, expr.arg)
+ 
++    def _print_set(self, expr):
++        args = self.reprify(sorted(expr, key=default_sort_key), ", ")
++        if not args:
++            return "set()"
++        return "{%s}" % args
++
++    def _print_frozenset(self, expr):
++        if not expr:
++            return "frozenset()"
++        return "frozenset(%s)" % self._print_set(expr)
++
+     def _print_str(self, expr):
+         return repr(expr)
+ 
