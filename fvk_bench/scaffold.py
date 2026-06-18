@@ -5,8 +5,8 @@ so sessions get a hermetic cwd. Target GitHub repos are cloned once into a bare
 mirror cache; each instance workspace then gets a local clone checked out
 (detached) at the instance's base commit, plus the benchmark input files.
 
-Only the directories every arm needs are created here — ``fvk/``, ``review/``
-and ``fvk_materials/`` are created later by the arms that use them.
+Only the directories every arm needs are created here — ``fvk/`` and
+``review/`` are created later by the arms that use them.
 """
 
 import json

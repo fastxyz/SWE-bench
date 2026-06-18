@@ -16,14 +16,6 @@ def test_tested_claude_version_pinned():
     # The version this infra was validated against; doctor warns on mismatch.
     assert config.TESTED_CLAUDE_VERSION == "2.1.169"
 
-def test_fvk_materials_copy_set():
-    assert config.FVK_MATERIALS_FILES == (
-        "README.md", "AGENTS.md", "commands/formalize.md", "commands/verify.md",
-        "knowledge/intent-evidence.md", "knowledge/k-framework.md",
-        "knowledge/matching-logic.md",
-        "knowledge/reachability-and-circularities.md", "knowledge/sources.md",
-    )
-
 def test_workspace_root_env_override(monkeypatch, tmp_path):
     monkeypatch.setenv("FVK_BENCH_WORKSPACE", str(tmp_path / "ws"))
     assert config.workspace_root() == tmp_path / "ws"

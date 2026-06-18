@@ -22,6 +22,8 @@ systematic code review of that fix, then improve or confirm it.
 - There are intentionally no test results available for your V1 fix. Do not infer
   or ask for them.
 - Do not modify any test files: the project's test suite is fixed and hidden.
+- Do not use the formal-verification-kit (FVK) skill, and do not run `/formalize` or
+  `/verify`. This is a standard code review, not formal verification.
 <!-- SECTION: no-exec -->
 - No execution environment exists: do not attempt to run tests or any code. Where
   your review would normally rely on executing code, reason about the expected

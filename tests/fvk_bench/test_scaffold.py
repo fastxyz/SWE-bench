@@ -210,7 +210,7 @@ def test_create_workspace_tree_exact(fixture_instance, mirror, tmp_path):
     assert {p.name for p in ws.iterdir()} == {"benchmark", "repo", "reports", ".fvk_bench"}
 
     # Arms created later must NOT be pre-created.
-    for forbidden in ("fvk", "review", "fvk_materials"):
+    for forbidden in ("fvk", "review"):
         assert not (ws / forbidden).exists(), f"{forbidden}/ must not exist"
 
     assert {p.name for p in (ws / "benchmark").iterdir()} == {"PROBLEM.md", "instance.json"}

@@ -35,6 +35,7 @@ import re
 import shutil
 import signal
 import subprocess
+import sys
 import time
 from collections import Counter
 from pathlib import Path
@@ -56,6 +57,38 @@ def _coerce_text(data: str | bytes | None) -> str:
 #: Where Codex writes session rollouts and reads subscription auth.
 def _codex_home() -> Path:
     return Path(os.environ.get("CODEX_HOME") or (Path.home() / ".codex"))
+
+
+def install_fvk_skill() -> Path:
+    """Install the FVK Codex skill from the submodule into ``$CODEX_HOME/skills``.
+
+    Idempotent: ``--force`` overwrites a prior install of the same skill. The
+    fvk arm relies on this skill being present (the prompt no longer ships FVK
+    material into the workspace); a missing installer means the submodule
+    predates the skill package. Returns the install destination.
+
+    Raises:
+        RuntimeError: if the installer is absent from the pinned submodule.
+        subprocess.CalledProcessError: if the install script itself fails.
+    """
+    script = (
+        config.FVK_SUBMODULE
+        / "skills" / "formal-verification-kit" / "scripts" / "install_skill.py"
+    )
+    if not script.is_file():
+        raise RuntimeError(
+            f"FVK skill installer missing at {script}. Update the "
+            "formal-verification-kit submodule to a commit that bundles the "
+            "skill package (`git submodule update --remote`)."
+        )
+    dest = _codex_home() / "skills" / "formal-verification-kit"
+    subprocess.run(
+        [sys.executable, str(script), "--dest", str(dest), "--force"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return dest
 
 
 #: Workspace-relative directory holding this benchmark's saved Codex artifacts

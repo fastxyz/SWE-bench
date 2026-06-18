@@ -19,6 +19,8 @@ repository is described in `benchmark/PROBLEM.md`.
   intentionally no test results available; do not infer or ask for them.
 - Do not modify any test files: the project's test suite is fixed and hidden. Your
   fix must change non-test source code only.
+- Do not use the formal-verification-kit (FVK) skill, and do not run `/formalize` or
+  `/verify`. This is a plain fix task; FVK is reserved for a separate arm.
 
 <!-- SECTION: tasks -->
 ## Task

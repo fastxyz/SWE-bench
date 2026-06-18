@@ -47,7 +47,7 @@ if not (ws / "reports" / "baseline_notes.md").exists():
     with open(ws / "repo" / "lib.py", "a", encoding="utf-8") as fh:
         fh.write("# baseline edit\\n")
     (ws / "reports" / "baseline_notes.md").write_text("v1 notes\\n", encoding="utf-8")
-elif (ws / "fvk_materials").exists():
+elif (ws / "fvk").exists():
     for name in ("SPEC.md", "PROPERTIES.md", "AUDIT.md", "PROOFS.md", "GAPS.md"):
         (ws / "fvk" / name).write_text(name + "\\n", encoding="utf-8")
     with open(ws / "repo" / "lib.py", "a", encoding="utf-8") as fh:

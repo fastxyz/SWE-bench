@@ -22,22 +22,6 @@ ARM_TIMEOUT_SECONDS: int = 4 * 3600
 assert set(MAX_TURNS) == set(ARMS), "MAX_TURNS keys must match ARMS"
 
 # ---------------------------------------------------------------------------
-# FVK materials files to copy into the fvk arm workspace
-# ---------------------------------------------------------------------------
-
-FVK_MATERIALS_FILES: tuple[str, ...] = (
-    "README.md",
-    "AGENTS.md",
-    "commands/formalize.md",
-    "commands/verify.md",
-    "knowledge/intent-evidence.md",
-    "knowledge/k-framework.md",
-    "knowledge/matching-logic.md",
-    "knowledge/reachability-and-circularities.md",
-    "knowledge/sources.md",
-)
-
-# ---------------------------------------------------------------------------
 # Filesystem paths
 # ---------------------------------------------------------------------------
 

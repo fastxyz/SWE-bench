@@ -32,7 +32,7 @@ _LOG_MARKER = "FAKE_CLAUDE_INVOKED "
 
 # One edits script serves all three arms by inspecting workspace state — the
 # orchestrator's deterministic arm order (baseline -> fvk -> control) makes the
-# dispatch unambiguous: no baseline notes yet => baseline; fvk_materials staged
+# dispatch unambiguous: no baseline notes yet => baseline; fvk/ output dir staged
 # => fvk; otherwise => control.
 _DISPATCH_EDITS = '''
 from pathlib import Path
@@ -58,7 +58,7 @@ if not (ws / "reports" / "baseline_notes.md").exists():
     with open(ws / "repo" / "lib.py", "a", encoding="utf-8") as fh:
         fh.write("# baseline edit\\n")
     (ws / "reports" / "baseline_notes.md").write_text("v1 notes\\n", encoding="utf-8")
-elif (ws / "fvk_materials").exists():
+elif (ws / "fvk").exists():
     # fvk arm
     for name in ("SPEC.md", "PROPERTIES.md", "AUDIT.md", "PROOFS.md", "GAPS.md"):
         (ws / "fvk" / name).write_text(name + "\\n", encoding="utf-8")
@@ -208,7 +208,6 @@ def test_happy_path_full_run(local_clone_url, fixture_instance, fake_claude_bin,
     assert control_patch == baseline_patch
 
     # Scrub: no fvk traces remain in the workspace...
-    assert not (ws / "fvk_materials").exists()
     assert not (ws / "fvk").exists()
     assert not (ws / "reports" / "fvk_notes.md").exists()
     # ...but the snapshots survived the scrub.
@@ -338,7 +337,6 @@ def test_core_tree_hash_excludes(tmp_path):
         ".fvk_bench/state.json",
         ".fvk_bench/fake/invocations.log",
         "fvk/SPEC.md",
-        "fvk_materials/README.md",
         "review/FINDINGS.md",
         "repo/.git/index",
     ):
@@ -372,25 +370,17 @@ def test_core_tree_hash_excludes(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# 7. stage_fvk copies exactly the pinned materials from the real submodule
+# 7. stage_fvk resets repo to V1 and creates an empty fvk/ output dir
 # ---------------------------------------------------------------------------
 
-def test_stage_fvk_copies_9_files(make_ws):
+def test_stage_fvk_creates_empty_output_dir(make_ws):
     ws = make_ws()
 
     arms_mod.stage_fvk(ws)
 
-    materials = ws / "fvk_materials"
-    found = sorted(
-        p.relative_to(materials).as_posix()
-        for p in materials.rglob("*")
-        if p.is_file()
-    )
-    assert found == sorted(config.FVK_MATERIALS_FILES)
-    # Byte-identical to the real submodule source.
-    assert (materials / "README.md").read_bytes() == (
-        config.FVK_SUBMODULE / "README.md"
-    ).read_bytes()
+    # No FVK material is copied into the workspace — the methodology is delivered
+    # by the installed Codex skill, not by staged files.
+    assert not (ws / "fvk_materials").exists()
     # fvk/ output dir exists and starts empty.
     assert (ws / "fvk").is_dir()
     assert list((ws / "fvk").iterdir()) == []
@@ -471,8 +461,8 @@ def test_control_resume_after_killed_fvk_scrubs_materials(
     local_clone_url, fixture_instance, fake_claude_bin, tmp_path
 ):
     """Control run after a simulated mid-fvk SIGKILL must scrub leftover fvk
-    material before staging, so the control arm never sees fvk_materials/ or
-    fvk/ and the resulting patch is byte-equal to the baseline-only patch."""
+    output before staging, so the control arm never sees fvk/ and the resulting
+    patch is byte-equal to the baseline-only patch."""
     edits = _write_dispatch_edits(tmp_path)
     bin_path = _wrapper_bin(tmp_path, fake_claude_bin, edits=edits)
     ws = _ws(tmp_path, fixture_instance)
@@ -488,12 +478,8 @@ def test_control_resume_after_killed_fvk_scrubs_materials(
     assert baseline_patch  # sanity: non-empty
 
     # Step 2: simulate a mid-fvk SIGKILL by:
-    #   a. creating fvk_materials/, fvk/, and reports/fvk_notes.md leftovers
+    #   a. creating fvk/ and reports/fvk_notes.md leftovers
     #   b. marking fvk arm as failed(timeout) in state.json
-    (ws / "fvk_materials").mkdir(parents=True, exist_ok=True)
-    (ws / "fvk_materials" / "README.md").write_text(
-        "leftover fvk material\n", encoding="utf-8"
-    )
     (ws / "fvk").mkdir(parents=True, exist_ok=True)
     (ws / "fvk" / "SPEC.md").write_text("leftover spec\n", encoding="utf-8")
     (ws / "reports").mkdir(parents=True, exist_ok=True)
@@ -513,7 +499,6 @@ def test_control_resume_after_killed_fvk_scrubs_materials(
     assert final_state["arms"]["control"]["status"] == "completed"
 
     # The stale fvk paths must be absent from the workspace after control staging.
-    assert not (ws / "fvk_materials").exists(), "fvk_materials/ still present"
     assert not (ws / "fvk").exists(), "fvk/ still present"
     assert not (ws / "reports" / "fvk_notes.md").exists(), "reports/fvk_notes.md still present"
 
@@ -610,6 +595,5 @@ def test_fvk_retry_after_control_completed(
     assert b"# baseline edit" in fvk_patch and b"# fvk edit" in fvk_patch
 
     # The fvk scrub still ran after the retried session.
-    assert not (ws / "fvk_materials").exists()
     assert not (ws / "fvk").exists()
     assert not (ws / "reports" / "fvk_notes.md").exists()

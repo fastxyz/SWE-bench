@@ -8,11 +8,11 @@ stay identical). Between arms this module:
   --binary HEAD`` so brand-new files are captured),
 - resets ``repo/`` deterministically to *V1* (base commit + the baseline
   patch re-applied),
-- stages/scrubs the FVK materials so only the fvk arm ever sees them, and
+- scrubs each arm's output so only that arm ever sees it, and
 - guards against cross-arm contamination with :func:`core_tree_hash`, a
   content hash of everything a session can observe **except** the
   orchestrator-private and arm-private areas (``.fvk_bench/``, ``fvk/``,
-  ``fvk_materials/``, ``review/``, ``repo/.git/``).
+  ``review/``, ``repo/.git/``).
 
 State lives in ``<ws>/.fvk_bench/state.json`` and is re-saved (atomically)
 after every transition, so a crashed or interrupted run resumes exactly where
@@ -41,7 +41,7 @@ from fvk_bench.prompting import render_prompt
 from fvk_bench.runner import AgentResult, AgentRunner, get_runner
 
 #: Top-level workspace entries excluded from :func:`core_tree_hash`.
-_HASH_EXCLUDED_TOP: tuple[str, ...] = (".fvk_bench", "fvk", "fvk_materials", "review")
+_HASH_EXCLUDED_TOP: tuple[str, ...] = (".fvk_bench", "fvk", "review")
 
 #: Per-arm artifact paths (relative to the workspace) snapshotted after success.
 _ARM_ARTIFACTS: dict[str, tuple[str, ...]] = {
@@ -89,7 +89,7 @@ def core_tree_hash(ws: Path) -> str:
     """Content hash of the workspace tree a session can observe.
 
     sha256 over every file under ``ws`` excluding ``.fvk_bench/**``, ``fvk/**``,
-    ``fvk_materials/**``, ``review/**`` and ``repo/.git/**``. Deterministic:
+    ``review/**`` and ``repo/.git/**``. Deterministic:
     files are visited in sorted relative-path (posix) order and the hash is
     updated with ``relpath + NUL + content + NUL``. Symlinks contribute their
     readlink target string instead of file content (and are never followed);
@@ -171,45 +171,26 @@ def reset_repo_to_v1(ws: Path) -> None:
 def stage_fvk(ws: Path) -> None:
     """Prepare the workspace for the fvk arm.
 
-    Resets ``repo/`` to V1, creates the empty ``fvk/`` output directory, and
-    copies the pinned :data:`fvk_bench.config.FVK_MATERIALS_FILES` from the
-    formal-verification-kit submodule into ``ws/fvk_materials/`` preserving
-    relative layout.
-
-    Raises:
-        RuntimeError: if any source file is missing (submodule not initialised).
+    Resets ``repo/`` to V1 and creates the empty ``fvk/`` output directory for
+    the arm's artifacts. The FVK methodology is delivered by the installed Codex
+    skill (see :func:`fvk_bench.codex_runner.install_fvk_skill`), not by copying
+    material files into the workspace.
     """
     ws = Path(ws)
     reset_repo_to_v1(ws)
     (ws / "fvk").mkdir(parents=True, exist_ok=True)
 
-    missing = [
-        rel for rel in config.FVK_MATERIALS_FILES
-        if not (config.FVK_SUBMODULE / rel).is_file()
-    ]
-    if missing:
-        raise RuntimeError(
-            f"FVK materials missing under {config.FVK_SUBMODULE}: "
-            f"{', '.join(missing)}. Run `git submodule update --init` to "
-            "initialise the formal-verification-kit submodule."
-        )
-    for rel in config.FVK_MATERIALS_FILES:
-        dst = ws / "fvk_materials" / rel
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(config.FVK_SUBMODULE / rel, dst)
-
 
 def scrub_fvk(ws: Path) -> None:
     """Remove every fvk trace from the workspace (missing entries tolerated).
 
-    Deletes ``fvk_materials/``, ``fvk/`` and ``reports/fvk_notes.md`` so the
-    control arm can never observe FVK material. Snapshot before scrubbing.
+    Deletes ``fvk/`` and ``reports/fvk_notes.md`` so the control arm can never
+    observe FVK output. Snapshot before scrubbing.
     """
     ws = Path(ws)
-    for rel in ("fvk_materials", "fvk"):
-        target = ws / rel
-        if target.exists():
-            shutil.rmtree(target)
+    target = ws / "fvk"
+    if target.exists():
+        shutil.rmtree(target)
     (ws / "reports" / "fvk_notes.md").unlink(missing_ok=True)
 
 

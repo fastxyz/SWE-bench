@@ -20,13 +20,15 @@ processed incrementally.
 import argparse
 import json
 import socket
+import subprocess
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from fvk_bench import (
-    arms, batches, config, doctor, evaluate, harvest, instances, report, scaffold,
+    arms, batches, codex_runner, config, doctor, evaluate, harvest, instances,
+    report, scaffold,
 )
 
 
@@ -334,6 +336,18 @@ def _cmd_run(args) -> int:
             scaffold.ensure_mirror(repo, cache_dir)
         except (RuntimeError, OSError) as exc:
             print(f"warning: mirror pre-warm failed for {repo}: {exc}")
+
+    # The fvk arm delivers its methodology through the installed Codex skill, not
+    # workspace files. Install it once up front from the pinned submodule so the
+    # manifest's submodule sha records exactly which FVK version every fvk session
+    # ran against. A failed install is fatal: the fvk arm cannot run without it.
+    if args.agent == "codex" and "fvk" in arm_list:
+        try:
+            dest = codex_runner.install_fvk_skill()
+        except (RuntimeError, OSError, subprocess.CalledProcessError) as exc:
+            print(f"error: fvk skill install failed: {exc}")
+            return 1
+        print(f"fvk skill installed -> {dest}")
 
     total = len(ids)
     print_lock = threading.Lock()
