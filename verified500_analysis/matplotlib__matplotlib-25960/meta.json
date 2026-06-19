@@ -1,0 +1,8 @@
+{
+  "instance": "matplotlib__matplotlib-25960",
+  "run_id": "verified029-codex-archlinux-20260616T111534Z",
+  "results_dir": "/home/xc/Projects/fastxyz-SWE-bench/results/verified029-codex-archlinux-20260616T111534Z/matplotlib__matplotlib-25960",
+  "baseline_patch": "/home/xc/Projects/fastxyz-SWE-bench/verified500_analysis/matplotlib__matplotlib-25960/_materials/baseline.patch",
+  "fvk_patch": "/home/xc/Projects/fastxyz-SWE-bench/verified500_analysis/matplotlib__matplotlib-25960/_materials/fvk.patch",
+  "patches_diff": "/home/xc/Projects/fastxyz-SWE-bench/verified500_analysis/matplotlib__matplotlib-25960/_materials/patches.diff"
+}

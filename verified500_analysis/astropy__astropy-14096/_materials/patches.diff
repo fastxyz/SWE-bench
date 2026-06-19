@@ -1,0 +1,59 @@
+# astropy__astropy-14096  (run verified001-codex-XC-MINI-PRO-AHP-20260615T131050Z)
+# baseline files: ['astropy/coordinates/sky_coordinate.py']
+# fvk files: ['astropy/coordinates/sky_coordinate.py']
+# files only in fvk: []
+# files only in baseline: []
+
+2c2
+< index ab475f7d0d..f163fe10ec 100644
+---
+> index ab475f7d0d..3f6cec8c75 100644
+5c5,32
+< @@ -871,6 +871,16 @@ class SkyCoord(ShapedLikeNDArray):
+---
+> @@ -866,11 +866,41 @@ class SkyCoord(ShapedLikeNDArray):
+>              isinstance(self.frame.name, list) and string in self.frame.name
+>          )
+>  
+> +    def _get_subclass_property_descriptor(self, attr):
+> +        for cls in type(self).__mro__:
+> +            if attr in cls.__dict__:
+> +                if cls not in SkyCoord.__mro__:
+> +                    descriptor = cls.__dict__[attr]
+> +                    if isinstance(descriptor, property):
+> +                        return descriptor
+> +                break
+> +
+> +    def __getattribute__(self, attr):
+> +        try:
+> +            return super().__getattribute__(attr)
+> +        except AttributeError as exc:
+> +            descriptor = SkyCoord._get_subclass_property_descriptor(self, attr)
+> +            if descriptor is not None:
+> +                # __getattr__ is about to be called for the property name.
+> +                # Preserve the original error raised from inside the property.
+> +                object.__setattr__(
+> +                    self, "_skycoord_subclass_property_attribute_error", (attr, exc)
+> +                )
+> +            raise
+> +
+>      def __getattr__(self, attr):
+>          """
+9,17c36,42
+< +        for cls in self.__class__.__mro__:
+< +            if cls is SkyCoord:
+< +                break
+< +            if attr in cls.__dict__:
+< +                descriptor = cls.__dict__[attr]
+< +                if isinstance(descriptor, property):
+< +                    # Preserve AttributeError raised inside subclass properties.
+< +                    return descriptor.__get__(self, self.__class__)
+< +                break
+---
+> +        previous_error = self.__dict__.pop(
+> +            "_skycoord_subclass_property_attribute_error", None
+> +        )
+> +        if previous_error is not None:
+> +            previous_attr, exc = previous_error
+> +            if previous_attr == attr:
+> +                raise exc

@@ -1,0 +1,53 @@
+# pydata__xarray-4094  (run verified031-codex-archlinux-20260616T140808Z)
+# baseline files: ['xarray/core/dataarray.py']
+# fvk files: ['xarray/core/dataarray.py']
+# files only in fvk: []
+# files only in baseline: []
+
+2c2
+< index b0df8749..08be5bbd 100644
+---
+> index b0df8749..d7d5d7ed 100644
+5c5
+< @@ -1961,7 +1961,11 @@ class DataArray(AbstractArray, DataWithCoords):
+---
+> @@ -1961,7 +1961,40 @@ class DataArray(AbstractArray, DataWithCoords):
+10,13c10,42
+< +            data_dict[k] = (
+< +                self.sel({variable_dim: k})
+< +                .squeeze(drop=True)
+< +                .drop_vars([dim, variable_dim], errors="ignore")
+---
+> +            data_array = self.sel({variable_dim: k})
+> +
+> +            dims_to_squeeze = []
+> +            if dim in data_array.dims and data_array.sizes[dim] == 1:
+> +                index = data_array.indexes.get(dim)
+> +                if isinstance(index, pd.MultiIndex):
+> +                    level_names = [
+> +                        name for name in index.names if name != variable_dim
+> +                    ]
+> +                    should_squeeze = not level_names or all(
+> +                        name in data_array.coords
+> +                        and pd.isnull(data_array[name].values).all()
+> +                        for name in level_names
+> +                    )
+> +                else:
+> +                    should_squeeze = True
+> +                if should_squeeze:
+> +                    dims_to_squeeze.append(dim)
+> +            for name in idx.names:
+> +                if name == variable_dim or name not in data_array.dims:
+> +                    continue
+> +                if (
+> +                    data_array[name].size == 1
+> +                    and pd.isnull(data_array[name].values).all()
+> +                    and name not in dims_to_squeeze
+> +                ):
+> +                    dims_to_squeeze.append(name)
+> +
+> +            if dims_to_squeeze:
+> +                data_array = data_array.squeeze(dim=dims_to_squeeze, drop=True)
+> +
+> +            data_dict[k] = data_array.drop_vars(
+> +                [dim, variable_dim], errors="ignore"

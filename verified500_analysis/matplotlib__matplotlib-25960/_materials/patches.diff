@@ -1,0 +1,42 @@
+# matplotlib__matplotlib-25960  (run verified029-codex-archlinux-20260616T111534Z)
+# baseline files: ['lib/matplotlib/figure.py']
+# fvk files: ['lib/matplotlib/figure.py']
+# files only in fvk: []
+# files only in baseline: []
+
+2c2
+< index dab2bc4a5a..1668313e43 100644
+---
+> index dab2bc4a5a..5c323036cb 100644
+16c16,28
+< @@ -2274,17 +2274,52 @@ class SubFigure(FigureBase):
+---
+> @@ -1585,6 +1585,11 @@ default: %(va)s
+>                        wspace=wspace, hspace=hspace,
+>                        width_ratios=width_ratios,
+>                        height_ratios=height_ratios)
+> +        # Keep the manual SubFigure layout spacing separate from subplot
+> +        # spacing so add_subfigure(GridSpec[...]) preserves its historical
+> +        # behavior of ignoring GridSpec wspace/hspace.
+> +        gs._subfigure_wspace = wspace
+> +        gs._subfigure_hspace = hspace
+>  
+>          sfarr = np.empty((nrows, ncols), dtype=object)
+>          for i in range(ncols):
+> @@ -2274,17 +2279,48 @@ class SubFigure(FigureBase):
+28,36c40,44
+< +        # Subfigures are laid out within their parent figure/subfigure, not
+< +        # the figure's subplot area, so do not inherit subplot margins or
+< +        # rcParam spacing here.  Only explicit GridSpec spacing is honored.
+< +        wspace = getattr(gs, "wspace", None)
+< +        hspace = getattr(gs, "hspace", None)
+< +        if wspace is None:
+< +            wspace = getattr(gs, "_wspace", None)
+< +        if hspace is None:
+< +            hspace = getattr(gs, "_hspace", None)
+---
+> +        # Subfigures are laid out within their parent figure/subfigure.
+> +        # Only Figure.subfigures supplies manual subfigure spacing; arbitrary
+> +        # GridSpec subplot spacing is intentionally not inherited here.
+> +        wspace = getattr(gs, "_subfigure_wspace", None)
+> +        hspace = getattr(gs, "_subfigure_hspace", None)

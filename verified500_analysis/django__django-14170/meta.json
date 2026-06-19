@@ -1,0 +1,8 @@
+{
+  "instance": "django__django-14170",
+  "run_id": "verified015-codex-XC-MINI-PRO-AHP-20260616T034306Z",
+  "results_dir": "/home/xc/Projects/fastxyz-SWE-bench/results/verified015-codex-XC-MINI-PRO-AHP-20260616T034306Z/django__django-14170",
+  "baseline_patch": "/home/xc/Projects/fastxyz-SWE-bench/verified500_analysis/django__django-14170/_materials/baseline.patch",
+  "fvk_patch": "/home/xc/Projects/fastxyz-SWE-bench/verified500_analysis/django__django-14170/_materials/fvk.patch",
+  "patches_diff": "/home/xc/Projects/fastxyz-SWE-bench/verified500_analysis/django__django-14170/_materials/patches.diff"
+}

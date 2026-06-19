@@ -1,0 +1,27 @@
+# django__django-13569  (run verified013-codex-XC-MINI-PRO-AHP-20260616T004115Z)
+# baseline files: ['django/db/models/sql/compiler.py']
+# fvk files: ['django/db/models/sql/compiler.py']
+# files only in fvk: []
+# files only in baseline: []
+
+2c2
+< index 04e430a42e..9db58cb7b6 100644
+---
+> index 04e430a42e..1b57934f71 100644
+5c5
+< @@ -129,7 +129,17 @@ class SQLCompiler:
+---
+> @@ -129,7 +129,22 @@ class SQLCompiler:
+12c12,13
+< +                    # raw SQL because it cannot be introspected.
+---
+> +                    # raw SQL because it cannot be introspected, or a subquery
+> +                    # that references outer columns.
+16c17,21
+< +                            isinstance(source, RawSQL)
+---
+> +                            isinstance(source, RawSQL) or
+> +                            (
+> +                                hasattr(source, 'get_external_cols') and
+> +                                source.get_external_cols()
+> +                            )

@@ -1,0 +1,5 @@
+# The repo root .gitignore has `*.patch`, but the patch files under this
+# directory ARE the evidence (baseline / fvk / gold solution patches that the
+# analysis compares). Re-include them here.
+!*.patch
+!**/*.patch

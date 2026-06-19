@@ -1,0 +1,8 @@
+{
+  "instance": "sympy__sympy-12481",
+  "run_id": "verified043-codex-wsl-ubuntu-260615221107",
+  "results_dir": "/home/xc/Projects/fastxyz-SWE-bench/results/verified043-codex-wsl-ubuntu-260615221107/sympy__sympy-12481",
+  "baseline_patch": "/home/xc/Projects/fastxyz-SWE-bench/verified500_analysis/sympy__sympy-12481/_materials/baseline.patch",
+  "fvk_patch": "/home/xc/Projects/fastxyz-SWE-bench/verified500_analysis/sympy__sympy-12481/_materials/fvk.patch",
+  "patches_diff": "/home/xc/Projects/fastxyz-SWE-bench/verified500_analysis/sympy__sympy-12481/_materials/patches.diff"
+}

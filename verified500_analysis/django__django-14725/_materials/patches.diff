@@ -1,0 +1,40 @@
+# django__django-14725  (run verified017-codex-XC-MINI-PRO-AHP-20260616T052940Z)
+# baseline files: ['django/contrib/contenttypes/forms.py', 'django/forms/models.py']
+# fvk files: ['django/contrib/contenttypes/forms.py', 'django/forms/models.py']
+# files only in fvk: []
+# files only in baseline: []
+
+24c24
+< index 7effb202e3..31144ba6c5 100644
+---
+> index 7effb202e3..3a7dc73d9a 100644
+35c35,45
+< @@ -813,6 +814,8 @@ class BaseModelFormSet(BaseFormSet):
+---
+> @@ -676,6 +677,9 @@ class BaseModelFormSet(BaseFormSet):
+>                  for form in self.saved_forms:
+>                      form.save_m2m()
+>              self.save_m2m = save_m2m
+> +        if self.edit_only:
+> +            self.new_objects = []
+> +            return self.save_existing_objects(commit)
+>          return self.save_existing_objects(commit) + self.save_new_objects(commit)
+>  
+>      save.alters_data = True
+> @@ -813,6 +817,8 @@ class BaseModelFormSet(BaseFormSet):
+44c54
+< @@ -875,7 +878,8 @@ def modelformset_factory(model, form=ModelForm, formfield_callback=None,
+---
+> @@ -875,7 +881,8 @@ def modelformset_factory(model, form=ModelForm, formfield_callback=None,
+54c64
+< @@ -896,6 +900,7 @@ def modelformset_factory(model, form=ModelForm, formfield_callback=None,
+---
+> @@ -896,6 +903,7 @@ def modelformset_factory(model, form=ModelForm, formfield_callback=None,
+62c72
+< @@ -1076,7 +1081,8 @@ def inlineformset_factory(parent_model, model, form=ModelForm,
+---
+> @@ -1076,7 +1084,8 @@ def inlineformset_factory(parent_model, model, form=ModelForm,
+72c82
+< @@ -1109,6 +1115,7 @@ def inlineformset_factory(parent_model, model, form=ModelForm,
+---
+> @@ -1109,6 +1118,7 @@ def inlineformset_factory(parent_model, model, form=ModelForm,

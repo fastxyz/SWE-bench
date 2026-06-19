@@ -1,0 +1,43 @@
+# psf__requests-2931  (run verified030-codex-archlinux-20260616T123754Z)
+# baseline files: ['requests/models.py']
+# fvk files: ['requests/models.py']
+# files only in fvk: []
+# files only in baseline: []
+
+2c2
+< index 9c624d3c..8ddfa2f1 100644
+---
+> index 9c624d3c..452d53b8 100644
+5,6c5,23
+< @@ -444,7 +444,10 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
+<                  (body, content_type) = self._encode_files(files, data)
+---
+> @@ -80,7 +80,9 @@ class RequestEncodingMixin(object):
+>          if parameters are supplied as a dict.
+>          """
+>  
+> -        if isinstance(data, (str, bytes)):
+> +        if isinstance(data, bytes):
+> +            return data
+> +        elif isinstance(data, str):
+>              return to_native_string(data)
+>          elif hasattr(data, 'read'):
+>              return data
+> @@ -387,6 +389,8 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
+>  
+>          enc_params = self._encode_params(params)
+>          if enc_params:
+> +            if isinstance(enc_params, bytes):
+> +                enc_params = to_native_string(enc_params)
+>              if query:
+>                  query = '%s&%s' % (query, enc_params)
+8,16d24
+<                  if data:
+< -                    body = self._encode_params(data)
+< +                    if isinstance(data, bytes):
+< +                        body = data
+< +                    else:
+< +                        body = self._encode_params(data)
+<                      if isinstance(data, basestring) or hasattr(data, 'read'):
+<                          content_type = None
+<                      else:

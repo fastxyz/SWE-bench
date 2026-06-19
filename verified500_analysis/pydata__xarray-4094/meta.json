@@ -1,0 +1,8 @@
+{
+  "instance": "pydata__xarray-4094",
+  "run_id": "verified031-codex-archlinux-20260616T140808Z",
+  "results_dir": "/home/xc/Projects/fastxyz-SWE-bench/results/verified031-codex-archlinux-20260616T140808Z/pydata__xarray-4094",
+  "baseline_patch": "/home/xc/Projects/fastxyz-SWE-bench/verified500_analysis/pydata__xarray-4094/_materials/baseline.patch",
+  "fvk_patch": "/home/xc/Projects/fastxyz-SWE-bench/verified500_analysis/pydata__xarray-4094/_materials/fvk.patch",
+  "patches_diff": "/home/xc/Projects/fastxyz-SWE-bench/verified500_analysis/pydata__xarray-4094/_materials/patches.diff"
+}

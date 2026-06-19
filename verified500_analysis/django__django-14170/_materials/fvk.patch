@@ -1,0 +1,84 @@
+diff --git a/django/db/backends/base/operations.py b/django/db/backends/base/operations.py
+index 0fcc607bcf..2fddb2c984 100644
+--- a/django/db/backends/base/operations.py
++++ b/django/db/backends/base/operations.py
+@@ -558,6 +558,51 @@ class BaseDatabaseOperations:
+         second = self.adapt_datetimefield_value(second)
+         return [first, second]
+ 
++    def year_lookup_bounds_for_iso_year_date_field(self, value):
++        """
++        Return a two-elements list with the lower and upper bound to be used
++        with a BETWEEN operator to query a DateField value using an iso_year
++        lookup.
++
++        `value` is an int, containing the looked-up ISO year.
++        """
++        first = datetime.date.fromisocalendar(value, 1, 1)
++        if value == datetime.MAXYEAR:
++            second = datetime.date.max
++        else:
++            second = datetime.date.fromisocalendar(value + 1, 1, 1)
++            second -= datetime.timedelta(days=1)
++        first = self.adapt_datefield_value(first)
++        second = self.adapt_datefield_value(second)
++        return [first, second]
++
++    def year_lookup_bounds_for_iso_year_datetime_field(self, value):
++        """
++        Return a two-elements list with the lower and upper bound to be used
++        with a BETWEEN operator to query a DateTimeField value using an
++        iso_year lookup.
++
++        `value` is an int, containing the looked-up ISO year.
++        """
++        first = datetime.datetime.combine(
++            datetime.date.fromisocalendar(value, 1, 1),
++            datetime.time.min,
++        )
++        if value == datetime.MAXYEAR:
++            second = datetime.datetime.max
++        else:
++            second = datetime.datetime.combine(
++                datetime.date.fromisocalendar(value + 1, 1, 1),
++                datetime.time.min,
++            ) - datetime.timedelta(microseconds=1)
++        if settings.USE_TZ:
++            tz = timezone.get_current_timezone()
++            first = timezone.make_aware(first, tz)
++            second = timezone.make_aware(second, tz)
++        first = self.adapt_datetimefield_value(first)
++        second = self.adapt_datetimefield_value(second)
++        return [first, second]
++
+     def get_db_converters(self, expression):
+         """
+         Return a list of functions needed to convert field data.
+diff --git a/django/db/models/lookups.py b/django/db/models/lookups.py
+index 916478d075..6d1bb204d5 100644
+--- a/django/db/models/lookups.py
++++ b/django/db/models/lookups.py
+@@ -540,11 +540,20 @@ class IRegex(Regex):
+ class YearLookup(Lookup):
+     def year_lookup_bounds(self, connection, year):
+         output_field = self.lhs.lhs.output_field
++        iso_year = getattr(self.lhs, 'lookup_name', None) == 'iso_year'
++        ops = connection.ops
+         if isinstance(output_field, DateTimeField):
+-            bounds = connection.ops.year_lookup_bounds_for_datetime_field(year)
++            if iso_year:
++                bounds_func = (
++                    ops.year_lookup_bounds_for_iso_year_datetime_field
++                )
++            else:
++                bounds_func = ops.year_lookup_bounds_for_datetime_field
++        elif iso_year:
++            bounds_func = ops.year_lookup_bounds_for_iso_year_date_field
+         else:
+-            bounds = connection.ops.year_lookup_bounds_for_date_field(year)
+-        return bounds
++            bounds_func = ops.year_lookup_bounds_for_date_field
++        return bounds_func(year)
+ 
+     def as_sql(self, compiler, connection):
+         # Avoid the extract operation if the rhs is a direct value to allow

@@ -1,0 +1,30 @@
+# django__django-13121  (run verified010-codex-XC-MINI-PRO-AHP-20260615T215736Z)
+# baseline files: ['django/db/models/expressions.py']
+# fvk files: ['django/db/models/expressions.py']
+# files only in fvk: []
+# files only in baseline: []
+
+2c2
+< index a156c5e881..bce7656b4a 100644
+---
+> index a156c5e881..63e355b376 100644
+18c18
+< @@ -491,19 +493,34 @@ class DurationExpression(CombinedExpression):
+---
+> @@ -491,19 +493,46 @@ class DurationExpression(CombinedExpression):
+27c27,39
+< +        return output.get_internal_type() == 'DurationField'
+---
+> +        if output.get_internal_type() == 'DurationField':
+> +            return True
+> +        if isinstance(expression, CombinedExpression) and expression.connector == self.SUB:
+> +            try:
+> +                lhs_output = expression.lhs.output_field
+> +                rhs_output = expression.rhs.output_field
+> +            except FieldError:
+> +                return False
+> +            return (
+> +                lhs_output.get_internal_type() in {'DateField', 'DateTimeField', 'TimeField'} and
+> +                lhs_output.get_internal_type() == rhs_output.get_internal_type()
+> +            )
+> +        return False

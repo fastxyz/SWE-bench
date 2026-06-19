@@ -1,0 +1,69 @@
+# django__django-11206  (run verified004-codex-XC-MINI-PRO-AHP-20260615T173203Z)
+# baseline files: ['django/utils/numberformat.py']
+# fvk files: ['django/utils/numberformat.py']
+# files only in fvk: []
+# files only in baseline: []
+
+2c2
+< index 88b35fc435..2f60bb77e9 100644
+---
+> index 88b35fc435..6f1e59cbf9 100644
+5c5
+< @@ -27,10 +27,17 @@ def format(number, decimal_sep, decimal_pos=None, grouping=0, thousand_sep='',
+---
+> @@ -27,18 +27,34 @@ def format(number, decimal_sep, decimal_pos=None, grouping=0, thousand_sep='',
+12d11
+< -        if abs(exponent) + len(digits) > 200:
+14,26c13,50
+< +        # If the first significant digit is too far past decimal_pos, fixed
+< +        # formatting would only produce zeros.
+< +        if (
+< +            decimal_pos is not None and decimal_pos >= 0 and
+< +            exponent < 0 and exponent + len(digits) <= -decimal_pos
+< +        ):
+< +            str_number = '{}0'.format('-' if number_sign else '')
+< +        elif abs(exponent) + len(digits) > 200:
+< +            # Format values with more than 200 digits (an arbitrary cutoff) using
+< +            # scientific notation to avoid high memory usage in {:f}'.format().
+<              number = '{:e}'.format(number)
+<              coefficient, exponent = number.split('e')
+<              # Format the coefficient.
+---
+>          if abs(exponent) + len(digits) > 200:
+> -            number = '{:e}'.format(number)
+> -            coefficient, exponent = number.split('e')
+> -            # Format the coefficient.
+> -            coefficient = format(
+> -                coefficient, decimal_sep, decimal_pos, grouping,
+> -                thousand_sep, force_grouping, use_l10n,
+> -            )
+> -            return '{}e{}'.format(coefficient, exponent)
+> +            # If the first significant digit is absent or too far past
+> +            # decimal_pos, fixed formatting would only produce zeros.
+> +            if (
+> +                decimal_pos is not None and decimal_pos >= 0 and (
+> +                    number.is_zero() or (
+> +                        exponent < 0 and exponent + len(digits) <= -decimal_pos
+> +                    )
+> +                )
+> +            ):
+> +                str_number = '{}0'.format('-' if number_sign else '')
+> +                if type(number) is not Decimal:
+> +                    try:
+> +                        str_number = '{:f}'.format(type(number)(str_number))
+> +                    except (TypeError, ValueError):
+> +                        pass
+> +            else:
+> +                # Format values with more than 200 digits (an arbitrary cutoff) using
+> +                # scientific notation to avoid high memory usage in {:f}'.format().
+> +                number = '{:e}'.format(number)
+> +                coefficient, exponent = number.split('e')
+> +                # Format the coefficient.
+> +                coefficient = format(
+> +                    coefficient, decimal_sep, decimal_pos, grouping,
+> +                    thousand_sep, force_grouping, use_l10n,
+> +                )
+> +                return '{}e{}'.format(coefficient, exponent)
+>          else:
+>              str_number = '{:f}'.format(number)
+>      else:

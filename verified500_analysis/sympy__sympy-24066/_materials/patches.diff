@@ -1,0 +1,64 @@
+# sympy__sympy-24066  (run verified050-codex-wsl-ubuntu-260615221107)
+# baseline files: ['sympy/physics/units/unitsystem.py']
+# fvk files: ['sympy/physics/units/unitsystem.py']
+# files only in fvk: []
+# files only in baseline: []
+
+2c2
+< index 3daf84c108..4447fa4d57 100644
+---
+> index 3daf84c108..c0cd6f2740 100644
+5,9c5,32
+< @@ -172,10 +172,12 @@ def _collect_factor_and_dimension(self, expr):
+<              return factor ** exp_factor, dim ** (exp_factor * exp_dim)
+<          elif isinstance(expr, Add):
+<              factor, dim = self._collect_factor_and_dimension(expr.args[0])
+< +            dimsys = self.get_dimension_system()
+---
+> @@ -149,6 +149,26 @@ def get_dimensional_expr(self, expr):
+>              return self.get_quantity_dimension(expr).name
+>          return S.One
+>  
+> +    def _is_dimensionless(self, dimension):
+> +        dimension_system = self.get_dimension_system()
+> +        if dimension_system is None:
+> +            return False
+> +        try:
+> +            return dimension_system.is_dimensionless(dimension)
+> +        except TypeError:
+> +            return False
+> +
+> +    def _dimensions_equivalent(self, dim1, dim2):
+> +        if dim1 == dim2:
+> +            return True
+> +        dimension_system = self.get_dimension_system()
+> +        if dimension_system is None:
+> +            return False
+> +        try:
+> +            return dimension_system.equivalent_dims(dim1, dim2)
+> +        except TypeError:
+> +            return False
+> +
+>      def _collect_factor_and_dimension(self, expr):
+>          """
+>          Return tuple with scale factor expression and dimension expression.
+> @@ -175,7 +195,7 @@ def _collect_factor_and_dimension(self, expr):
+14,15c37
+< +                if dim != addend_dim and (
+< +                        dimsys is None or not dimsys.equivalent_dims(dim, addend_dim)):
+---
+> +                if not self._dimensions_equivalent(dim, addend_dim):
+19c41
+< @@ -192,8 +194,14 @@ def _collect_factor_and_dimension(self, expr):
+---
+> @@ -192,8 +212,10 @@ def _collect_factor_and_dimension(self, expr):
+23,28c45,46
+< +            dimsys = self.get_dimension_system()
+< +            if dimsys is not None:
+< +                dims = [Dimension(1) if dimsys.is_dimensionless(dim)
+< +                        else dim for _, dim in fds]
+< +            else:
+< +                dims = [dim for _, dim in fds]
+---
+> +            dims = [Dimension(1) if self._is_dimensionless(dim)
+> +                    else dim for _, dim in fds]

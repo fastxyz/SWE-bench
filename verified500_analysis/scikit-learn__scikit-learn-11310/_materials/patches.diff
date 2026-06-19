@@ -1,0 +1,56 @@
+# scikit-learn__scikit-learn-11310  (run verified036-codex-wsl-ubuntu-260615212520)
+# baseline files: ['sklearn/model_selection/_search.py']
+# fvk files: ['sklearn/grid_search.py', 'sklearn/model_selection/_search.py']
+# files only in fvk: ['sklearn/grid_search.py']
+# files only in baseline: []
+
+0a1,49
+> diff --git a/sklearn/grid_search.py b/sklearn/grid_search.py
+> index 6ba673d2fb..8faf462efb 100644
+> --- a/sklearn/grid_search.py
+> +++ b/sklearn/grid_search.py
+> @@ -15,6 +15,7 @@ from collections import Mapping, namedtuple, Sized
+>  from functools import partial, reduce
+>  from itertools import product
+>  import operator
+> +import time
+>  import warnings
+>  
+>  import numpy as np
+> @@ -616,10 +617,12 @@ class BaseSearchCV(six.with_metaclass(ABCMeta, BaseEstimator,
+>              # clone first to work around broken estimators
+>              best_estimator = clone(base_estimator).set_params(
+>                  **best.parameters)
+> +            refit_start_time = time.time()
+>              if y is not None:
+>                  best_estimator.fit(X, y, **self.fit_params)
+>              else:
+>                  best_estimator.fit(X, **self.fit_params)
+> +            self.refit_time_ = time.time() - refit_start_time
+>              self.best_estimator_ = best_estimator
+>          return self
+>  
+> @@ -772,6 +775,11 @@ class GridSearchCV(BaseSearchCV):
+>          which gave highest score (or smallest loss if specified)
+>          on the left out data. Not available if refit=False.
+>  
+> +    refit_time_ : float
+> +        Seconds used for refitting the best model on the whole dataset.
+> +
+> +        This is present only if refit is not False.
+> +
+>      best_score_ : float
+>          Score of best_estimator on the left out data.
+>  
+> @@ -983,6 +991,11 @@ class RandomizedSearchCV(BaseSearchCV):
+>          which gave highest score (or smallest loss if specified)
+>          on the left out data. Not available if refit=False.
+>  
+> +    refit_time_ : float
+> +        Seconds used for refitting the best model on the whole dataset.
+> +
+> +        This is present only if refit is not False.
+> +
+>      best_score_ : float
+>          Score of best_estimator on the left out data.
+>  

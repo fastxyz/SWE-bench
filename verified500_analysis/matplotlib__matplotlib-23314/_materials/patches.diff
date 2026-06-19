@@ -1,0 +1,21 @@
+# matplotlib__matplotlib-23314  (run verified027-codex-archlinux-20260616T084044Z)
+# baseline files: ['lib/mpl_toolkits/mplot3d/axes3d.py']
+# fvk files: ['lib/mpl_toolkits/mplot3d/axes3d.py']
+# files only in fvk: []
+# files only in baseline: []
+
+2c2
+< index 9db44b7994..c67b79bf90 100644
+---
+> index 9db44b7994..e9ffa55d2b 100644
+5c5
+< @@ -387,6 +387,8 @@ class Axes3D(Axes):
+---
+> @@ -387,6 +387,10 @@ class Axes3D(Axes):
+8a9,10
+> +        if renderer is None:
+> +            raise RuntimeError('No renderer defined')
+14c16
+< @@ -3102,6 +3104,8 @@ pivot='tail', normalize=False, **kwargs)
+---
+> @@ -3102,6 +3106,8 @@ pivot='tail', normalize=False, **kwargs)

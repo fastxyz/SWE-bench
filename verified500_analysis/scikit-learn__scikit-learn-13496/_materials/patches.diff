@@ -1,0 +1,39 @@
+# scikit-learn__scikit-learn-13496  (run verified037-codex-wsl-ubuntu-260615221107)
+# baseline files: ['sklearn/ensemble/iforest.py']
+# fvk files: ['sklearn/ensemble/iforest.py']
+# files only in fvk: []
+# files only in baseline: []
+
+2c2
+< index 8a1bd36259..4db5504b7d 100644
+---
+> index 8a1bd36259..9309ab82db 100644
+5,7c5,7
+< @@ -85,6 +85,11 @@ class IsolationForest(BaseBagging, OutlierMixin):
+<          data sampled with replacement. If False, sampling without replacement
+<          is performed.
+---
+> @@ -120,6 +120,11 @@ class IsolationForest(BaseBagging, OutlierMixin):
+>      verbose : int, optional (default=0)
+>          Controls the verbosity of the tree building process.
+14,21c14,17
+<      n_jobs : int or None, optional (default=None)
+<          The number of jobs to run in parallel for both `fit` and `predict`.
+<          ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+< @@ -170,6 +175,7 @@ class IsolationForest(BaseBagging, OutlierMixin):
+<                   contamination="legacy",
+<                   max_features=1.,
+<                   bootstrap=False,
+< +                 warm_start=False,
+---
+>  
+>      Attributes
+>      ----------
+> @@ -173,7 +178,8 @@ class IsolationForest(BaseBagging, OutlierMixin):
+24a21,26
+> -                 verbose=0):
+> +                 verbose=0,
+> +                 warm_start=False):
+>          super().__init__(
+>              base_estimator=ExtraTreeRegressor(
+>                  max_features=1,

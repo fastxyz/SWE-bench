@@ -1,0 +1,31 @@
+# django__django-16454  (run verified023-codex-archlinux-20260616T052232Z)
+# baseline files: ['django/core/management/base.py']
+# fvk files: ['django/core/management/base.py']
+# files only in fvk: []
+# files only in baseline: []
+
+2c2
+< index abc6f79a15..3e09fb2b5c 100644
+---
+> index abc6f79a15..7b1bc2ca28 100644
+5c5
+< @@ -65,6 +65,23 @@ class CommandParser(ArgumentParser):
+---
+> @@ -65,6 +65,21 @@ class CommandParser(ArgumentParser):
+10,12c10
+< +        parser_class = kwargs.pop("parser_class", type(self))
+< +        if parser_class is None:
+< +            parser_class = type(self)
+---
+> +        parser_class = kwargs.get("parser_class", type(self))
+14a13
+> +            called_from_command_line = self.called_from_command_line
+18c17
+< +                    "called_from_command_line", self.called_from_command_line
+---
+> +                    "called_from_command_line", called_from_command_line
+22,23c21
+< +            parser_class = parser_class_wrapper
+< +        kwargs["parser_class"] = parser_class
+---
+> +            kwargs["parser_class"] = parser_class_wrapper

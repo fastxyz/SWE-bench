@@ -1,0 +1,8 @@
+{
+  "instance": "scikit-learn__scikit-learn-11310",
+  "run_id": "verified036-codex-wsl-ubuntu-260615212520",
+  "results_dir": "/home/xc/Projects/fastxyz-SWE-bench/results/verified036-codex-wsl-ubuntu-260615212520/scikit-learn__scikit-learn-11310",
+  "baseline_patch": "/home/xc/Projects/fastxyz-SWE-bench/verified500_analysis/scikit-learn__scikit-learn-11310/_materials/baseline.patch",
+  "fvk_patch": "/home/xc/Projects/fastxyz-SWE-bench/verified500_analysis/scikit-learn__scikit-learn-11310/_materials/fvk.patch",
+  "patches_diff": "/home/xc/Projects/fastxyz-SWE-bench/verified500_analysis/scikit-learn__scikit-learn-11310/_materials/patches.diff"
+}

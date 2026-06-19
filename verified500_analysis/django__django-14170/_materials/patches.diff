@@ -1,0 +1,140 @@
+# django__django-14170  (run verified015-codex-XC-MINI-PRO-AHP-20260616T034306Z)
+# baseline files: ['django/db/backends/base/operations.py', 'django/db/models/lookups.py']
+# fvk files: ['django/db/backends/base/operations.py', 'django/db/models/lookups.py']
+# files only in fvk: []
+# files only in baseline: []
+
+2c2
+< index 0fcc607bcf..3fa58e22f5 100644
+---
+> index 0fcc607bcf..2fddb2c984 100644
+5,14c5,7
+< @@ -526,7 +526,7 @@ class BaseDatabaseOperations:
+<          """
+<          return value or None
+<  
+< -    def year_lookup_bounds_for_date_field(self, value):
+< +    def year_lookup_bounds_for_date_field(self, value, iso_year=False):
+<          """
+<          Return a two-elements list with the lower and upper bound to be used
+<          with a BETWEEN operator to query a DateField value using a year
+< @@ -534,13 +534,18 @@ class BaseDatabaseOperations:
+---
+> @@ -558,6 +558,51 @@ class BaseDatabaseOperations:
+>          second = self.adapt_datetimefield_value(second)
+>          return [first, second]
+16,21c9,20
+<          `value` is an int, containing the looked-up year.
+<          """
+< -        first = datetime.date(value, 1, 1)
+< -        second = datetime.date(value, 12, 31)
+< +        if iso_year:
+< +            first = datetime.date.fromisocalendar(value, 1, 1)
+---
+> +    def year_lookup_bounds_for_iso_year_date_field(self, value):
+> +        """
+> +        Return a two-elements list with the lower and upper bound to be used
+> +        with a BETWEEN operator to query a DateField value using an iso_year
+> +        lookup.
+> +
+> +        `value` is an int, containing the looked-up ISO year.
+> +        """
+> +        first = datetime.date.fromisocalendar(value, 1, 1)
+> +        if value == datetime.MAXYEAR:
+> +            second = datetime.date.max
+> +        else:
+23a23,40
+> +        first = self.adapt_datefield_value(first)
+> +        second = self.adapt_datefield_value(second)
+> +        return [first, second]
+> +
+> +    def year_lookup_bounds_for_iso_year_datetime_field(self, value):
+> +        """
+> +        Return a two-elements list with the lower and upper bound to be used
+> +        with a BETWEEN operator to query a DateTimeField value using an
+> +        iso_year lookup.
+> +
+> +        `value` is an int, containing the looked-up ISO year.
+> +        """
+> +        first = datetime.datetime.combine(
+> +            datetime.date.fromisocalendar(value, 1, 1),
+> +            datetime.time.min,
+> +        )
+> +        if value == datetime.MAXYEAR:
+> +            second = datetime.datetime.max
+25,46d41
+< +            first = datetime.date(value, 1, 1)
+< +            second = datetime.date(value, 12, 31)
+<          first = self.adapt_datefield_value(first)
+<          second = self.adapt_datefield_value(second)
+<          return [first, second]
+<  
+< -    def year_lookup_bounds_for_datetime_field(self, value):
+< +    def year_lookup_bounds_for_datetime_field(self, value, iso_year=False):
+<          """
+<          Return a two-elements list with the lower and upper bound to be used
+<          with a BETWEEN operator to query a DateTimeField value using a year
+< @@ -548,8 +553,18 @@ class BaseDatabaseOperations:
+<  
+<          `value` is an int, containing the looked-up year.
+<          """
+< -        first = datetime.datetime(value, 1, 1)
+< -        second = datetime.datetime(value, 12, 31, 23, 59, 59, 999999)
+< +        if iso_year:
+< +            first = datetime.datetime.combine(
+< +                datetime.date.fromisocalendar(value, 1, 1),
+< +                datetime.time.min,
+< +            )
+51,56c46,56
+< +        else:
+< +            first = datetime.datetime(value, 1, 1)
+< +            second = datetime.datetime(value, 12, 31, 23, 59, 59, 999999)
+<          if settings.USE_TZ:
+<              tz = timezone.get_current_timezone()
+<              first = timezone.make_aware(first, tz)
+---
+> +        if settings.USE_TZ:
+> +            tz = timezone.get_current_timezone()
+> +            first = timezone.make_aware(first, tz)
+> +            second = timezone.make_aware(second, tz)
+> +        first = self.adapt_datetimefield_value(first)
+> +        second = self.adapt_datetimefield_value(second)
+> +        return [first, second]
+> +
+>      def get_db_converters(self, expression):
+>          """
+>          Return a list of functions needed to convert field data.
+58c58
+< index 916478d075..abea9c2006 100644
+---
+> index 916478d075..6d1bb204d5 100644
+61c61
+< @@ -540,10 +540,15 @@ class IRegex(Regex):
+---
+> @@ -540,11 +540,20 @@ class IRegex(Regex):
+65a66
+> +        ops = connection.ops
+68,70c69,76
+< +            bounds = connection.ops.year_lookup_bounds_for_datetime_field(
+< +                year, iso_year=iso_year,
+< +            )
+---
+> +            if iso_year:
+> +                bounds_func = (
+> +                    ops.year_lookup_bounds_for_iso_year_datetime_field
+> +                )
+> +            else:
+> +                bounds_func = ops.year_lookup_bounds_for_datetime_field
+> +        elif iso_year:
+> +            bounds_func = ops.year_lookup_bounds_for_iso_year_date_field
+73,76c79,81
+< +            bounds = connection.ops.year_lookup_bounds_for_date_field(
+< +                year, iso_year=iso_year,
+< +            )
+<          return bounds
+---
+> -        return bounds
+> +            bounds_func = ops.year_lookup_bounds_for_date_field
+> +        return bounds_func(year)
+78a84
+>          # Avoid the extract operation if the rhs is a direct value to allow

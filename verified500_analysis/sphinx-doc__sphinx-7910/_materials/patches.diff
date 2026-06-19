@@ -1,0 +1,61 @@
+# sphinx-doc__sphinx-7910  (run verified040-codex-wsl-ubuntu-260615221107)
+# baseline files: ['sphinx/ext/napoleon/__init__.py']
+# fvk files: ['sphinx/ext/napoleon/__init__.py']
+# files only in fvk: []
+# files only in baseline: []
+
+2c2
+< index 10b1ff3a3..084e7e7ad 100644
+---
+> index 10b1ff3a3..96fe84505 100644
+5c5,33
+< @@ -430,15 +430,12 @@ def _skip_member(app: Sphinx, what: str, name: str, obj: Any,
+---
+> @@ -13,6 +13,7 @@ from typing import Any, Dict, List
+>  from sphinx import __display_version__ as __version__
+>  from sphinx.application import Sphinx
+>  from sphinx.ext.napoleon.docstring import GoogleDocstring, NumpyDocstring
+> +from sphinx.util.inspect import unwrap
+>  
+>  
+>  class Config:
+> @@ -378,6 +379,19 @@ def _process_docstring(app: Sphinx, what: str, name: str, obj: Any,
+>      lines[:] = result_lines[:]
+>  
+>  
+> +def _get_class_from_qualname(obj: Any, cls_path: str) -> Any:
+> +    import functools
+> +    import importlib
+> +
+> +    try:
+> +        mod = importlib.import_module(obj.__module__)
+> +        return functools.reduce(getattr, cls_path.split('.'), mod)
+> +    except Exception:
+> +        if '.' not in cls_path:
+> +            return obj.__globals__[cls_path]
+> +        raise
+> +
+> +
+>  def _skip_member(app: Sphinx, what: str, name: str, obj: Any,
+>                   skip: bool, options: Any) -> bool:
+>      """Determine if private and special class members are included in docs.
+> @@ -430,20 +444,14 @@ def _skip_member(app: Sphinx, what: str, name: str, obj: Any,
+18,23c46
+< +                    import functools
+< +                    import importlib
+< +
+< +                    mod = importlib.import_module(obj.__module__)
+< +                    mod_path = cls_path.split('.')
+< +                    cls = functools.reduce(getattr, mod_path, mod)
+---
+> +                    cls = _get_class_from_qualname(obj, cls_path)
+26a50,58
+> -                    cls_is_owner = (cls and hasattr(cls, name) and  # type: ignore
+> -                                    name in cls.__dict__)
+> +                    cls_candidates = [cls, unwrap(cls)]
+> +                    cls_is_owner = any(candidate and hasattr(candidate, name) and
+> +                                       name in candidate.__dict__
+> +                                       for candidate in cls_candidates)
+>              else:
+>                  cls_is_owner = False
+>  
