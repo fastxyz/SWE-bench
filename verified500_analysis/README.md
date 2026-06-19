@@ -5,6 +5,7 @@ Evidence that **passing the tests is not the same as being correct** — and tha
 ## Start here
 - 📄 **[REPORT.md](REPORT.md)** — the full write-up (TL;DR, the numbers, 3 flagship examples, methodology). **Read this first.**
 - 📊 **[SUMMARY_TABLE.md](SUMMARY_TABLE.md)** — all 21 analyzed instances at a glance.
+- 🧪 **[ENHANCED_TESTS.md](ENHANCED_TESTS.md)** — new regression tests for the 3 flagships, each verified RED-on-baseline / GREEN-on-FVK through the official Docker harness.
 
 ## The 3 flagship examples
 1. [pydata__xarray-4094](pydata__xarray-4094/ANALYSIS.md) — silent data loss that the official human fix *also* has.

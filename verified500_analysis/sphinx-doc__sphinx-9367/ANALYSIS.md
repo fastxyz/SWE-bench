@@ -2,6 +2,7 @@
 
 - **Verdict:** B_COMPLETENESS — fvk fixed the *same* "1-element tuple loses its trailing comma" bug in a second, sibling code path (`visit_Subscript`) that baseline, the gold patch, and even the real upstream fix all missed.
 - **Pitch-worthiness (1-5):** 5
+- **✅ Harness-verified regression test:** [`enhanced_tests/test_fvk_regression.py`](enhanced_tests/test_fvk_regression.py) — FAILS on baseline (RED), PASSES on FVK (GREEN), and FAILS on the official human fix (gold), via the official SWE-bench Docker harness. See [../ENHANCED_TESTS.md](../ENHANCED_TESTS.md).
 
 ## The issue
 `sphinx/pycode/ast._UnparseVisitor` turns a Python AST back into source text (used by autodoc to render default argument values and type annotations). Python requires a trailing comma to denote a 1-element tuple: `(1,)` is a tuple, `(1)` is just the integer `1`. Issue #9367 reports that `(1,)` was rendered as `(1)`, dropping the comma and silently changing a tuple into a scalar. The fix must keep the comma for the 1-element case while leaving `()` (0-tuple) and `(a, b, ...)` (n-tuple) unchanged.

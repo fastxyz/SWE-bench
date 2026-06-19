@@ -2,6 +2,7 @@
 
 - **Verdict:** A_GENUINE_FIX — baseline (and the official human gold fix) use an unqualified `.squeeze(drop=True)` that silently destroys legitimate length-1 dimensions during a stack→unstack roundtrip; fvk uses a targeted per-dimension squeeze that preserves them.
 - **Pitch-worthiness (1-5):** 5
+- **✅ Harness-verified regression test:** [`enhanced_tests/test_fvk_regression.py`](enhanced_tests/test_fvk_regression.py) — FAILS on baseline (RED), PASSES on FVK (GREEN), and FAILS on the official human fix (gold), via the official SWE-bench Docker harness. See [../ENHANCED_TESTS.md](../ENHANCED_TESTS.md).
 
 ## The issue
 `DataArray.to_unstacked_dataset()` is the inverse of `to_stacked_array()`. The reported bug: roundtripping a dataset through `to_stacked_array(...).to_unstacked_dataset(...)` raised / lost data for single-dimension variables. The fix must reconstruct each original variable by selecting its level out of the stacked array and dropping only the *stacked* index dimension.

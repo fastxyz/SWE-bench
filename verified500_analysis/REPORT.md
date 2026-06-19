@@ -86,6 +86,20 @@ Each was verified by **running the actual code** for the baseline, FVK, and offi
 
 ---
 
+## We turned these catches into tests — RED on baseline, GREEN on FVK
+
+To prove the bugs are real (not stylistic), we wrote a regression test for each flagship and ran it through the **official SWE-bench Docker harness**. Each test **fails on the baseline and passes on FVK** — exactly the enhancement the hidden suite needed (the graded tests passed *both* solutions, so they were blind to these):
+
+| New test | Baseline | FVK | Human fix (gold) |
+|---|:--:|:--:|:--:|
+| xarray: round-trip preserves a length-1 dimension | 🔴 FAIL | 🟢 PASS | 🔴 FAIL |
+| scikit-learn: positional constructor call binds correctly | 🔴 FAIL | 🟢 PASS | 🟢 |
+| sphinx: `obj[1,]` keeps its trailing comma | 🔴 FAIL | 🟢 PASS | 🔴 FAIL |
+
+**Two of the three also fail on the official human fix** — they would catch still-latent bugs upstream too. Tests, reproduction steps, and the harness `report.json` proofs: **[ENHANCED_TESTS.md](ENHANCED_TESTS.md)**.
+
+---
+
 ## "It's not cherry-picking" — more verified examples
 
 Every row below was code-executed; folders contain the reproduction and the official human patch.

@@ -2,6 +2,7 @@
 
 - **Verdict:** C_ROBUSTNESS — baseline introduced a backward-incompatible API regression by inserting `warm_start` in the *middle* of `IsolationForest`'s non-keyword-only constructor, silently shifting the positional slots of `n_jobs`, `behaviour`, `random_state`, `verbose`; fvk appended it at the end (exactly as gold did), preserving positional compatibility.
 - **Pitch-worthiness (1-5):** 4
+- **✅ Harness-verified regression test:** [`enhanced_tests/test_fvk_regression.py`](enhanced_tests/test_fvk_regression.py) — FAILS on baseline (RED), PASSES on FVK (GREEN), via the official SWE-bench Docker harness. See [../ENHANCED_TESTS.md](../ENHANCED_TESTS.md).
 
 > NOTE on the original investigation hint: the hint's hypothesis ("baseline added `warm_start` to `__init__` but didn't pass it through to the parent `BaseBagging`, so `warm_start=True` had no effect") is **factually wrong** for this instance. Both baseline and fvk forward `warm_start=warm_start` to `super().__init__(...)`. The functional `warm_start=True` feature works identically in both. The real defect fvk fixed is a *positional-argument shift*, described below.
 
