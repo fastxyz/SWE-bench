@@ -29,6 +29,12 @@ Functionally correct, wrong place: baseline inserted `warm_start=False` **betwee
 ## What fvk changed and why
 fvk moved `warm_start=False` to the **end**, after `verbose=0`, leaving the parent-forward unchanged. This is the only diff vs baseline. `fvk_FINDINGS.md` F1 ("V1 shifted old positional constructor arguments") and `fvk_notes.md` decision #2 state this rationale correctly.
 
+## FVK Formal Argument
+
+- **FVK status:** constructed, not machine-checked.
+- **FVK formal argument:** PO4 / `IFOREST-POSITIONAL-COMPAT`: adding `warm_start` is a public-call compatibility obligation; existing positional constructor slots must keep their meanings.
+- **Why it catches baseline:** baseline inserts `warm_start` before existing positional parameters, so old positional callers silently bind later arguments to the wrong names.
+
 ## Concrete demonstration
 A user writing against the original public API (intending `n_jobs=3, behaviour="new", random_state=0, verbose=1`):
 ```python

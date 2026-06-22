@@ -98,6 +98,12 @@ The FVK formal argument is captured by the `HELPER-METHOD-CONCRETE` and
 That is the core proof obligation: dynamically derived dimension names are
 data, not Python call-site option names.
 
+## FVK Formal Argument
+
+- **FVK status:** constructed, not machine-checked.
+- **FVK formal argument:** PO-1/PO-4/PO-5 / `HELPER-METHOD-CONCRETE`: dynamically derived dimension names are data and must be passed as mapping indexers; exact `.sel()` options remain framed.
+- **Why it catches baseline:** baseline fixes direct `.loc` dispatch but leaves internal helpers using `.sel(**{dim: value})`, so a dimension named like `method` can still bind as an option instead of an indexer.
+
 ## Concrete demonstration
 
 Consider an internal helper iterating selections over a dimension named

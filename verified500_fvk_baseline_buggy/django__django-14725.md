@@ -36,6 +36,12 @@ return self.save_existing_objects(commit) + self.save_new_objects(commit)
 ```
 This is exactly where **gold** placed its only guard. Because `save()` calls `self.save_new_objects(commit)` *virtually*, a subclass that overrides `save_new_objects()` without `super()` bypasses baseline's helper guard — but cannot bypass fvk's/gold's `save()` guard.
 
+## FVK Formal Argument
+
+- **FVK status:** constructed, not machine-checked.
+- **FVK formal argument:** PO-2/PO-7: edit-only `save()` creates zero new objects, and the public `save()` entry point must be safe against virtual dispatch to overrideable new-object creation.
+- **Why it catches baseline:** baseline enforces the condition only in `save_new_objects()`, but `save()` still virtually dispatches to an overrideable new-object path.
+
 ## Concrete demonstration (executed, not asserted)
 Three trees built from the pristine base commit (`baseline.patch` / `fvk.patch` / `gold.patch`), run against the local Django (PYTHONPATH pinned to each tree — a venv's Django 4.2 initially shadowed the trees and gave a false pass; corrected and re-verified):
 ```python

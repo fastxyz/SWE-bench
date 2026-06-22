@@ -26,6 +26,12 @@ For `class C(SkyCoord, Mixin)` the MRO is `[C, SkyCoord, ..., Mixin, object]`, s
 ## What fvk changed and why
 fvk scans the full MRO for the first provider of the attribute and intercepts if that provider is outside `SkyCoord.__mro__` — matching gold's behavior (gold delegates to `__getattribute__`, which naturally honors the full MRO) — and executes the property only once.
 
+## FVK Formal Argument
+
+- **FVK status:** constructed, not machine-checked.
+- **FVK formal argument:** PO1/PO4/PO5: descriptor lookup must preserve the inner `AttributeError`, respect the full Python MRO, and keep the saved-error marker attribute-matched and single-use.
+- **Why it catches baseline:** baseline stops at `SkyCoord`, so providers later in the MRO are invisible and their real inner `AttributeError` is masked.
+
 ## Concrete demonstration (executed)
 ```python
 class Mixin:

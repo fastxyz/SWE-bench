@@ -18,6 +18,12 @@ Baseline generalized the `Add` branch to use `equivalent_dims(...)` and called `
 ## What fvk changed and why
 fvk extracted `_is_dimensionless`/`_dimensions_equivalent` helpers that wrap those calls in `try/except TypeError`, treating an un-analyzable dimension as "not dimensionless"/"not equivalent". This restores the correct `ValueError` in the `Add` branch and avoids an uncaught `TypeError` in the `Function` branch.
 
+## FVK Formal Argument
+
+- **FVK status:** constructed, not machine-checked.
+- **FVK formal argument:** PO3/PO4: incompatible additions still raise the public incompatible-dimension error, and unsupported dimension-system checks are conservative negative results rather than escaping helper `TypeError`s.
+- **Why it catches baseline:** baseline calls dimension-equivalence helpers inline; unsupported symbolic dimensions can raise low-level `TypeError` instead of the documented incompatible-dimension error.
+
 ## Concrete demonstration (executed, sympy 1.11.1 — exact pre-fix version)
 ```python
 # Q is a quantity whose dimension is Dimension(sin(length))  (un-analyzable)

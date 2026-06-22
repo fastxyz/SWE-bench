@@ -18,6 +18,12 @@ Baseline made `_redo_transform_rel_fig` read spacing from the gridspec (`gs.wspa
 ## What fvk changed and why
 fvk routes spacing through a private `_subfigure_wspace`/`_subfigure_hspace` marker that **only `Figure.subfigures` sets**. So `subfigures(...)` honors spacing (bug fixed) while `add_subfigure(user_gridspec)` ignores subplot spacing (historical/gold behavior preserved). The downstream geometry arithmetic is byte-identical between baseline and fvk.
 
+## FVK Formal Argument
+
+- **FVK status:** constructed, not machine-checked.
+- **FVK formal argument:** PO1/PO5: `Figure.subfigures()` may store subfigure spacing metadata, but generic `add_subfigure(GridSpec[...])` must not inherit ordinary GridSpec subplot spacing.
+- **Why it catches baseline:** baseline reads public `GridSpec` spacing from arbitrary user-created GridSpecs, allowing subplot spacing to leak into unrelated subfigure placement.
+
 ## Concrete demonstration (numeric, from 3.6.3-structure source)
 ```python
 fig.add_subfigure(fig.add_gridspec(1, 2, wspace=0.5)[0, 0])   # equal width ratios

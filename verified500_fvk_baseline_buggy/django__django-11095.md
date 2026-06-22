@@ -105,6 +105,12 @@ That frame condition separates two public obligations:
 - inline rendering is dynamic and request/object aware;
 - related-object validation remains static because it has no object context.
 
+## FVK Formal Argument
+
+- **FVK status:** constructed, not machine-checked.
+- **FVK formal argument:** PO-004/PO-006 / `TO-FIELD-ALLOWED-FRAME`: related-object validation and admin checks are static registration obligations; they must inspect `admin.inlines`, not objectless dynamic hook results.
+- **Why it catches baseline:** baseline calls `get_inlines(request)` from `to_field_allowed()` without an object, allowing object-dependent display logic to mutate the validation registry.
+
 ## Concrete demonstration
 
 The failure does not require exotic code. Any hook that returns no inlines for

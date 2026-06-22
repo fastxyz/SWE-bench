@@ -18,6 +18,12 @@ Correctly diagnosed the root cause but fixed exactly the two methods named in th
 ## What fvk changed and why
 Kept baseline's two fixes and routed operand fields of seven more methods through `self._print(...)`: `_print_AppliedPredicate`, `_print_ExprCondPair` (Piecewise), `_print_Interval`, `_print_Lambda`, `_print_MatrixElement`, `_print_Normal`, `_print_Uniform` — the same latent bug. It explicitly bounded the change and left domain-specific delegating methods alone.
 
+## FVK Formal Argument
+
+- **FVK status:** constructed, not machine-checked.
+- **FVK formal argument:** PO-FAMILY/PO-FRAME: audited composite printer operands must render through `self._print(...)` so active printer options propagate recursively, while default shapes and unrelated domain-specific delegations remain framed.
+- **Why it catches baseline:** baseline fixes only the reported printer methods, while sibling composite printers still interpolate nested operands directly and drop `sympy_integers=True`.
+
 ## Concrete demonstration
 Built baseline- and fvk-patched copies of `str.py` from a version-identical base (`sympy__sympy-14248/repo`, whose pre-patch `str.py` is byte-identical to 14531's base — both patches apply with `git apply --check`), ran on Python 3.9 / sympy 1.1.2.dev. All inputs `sstr(..., sympy_integers=True)`:
 

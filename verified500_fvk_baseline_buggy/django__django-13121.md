@@ -18,6 +18,12 @@ Added a `duration_only` fast-path: if connector is `+`/`-` and **both operands' 
 ## What fvk changed and why
 fvk kept baseline's machinery but **widened `has_duration_output()`**: it also treats a same-type temporal subtraction (`CombinedExpression`, connector `-`, both sides `Date/DateTime/TimeField`) as duration-producing. Rationale: `DateTime − DateTime` compiles via `TemporalSubtraction` to an integer-microsecond value, so an outer `+`/`-` over it is duration-only and must use the numeric path. Baseline missed this because the inner subtraction's *inferred* `output_field` is `DateTimeField` (per `_resolve_output_field`), not `DurationField`.
 
+## FVK Formal Argument
+
+- **FVK status:** constructed, not machine-checked.
+- **FVK formal argument:** PO1/PO3/PO4: duration-only arithmetic must use numeric microsecond operations; same-type temporal subtraction counts as duration-producing, while mixed date/time arithmetic remains framed.
+- **Why it catches baseline:** baseline only recognizes literal `DurationField` outputs, so nested `DateTimeField - DateTimeField` is misclassified and routed through backend interval/date formatting.
+
 ## Concrete demonstration (empirically executed, not reasoned)
 Ran all three variants against the staged Django 3.2a repo on in-memory **SQLite** (row: `estimated_time=253000µs`, `end−start=1 day`), swapping `expressions.py` (+ gold's backend files) per variant.
 

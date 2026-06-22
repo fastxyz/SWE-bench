@@ -18,6 +18,12 @@ Instead of gold's targeted change, baseline rewrote the `order_by` GROUP BY logi
 ## What fvk changed and why
 fvk added a `get_external_cols()` branch so that a correlated subquery's external columns are retained in GROUP BY, restoring the behavior that both original Django and gold have. `fvk_FINDINGS.md` F1 identified exactly this regression.
 
+## FVK Formal Argument
+
+- **FVK status:** constructed, not machine-checked.
+- **FVK formal argument:** PO4/PO7: order-by expressions with subquery external columns must be retained in GROUP BY, while unrelated GROUP BY frame conditions remain unchanged.
+- **Why it catches baseline:** baseline prunes order-by expressions by a narrower predicate and drops correlated subqueries even though their external columns are semantically required for grouping.
+
 ## Concrete demonstration (executed, Django 3.2 repo checkout)
 ```python
 Author.objects.annotate(c=Count('book')).order_by(

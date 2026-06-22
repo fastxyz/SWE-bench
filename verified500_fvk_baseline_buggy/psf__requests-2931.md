@@ -49,6 +49,12 @@ fvk's findings (`fvk_FINDINGS.md` F-001) frame this as fixing "the shared
 `_encode_params` hazard" reachable "directly or through a future body path,"
 and F-003 honestly declines to touch the unrelated empty-bytes+json boundary.
 
+## FVK Formal Argument
+
+- **FVK status:** constructed, not machine-checked.
+- **FVK formal argument:** PO-1/PO-4: for every byte sequence `B`, `_encode_params(B)` must return `B` unchanged, while mapping/list form-data encoding remains framed.
+- **Why it catches baseline:** baseline patches one caller but leaves the shared helper capable of decoding or altering raw bytes, violating the helper-level byte-preservation contract.
+
 ## Concrete demonstration
 Reconstructed all four code variants (ORIGINAL/BASELINE/FVK/GOLD) of
 `_encode_params` / `prepare_body` / `prepare_url` from the patch contexts and the

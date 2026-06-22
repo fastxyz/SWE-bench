@@ -23,6 +23,12 @@ if value == datetime.MAXYEAR:
 ```
 so the MAXYEAR upper bound is `9999-12-31` instead of overflowing. (The surrounding helper-method refactor vs gold's `iso_year=` keyword is stylistic/equivalent — only the MAXYEAR guard is substantive.)
 
+## FVK Formal Argument
+
+- **FVK status:** constructed, not machine-checked.
+- **FVK formal argument:** PO-003/PO-005: maximum representable year is a finite-domain boundary; ISO-year lookup for 9999 must use the maximum representable date/datetime and leave calendar-year behavior framed unchanged.
+- **Why it catches baseline:** baseline computes `fromisocalendar(value + 1, ...)` unconditionally, so the boundary obligation fails at `value == 9999`.
+
 ## Concrete demonstration
 ```python
 Model.objects.filter(start_date__iso_year=9999)

@@ -19,6 +19,12 @@ Baseline added a `len(node.elts) == 1` branch to `visit_Tuple()` returning `"(%s
 ## What fvk changed and why
 fvk kept baseline's `visit_Tuple` fix **and** added a `render_simple_tuple()` helper inside `visit_Subscript()`, routing both the modern `node.slice` tuple branch and the legacy `ast.Index(...).value` branch through it. The helper appends a comma when the tuple slice has exactly one element. Rationale (fvk_FINDINGS F-002): a one-element *tuple slice* such as `obj[1,]` was being rendered as `obj[1]`, which is a different subscript (`__getitem__((1,))` vs `__getitem__(1)`) — the identical bug class as the headline issue, just in a sibling renderer that feeds the same `unparse()` output.
 
+## FVK Formal Argument
+
+- **FVK status:** constructed, not machine-checked.
+- **FVK formal argument:** PO-3/PO-4: one-element tuple slices in subscripts must preserve tuple cardinality; the trailing comma is the semantic witness for a one-element tuple.
+- **Why it catches baseline:** baseline preserves one-element tuple cardinality in `visit_Tuple()` but not in `visit_Subscript()`, so the proof obligation fails on the sibling unparse path.
+
 ## Concrete demonstration
 Input source: **`obj[1,]`** (a subscript whose slice is the 1-element tuple `(1,)`; parses to `Subscript(slice=Tuple(elts=[Constant(1)]))`).
 

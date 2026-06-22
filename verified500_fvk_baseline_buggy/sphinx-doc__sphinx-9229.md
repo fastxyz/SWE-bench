@@ -75,6 +75,12 @@ This is a frame condition over the new content path. If a patch introduces a new
 source file read for rendered autodoc content, it must preserve Sphinx's
 existing dependency-recording invariant.
 
+## FVK Formal Argument
+
+- **FVK status:** constructed, not machine-checked.
+- **FVK formal argument:** PO4/PO5: class-alias source comments may supply alias documentation, and every analyzer source consumed for that documentation must be recorded as a rebuild dependency.
+- **Why it catches baseline:** baseline reads class-alias comments from the aliasing module but does not add that analyzer source to `record_dependencies`, so incremental rebuilds can miss source changes.
+
 ## Concrete demonstration
 
 The failure shape is:

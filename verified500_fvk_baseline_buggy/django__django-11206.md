@@ -18,6 +18,12 @@ Baseline fixed the reported case (small magnitudes) using an `exponent < 0` guar
 ## What fvk changed and why
 fvk's revision detects the zero / out-of-range-exponent case and routes it to the plain fixed-point path, so any zero renders as `0` / `0.00` regardless of its stored exponent. `fvk_FINDINGS.md` flagged baseline's branch as missing the zero-exponent class.
 
+## FVK Formal Argument
+
+- **FVK status:** constructed, not machine-checked.
+- **FVK formal argument:** PO3/PO7: zero-valued Decimal objects are exactly representable at fixed decimal widths, and output shape must remain fixed-point rather than scientific notation.
+- **Why it catches baseline:** baseline reasons from stored exponent shape, so zero values with large positive exponents fall into scientific-notation formatting even though the numeric value is exactly zero.
+
 ## Concrete demonstration (executed)
 ```python
 from decimal import Decimal

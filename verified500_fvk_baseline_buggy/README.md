@@ -57,7 +57,8 @@ Each case document is self-contained and includes:
 - the benchmark outcome;
 - the baseline bug;
 - why the hidden tests missed it;
-- the FVK formal argument;
+- the FVK formal argument, including the relevant PO/claim identifiers and why
+  the obligation catches the baseline bug;
 - the relationship to the human gold fix.
 
 The FVK proof status is reported conservatively. When the underlying FVK run was

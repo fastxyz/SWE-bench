@@ -19,6 +19,12 @@ Baseline (and gold) reconstruct each variable with `data.sel(...).squeeze(drop=T
 ## What fvk changed and why
 fvk replaced the blanket `.squeeze(drop=True)` with a targeted drop of only the stacked dimension being unstacked (squeeze/select scoped to that single level dimension), leaving all other dimensions intact. `fvk_FINDINGS.md` flagged the unqualified squeeze as over-broad.
 
+## FVK Formal Argument
+
+- **FVK status:** constructed, not machine-checked.
+- **FVK formal argument:** PO4/PO5/PO6: sample dimensions and real remaining stacked levels are frame conditions; only consumed coordinate metadata or missing stacked-level placeholders may be removed.
+- **Why it catches baseline:** baseline uses unconstrained `squeeze(drop=True)`, so it can remove unrelated size-1 sample dimensions that the unstacking obligation says must be preserved.
+
 ## Concrete demonstration (executed, all variants)
 ```python
 import numpy as np, xarray as xr
