@@ -1,12 +1,35 @@
 # Verified500 FVK Baseline-Buggy Cases
 
-This directory is an article-oriented evidence set for 16 confirmed cases where
-both arms passed the official SWE-bench evaluation, but the baseline patch still
-had a concrete correctness bug that the FVK patch fixed.
+This directory is an article-oriented evidence set for 16 cases where both arms
+passed the official SWE-bench evaluation, but the baseline patch still carried a
+correctness defect that the FVK patch fixed.
 
 The intended article claim is simple: SWE-bench hidden tests are useful, but
 passing them is not the same thing as semantic correctness. These cases are the
 small stories behind that claim.
+
+## Two evidentiary tiers (read before citing)
+
+The cases are not all confirmed the same way. The two document formats in this
+directory reflect that — do not flatten them:
+
+- **Execution-verified — cases 1–13.** The baseline / FVK / gold variants were
+  actually run on a distinguishing input and the divergent behavior recorded
+  (these documents carry a `Pitch-worthiness` line and a "Concrete
+  demonstration (empirically executed)" table).
+- **Source-and-gold-confirmed — cases 14–16** (`django-11095`, `xarray-4695`,
+  `sphinx-9229`). Confirmed by patch-vs-gold comparison and source-level
+  reasoning, **not** by execution (these carry a `Proof status` line and a
+  `Confidence and caveats` section). The defect and the gold relationship are
+  verified against the real patches; the runtime behavior is argued, not run.
+
+**Reachability caveat — one case is latent.** 15 of the 16 baseline defects are
+reachable through a concrete input. Case 13 (`psf-requests-2931`) is a
+**latent / structural** defect: real and gold-aligned at the shared
+`_encode_params` helper, but not triggerable through a supported public API on
+this commit (only by calling the private helper directly or via a future body
+path). Its own document states this; cite it as hardening + gold-alignment, not
+as a live user-facing crash.
 
 ## Case Documents
 
@@ -22,7 +45,7 @@ small stories behind that claim.
 10. [matplotlib__matplotlib-25960](matplotlib__matplotlib-25960.md) - human fix issue: no; Different mechanism, same spacing boundary as the human fix.
 11. [scikit-learn__scikit-learn-13496](scikit-learn__scikit-learn-13496.md) - human fix issue: no; FVK is behaviorally equivalent to gold; gold adds only documentation.
 12. [astropy__astropy-14096](astropy__astropy-14096.md) - human fix issue: no; FVK matches gold behavior by respecting the full MRO.
-13. [psf__requests-2931](psf__requests-2931.md) - human fix issue: no; FVK is behaviorally aligned with gold at the shared encoder helper.
+13. [psf__requests-2931](psf__requests-2931.md) - human fix issue: no; FVK is behaviorally aligned with gold at the shared encoder helper. **Latent**: defect is not reachable through a public API on this commit (hardening, not a live crash).
 14. [django__django-11095](django__django-11095.md) - human fix issue: no; Gold independently supports FVK's static validation boundary.
 15. [pydata__xarray-4695](pydata__xarray-4695.md) - human fix issue: partial; Gold fixes direct `.loc`; FVK applies the same invariant to internal dynamic selection helpers.
 16. [sphinx-doc__sphinx-9229](sphinx-doc__sphinx-9229.md) - human fix issue: no; Gold uses a different implementation path; FVK fixes a baseline-specific dependency bug.
