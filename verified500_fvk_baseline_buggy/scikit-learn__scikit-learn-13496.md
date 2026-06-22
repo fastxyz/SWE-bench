@@ -1,10 +1,16 @@
-# scikit-learn__scikit-learn-13496 — FVK analysis
+# scikit-learn__scikit-learn-13496
 
 - **Verdict:** C_ROBUSTNESS — baseline introduced a backward-incompatible API regression by inserting `warm_start` in the *middle* of `IsolationForest`'s non-keyword-only constructor, silently shifting the positional slots of `n_jobs`, `behaviour`, `random_state`, `verbose`; fvk appended it at the end (exactly as gold did), preserving positional compatibility.
 - **Pitch-worthiness (1-5):** 4
-- **✅ Harness-verified regression test:** [`enhanced_tests/test_fvk_regression.py`](enhanced_tests/test_fvk_regression.py) — FAILS on baseline (RED), PASSES on FVK (GREEN), via the official SWE-bench Docker harness. See [../ENHANCED_TESTS.md](../ENHANCED_TESTS.md).
+- **Harness-verified regression test:** FAILS on baseline (RED), PASSES on FVK (GREEN), via the official SWE-bench Docker harness.
 
 > NOTE on the original investigation hint: the hint's hypothesis ("baseline added `warm_start` to `__init__` but didn't pass it through to the parent `BaseBagging`, so `warm_start=True` had no effect") is **factually wrong** for this instance. Both baseline and fvk forward `warm_start=warm_start` to `super().__init__(...)`. The functional `warm_start=True` feature works identically in both. The real defect fvk fixed is a *positional-argument shift*, described below.
+
+## Benchmark Result
+
+- Baseline arm: official SWE-bench evaluation marked the patch as resolved.
+- FVK arm: official SWE-bench evaluation marked the patch as resolved.
+- Audit category: baseline passed the benchmark but remained concretely buggy.
 
 ## The issue
 `IsolationForest` inherits a working `warm_start` implementation from `BaseBagging` (whose `_fit` reuses `self.estimators_` and only builds `n_estimators - len(estimators_)` new trees when `warm_start=True`, else resets `estimators_` to `[]`), but never exposed `warm_start` in its own `__init__`. The issue asks to expose `warm_start=False`, forward it to the parent, and document it RandomForest-style.
@@ -45,7 +51,12 @@ Under baseline the object is silently misconfigured. Concretely: `n_jobs="new"` 
 - A scan of the entire `test_iforest.py` (all PASS_TO_PASS): **no** `IsolationForest(...)` call uses positional args at position 6+. No hidden test exercises positional binding, so baseline's regression is invisible to grading.
 - Classic "passes tests ≠ correct": the regression lives entirely in the positional contract, which the suite never touches.
 
-## Gold comparison
+## FVK vs. Human Fix
+
+**Human fix issue:** no.
+
+Both FVK and gold append `warm_start` to preserve existing positional constructor slots. Baseline inserts it in the middle, silently shifting public positional arguments.
+
 Gold appends `warm_start` at the end, identical to fvk:
 ```python
 -                 verbose=0):

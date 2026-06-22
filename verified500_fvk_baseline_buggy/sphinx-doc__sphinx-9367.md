@@ -1,8 +1,14 @@
-# sphinx-doc__sphinx-9367 — FVK analysis
+# sphinx-doc__sphinx-9367
 
 - **Verdict:** B_COMPLETENESS — fvk fixed the *same* "1-element tuple loses its trailing comma" bug in a second, sibling code path (`visit_Subscript`) that baseline, the gold patch, and even the real upstream fix all missed.
 - **Pitch-worthiness (1-5):** 5
-- **✅ Harness-verified regression test:** [`enhanced_tests/test_fvk_regression.py`](enhanced_tests/test_fvk_regression.py) — FAILS on baseline (RED), PASSES on FVK (GREEN), and FAILS on the official human fix (gold), via the official SWE-bench Docker harness. See [../ENHANCED_TESTS.md](../ENHANCED_TESTS.md).
+- **Harness-verified regression test:** FAILS on baseline (RED), PASSES on FVK (GREEN), and FAILS on the official human fix (gold), via the official SWE-bench Docker harness.
+
+## Benchmark Result
+
+- Baseline arm: official SWE-bench evaluation marked the patch as resolved.
+- FVK arm: official SWE-bench evaluation marked the patch as resolved.
+- Audit category: baseline passed the benchmark but remained concretely buggy.
 
 ## The issue
 `sphinx/pycode/ast._UnparseVisitor` turns a Python AST back into source text (used by autodoc to render default argument values and type annotations). Python requires a trailing comma to denote a 1-element tuple: `(1,)` is a tuple, `(1)` is just the integer `1`. Issue #9367 reports that `(1,)` was rendered as `(1)`, dropping the comma and silently changing a tuple into a scalar. The fix must keep the comma for the 1-element case while leaving `()` (0-tuple) and `(a, b, ...)` (n-tuple) unchanged.
@@ -35,7 +41,12 @@ No regression: `is_simple_tuple` only fires when the slice is itself a `Tuple` A
 - `tests.json` FAIL_TO_PASS is exactly one case: `test_unparse[(1,)-(1,)]`, and `gold_test.patch` adds only `("(1,)", "(1,)")` to `tests/test_pycode_ast.py`. That test exercises `visit_Tuple`, which baseline already fixed — so the hidden suite passes baseline and never touches `visit_Subscript`.
 - There is **no test anywhere** (verified via grep over `tests/`) for a one-element tuple *subscript* (`obj[1,]`). The existing subscript tests (`Tuple[int, int]`) only cover the multi-element case, where original/baseline/gold/fvk all agree. Hence both baseline and fvk are scored "resolved" despite baseline retaining the subscript defect.
 
-## Gold comparison
+## FVK vs. Human Fix
+
+**Human fix issue:** yes.
+
+The human fix repairs tuple rendering in the reported path, but it does not repair the sibling `visit_Subscript` path. FVK preserves tuple cardinality there too, so `obj[1,]` does not collapse into `obj[1]`.
+
 Gold (`gold.patch`) changes **only** `visit_Tuple`:
 ```python
      def visit_Tuple(self, node: ast.Tuple) -> str:

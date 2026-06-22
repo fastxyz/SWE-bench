@@ -1,4 +1,4 @@
-# django__django-11095 - FVK confirmed baseline-buggy analysis
+# django__django-11095
 
 - **Verdict:** CONFIRMED baseline-buggy. Both baseline and FVK have
   `resolved: true` in the official eval reports, but baseline introduced a
@@ -9,6 +9,12 @@
   an objectless hook call`.
 - **Proof status:** constructed, not machine-checked. The FVK artifacts provide
   K claims and proof obligations, but the recorded run did not execute `kprove`.
+
+## Benchmark Result
+
+- Baseline arm: official SWE-bench evaluation marked the patch as resolved.
+- FVK arm: official SWE-bench evaluation marked the patch as resolved.
+- Audit category: baseline passed the benchmark but remained concretely buggy.
 
 ## The issue
 
@@ -127,7 +133,12 @@ object-dependent `get_inlines()` override with the unrelated
 `to_field_allowed()` validation path. Both baseline and FVK therefore pass the
 official tests, even though baseline has a validation regression.
 
-## Gold comparison
+## FVK vs. Human Fix
+
+**Human fix issue:** no.
+
+Gold adds the dynamic inline hook only to inline instance construction. It does not route `to_field_allowed()` through an objectless dynamic hook. FVK restores that same static validation boundary after baseline crossed it.
+
 
 The official gold patch adds `get_inlines()` and changes
 `get_inline_instances()` to call it. It does not modify `to_field_allowed()`.
@@ -137,11 +148,6 @@ related-object validation stays on static inline registration.
 FVK is therefore not merely a stylistic alternative. It removed a baseline-only
 behavioral regression that the official fix never introduced.
 
-## Evidence files
-
-- FVK findings: [_materials/FINDINGS.md](_materials/FINDINGS.md)
-- FVK formal spec: [_materials/FORMAL_SPEC_ENGLISH.md](_materials/FORMAL_SPEC_ENGLISH.md)
-- FVK notes: [_materials/fvk_notes.md](_materials/fvk_notes.md)
 
 ## Confidence and caveats
 

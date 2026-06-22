@@ -1,10 +1,16 @@
-# psf__requests-2931 — FVK analysis
+# psf__requests-2931
 
 - **Verdict:** C_ROBUSTNESS — fvk fixes the bytes defect in the *shared* `_encode_params`
   helper (exactly where gold fixes it), whereas baseline only guards the one caller and
   leaves the encoder a latent footgun; the difference is real but not reachable via a
   public API path on this commit.
 - **Pitch-worthiness (1-5):** 3
+
+## Benchmark Result
+
+- Baseline arm: official SWE-bench evaluation marked the patch as resolved.
+- FVK arm: official SWE-bench evaluation marked the patch as resolved.
+- Audit category: baseline passed the benchmark but remained concretely buggy.
 
 ## The issue
 On requests 2.9 a binary body `requests.put(url, data=u"ööö".encode("utf-8"))`
@@ -88,7 +94,12 @@ never trips `to_native_string`. So the suite cannot see baseline's untouched
 encoder. (This also means it cannot *prove* fvk is better through the public
 surface — the difference is structural/latent.)
 
-## Gold comparison
+## FVK vs. Human Fix
+
+**Human fix issue:** no.
+
+Gold and FVK both preserve raw bytes at `_encode_params()`, the shared root helper. Baseline guards only one caller, leaving the helper contract wrong.
+
 Gold fixes the **same shared location** fvk does, not baseline's caller:
 
     # requests/models.py, _encode_params

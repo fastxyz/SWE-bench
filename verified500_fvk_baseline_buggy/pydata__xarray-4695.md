@@ -1,4 +1,4 @@
-# pydata__xarray-4695 - FVK confirmed baseline-buggy analysis
+# pydata__xarray-4695
 
 - **Verdict:** CONFIRMED baseline-buggy. Both baseline and FVK have
   `resolved: true` in the official eval reports, but baseline fixed only the
@@ -7,6 +7,12 @@
 - **Primary FVK finding:** `FVK-F2 - Same Dynamic-Indexer Pattern Outside .loc`.
 - **Proof status:** constructed, not machine-checked. The FVK artifacts provide
   K claims and proof obligations, but the recorded run did not execute `kprove`.
+
+## Benchmark Result
+
+- Baseline arm: official SWE-bench evaluation marked the patch as resolved.
+- FVK arm: official SWE-bench evaluation marked the patch as resolved.
+- Audit category: baseline passed the benchmark but remained concretely buggy.
 
 ## The issue
 
@@ -131,7 +137,12 @@ or groupby binary application with a colliding dimension/group name. Baseline
 therefore passes the official test while leaving the same dispatch bug in those
 additional public API paths.
 
-## Gold comparison
+## FVK vs. Human Fix
+
+**Human fix issue:** partial.
+
+The human fix covers the reported direct `.loc` call. FVK keeps that fix and extends the same mapping-dispatch invariant to computation and groupby helpers that still constructed dynamic `.sel(**{dim: value})` calls.
+
 
 The official gold patch matches the direct `.loc` change:
 
@@ -148,11 +159,6 @@ This case is retained because baseline remained concretely buggy after passing
 the official tests, and FVK fixed the surviving bug with an explicit dispatch
 invariant.
 
-## Evidence files
-
-- FVK findings: [_materials/FINDINGS.md](_materials/FINDINGS.md)
-- FVK formal spec: [_materials/FORMAL_SPEC_ENGLISH.md](_materials/FORMAL_SPEC_ENGLISH.md)
-- FVK notes: [_materials/fvk_notes.md](_materials/fvk_notes.md)
 
 ## Confidence and caveats
 

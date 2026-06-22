@@ -1,7 +1,13 @@
-# astropy__astropy-14096 — FVK analysis
+# astropy__astropy-14096
 
 - **Verdict:** B_COMPLETENESS — baseline truncates its subclass-property MRO scan at `SkyCoord` (`if cls is SkyCoord: break`), so a custom property inherited from a mixin ordered *after* SkyCoord still produces the misleading "no attribute" message; fvk (like gold) scans the full MRO and reports the real missing inner attribute.
 - **Pitch-worthiness (1-5):** 4
+
+## Benchmark Result
+
+- Baseline arm: official SWE-bench evaluation marked the patch as resolved.
+- FVK arm: official SWE-bench evaluation marked the patch as resolved.
+- Audit category: baseline passed the benchmark but remained concretely buggy.
 
 ## The issue
 Subclassing `SkyCoord` and adding a `@property` that internally accesses a missing attribute produced a misleading error: `AttributeError: 'C' object has no attribute 'prop'` (blaming the property itself) instead of naming the real missing attribute the property tried to read. The fix should surface the inner attribute error.
@@ -40,7 +46,12 @@ C(...).prop
 ## Why the tests missed it
 The FAIL_TO_PASS test only covers the simple direct-subclass case (property on the immediate subclass, before SkyCoord in the MRO), which baseline's truncated scan does reach. No test uses a mixin ordered after SkyCoord, so baseline passes while retaining the defect.
 
-## Gold comparison
+## FVK vs. Human Fix
+
+**Human fix issue:** no.
+
+Gold delegates through lookup behavior that honors the full MRO. FVK explicitly scans the full provider chain. Baseline truncates at `SkyCoord`, masking the real inner property error.
+
 Gold scans the full MRO (via `__getattribute__` delegation); fvk matches that behavior. Baseline's `break at SkyCoord` is the divergence. **GOLD_MATCH: yes.**
 
 ## Confidence & caveats

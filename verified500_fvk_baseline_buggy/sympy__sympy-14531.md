@@ -1,7 +1,13 @@
-# sympy__sympy-14531 — FVK analysis
+# sympy__sympy-14531
 
 - **Verdict:** B_COMPLETENESS — baseline fixed only the two printer methods named in the issue (`Limit`, `Relational`); fvk extended the identical one-line fix to the other seven `StrPrinter` methods carrying the same latent bug, so `sympy_integers=True` is now honored everywhere it was being silently dropped.
 - **Pitch-worthiness (1-5):** 4 — clean, runnable "passed the tests but still wrong" story: same setting, asked-for behavior, baseline prints `Interval(1/2, 3/2)` (lossy float on re-parse) while fvk prints `Interval(S(1)/2, S(3)/2)` (exact). Held off 5 only because the symptom is print/round-trip fidelity, which needs one sentence of framing for a non-expert.
+
+## Benchmark Result
+
+- Baseline arm: official SWE-bench evaluation marked the patch as resolved.
+- FVK arm: official SWE-bench evaluation marked the patch as resolved.
+- Audit category: baseline passed the benchmark but remained concretely buggy.
 
 ## The issue
 SymPy's string printer has a `sympy_integers=True` option making output round-trip-safe: integers print as `S(1)/2` (exact `Rational`) not `1/2` (re-parses to Python float `0.5`). Bug: several printer methods built output by interpolating raw subexpressions with `%s` (plain `str()`), bypassing the active printer and dropping the setting. The issue shows `Eq` and `Limit` losing it; the same defect lurks in many sibling methods.
@@ -27,7 +33,12 @@ Why wrong, not cosmetic: the point of the setting is round-trip safety. Re-evalu
 ## Why the tests missed it
 `FAIL_TO_PASS` is only `test_Rational` + `test_python_relational`, and `gold_test.patch` adds asserts only for `Eq(x, S(2)/3)`, `Limit(x, x, S(7)/2)`, `python(Eq(x,y))` — i.e. only the two methods baseline already fixed. No test exercises Interval/Lambda/Piecewise/AppliedPredicate/Normal/Uniform/MatrixElement under `sympy_integers=True`. Both `FAIL_TO_PASS` tests pass against each variant (2 passed). The suite is provably blind to the defect.
 
-## Gold comparison
+## FVK vs. Human Fix
+
+**Human fix issue:** partial.
+
+The human fix and FVK share the core recursive-printing insight: nested SymPy operands must go through `self._print(...)`. Gold covers some additional domain printers; FVK covers `Interval`, which gold missed.
+
 Strong match. The human gold patch routes operands through `self._print(...)` in exactly the methods fvk extended: confirmed gold modifies `_print_AppliedPredicate`, `_print_ExprCondPair`, `_print_Lambda`, `_print_MatrixElement`, `_print_Normal`, `_print_Uniform` (+ Limit/Relational). E.g. gold `return "Lambda(%s, %s)" % (self._print(args.args[0]), self._print(expr))` — identical to fvk. Two minor divergences: gold also fixed some domain methods fvk left (`_print_Permutation`, `_print_PolyRing`, `_print_FracField`, `_print_Pi`, `_print_TensAdd`); and gold did NOT fix `_print_Interval` but fvk did — a legitimate fix, so on Interval fvk is *more complete than the human*. **GOLD_MATCH: yes.**
 
 ## Confidence & caveats

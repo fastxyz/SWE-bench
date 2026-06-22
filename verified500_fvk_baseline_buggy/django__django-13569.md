@@ -1,7 +1,13 @@
-# django__django-13569 — FVK analysis
+# django__django-13569
 
 - **Verdict:** A_GENUINE_FIX — baseline's narrowed `order_by` GROUP BY filter silently drops a multivalued correlated `Subquery` from GROUP BY (a regression baseline introduced); fvk restores the upstream/gold behavior of keeping it.
 - **Pitch-worthiness (1-5):** 4
+
+## Benchmark Result
+
+- Baseline arm: official SWE-bench evaluation marked the patch as resolved.
+- FVK arm: official SWE-bench evaluation marked the patch as resolved.
+- Audit category: baseline passed the benchmark but remained concretely buggy.
 
 ## The issue
 The ticket: `order_by('?')` (random ordering) was wrongly added to a query's GROUP BY, breaking aggregation. The gold fix changes `Random.get_group_by_cols()` so random expressions are excluded from GROUP BY.
@@ -29,7 +35,12 @@ Consequence of dropping a multivalued subquery from GROUP BY: on databases that 
 ## Why the tests missed it
 The hidden suite's multivalued-subquery test (`test_aggregation_subquery_annotation_multivalued`) places the subquery in **select/annotate** (the unmodified code path), never in **order_by**. So baseline's narrowed order_by filter is never exercised on a subquery, and baseline passes.
 
-## Gold comparison
+## FVK vs. Human Fix
+
+**Human fix issue:** no.
+
+The human fix addresses random ordering at the source expression. FVK repairs baseline by retaining order-by expressions with external columns. Both preserve the correlated-subquery grouping behavior that baseline accidentally dropped.
+
 Gold only touches `functions/math.py` (`Random.get_group_by_cols`), leaving the order_by GROUP BY loop intact — so original/gold keep the subquery. fvk's added branch reproduces that. **GOLD_MATCH: partial** (different mechanism, same correct outcome; baseline regressed, fvk did not).
 
 ## Confidence & caveats

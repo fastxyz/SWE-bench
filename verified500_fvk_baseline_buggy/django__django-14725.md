@@ -1,7 +1,13 @@
-# django__django-14725 — FVK analysis
+# django__django-14725
 
 - **Verdict:** A_GENUINE_FIX — baseline put the `edit_only` guard *only* in the semi-private `save_new_objects()` helper, so a formset subclass that overrides that helper still creates new objects despite `edit_only=True`; fvk moved the guard up into `save()` (exactly where gold put it), closing the hole.
 - **Pitch-worthiness (1-5):** 3
+
+## Benchmark Result
+
+- Baseline arm: official SWE-bench evaluation marked the patch as resolved.
+- FVK arm: official SWE-bench evaluation marked the patch as resolved.
+- Audit category: baseline passed the benchmark but remained concretely buggy.
 
 ## The issue
 Model formsets had no reliable "edit only" mode. `extra=0` is only a *display* hint — a client can add forms via JavaScript or by editing the management-form `TOTAL_FORMS`/`INITIAL_FORMS` counts and POST extra rows, which the server turns into new objects. The ticket asks for an explicit opt-in (`edit_only=True`) that **disallows new object creation** while still saving edits to existing objects.
@@ -57,7 +63,12 @@ Author.objects.count()   # contract says MUST stay 0
 ## Why the tests missed it
 The 3 official `FAIL_TO_PASS` tests (`test_edit_only`, `test_edit_only_inlineformset_factory`, `test_edit_only_object_outside_of_queryset`) all use the **stock** factories with no custom `save_new_objects()` override. On the stock class baseline's helper guard *is* reached, so all three pass on baseline (verified). The full 73-test `model_formsets` suite also passes identically on baseline and fvk. The tests never subclass and re-implement `save_new_objects()`, so they never exercise the virtual-dispatch path where the guard's *location* matters.
 
-## Gold comparison
+## FVK vs. Human Fix
+
+**Human fix issue:** no.
+
+Gold puts the `edit_only` guard at `save()`, the public entry point. FVK does the same and also keeps a redundant helper-level guard. Baseline guarded only the overrideable helper and was bypassable.
+
 Gold uses a single guard, in `save()` only, leaving `save_new_objects()` untouched. fvk matches gold at this exact site (and adds a redundant helper guard). Baseline placed its guard at the *opposite* site from gold (helper, not `save()`) and omitted it where gold actually put it. fvk is strictly closer to gold. **GOLD_MATCH: yes.**
 
 ## Confidence & caveats

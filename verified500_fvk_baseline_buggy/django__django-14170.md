@@ -1,7 +1,13 @@
-# django__django-14170 — FVK analysis
+# django__django-14170
 
 - **Verdict:** C_ROBUSTNESS — fvk adds a `value == datetime.MAXYEAR` guard that prevents a real `ValueError: Year is out of range: 10000` crash on `filter(field__iso_year=9999)`, a crash that **both baseline AND the human gold fix** hit.
 - **Pitch-worthiness (1-5):** 4
+
+## Benchmark Result
+
+- Baseline arm: official SWE-bench evaluation marked the patch as resolved.
+- FVK arm: official SWE-bench evaluation marked the patch as resolved.
+- Audit category: baseline passed the benchmark but remained concretely buggy.
 
 ## The issue
 `__iso_year` lookups compute BETWEEN bounds for an ISO year. The ISO-year upper bound is derived as `fromisocalendar(value + 1, 1, 1) - 1unit`.
@@ -32,7 +38,12 @@ Model.objects.filter(start_date__iso_year=9999)
 ## Why the tests missed it
 The FAIL_TO_PASS test (`test_extract_iso_year_func_boundaries`) only checks ISO years 2014/2015 — it never exercises year 9999. So both baseline and gold pass despite the latent crash; the MAXYEAR boundary is an untested edge.
 
-## Gold comparison
+## FVK vs. Human Fix
+
+**Human fix issue:** yes.
+
+The human fix computes the upper ISO-year bound with `value + 1`. That is fine for normal years but crashes at `datetime.MAXYEAR`. FVK adds the explicit maximum-year boundary condition.
+
 Gold unconditionally computes `fromisocalendar(value + 1, 1, 1)` with no MAXYEAR special case — so gold crashes too. **GOLD_MATCH: no** — this is a case where fvk is *more correct than the human fix*.
 
 ## Confidence & caveats

@@ -1,8 +1,14 @@
-# pydata__xarray-4094 — FVK analysis
+# pydata__xarray-4094
 
 - **Verdict:** A_GENUINE_FIX — baseline (and the official human gold fix) use an unqualified `.squeeze(drop=True)` that silently destroys legitimate length-1 dimensions during a stack→unstack roundtrip; fvk uses a targeted per-dimension squeeze that preserves them.
 - **Pitch-worthiness (1-5):** 5
-- **✅ Harness-verified regression test:** [`enhanced_tests/test_fvk_regression.py`](enhanced_tests/test_fvk_regression.py) — FAILS on baseline (RED), PASSES on FVK (GREEN), and FAILS on the official human fix (gold), via the official SWE-bench Docker harness. See [../ENHANCED_TESTS.md](../ENHANCED_TESTS.md).
+- **Harness-verified regression test:** FAILS on baseline (RED), PASSES on FVK (GREEN), and FAILS on the official human fix (gold), via the official SWE-bench Docker harness.
+
+## Benchmark Result
+
+- Baseline arm: official SWE-bench evaluation marked the patch as resolved.
+- FVK arm: official SWE-bench evaluation marked the patch as resolved.
+- Audit category: baseline passed the benchmark but remained concretely buggy.
 
 ## The issue
 `DataArray.to_unstacked_dataset()` is the inverse of `to_stacked_array()`. The reported bug: roundtripping a dataset through `to_stacked_array(...).to_unstacked_dataset(...)` raised / lost data for single-dimension variables. The fix must reconstruct each original variable by selecting its level out of the stacked array and dropping only the *stacked* index dimension.
@@ -33,7 +39,12 @@ fvk was verified to pass everything baseline/gold pass, **plus** 4 additional in
 ## Why the tests missed it
 `tests.json` FAIL_TO_PASS covers the reported MCVE, whose sample dimension has length ≥ 2 — so the unqualified squeeze removes only the intended stacked dimension and the bug is invisible. No test roundtrips a variable with a legitimate length-1 dimension. That is exactly why the **human gold fix shipped with the same latent bug**.
 
-## Gold comparison
+## FVK vs. Human Fix
+
+**Human fix issue:** yes.
+
+The human fix uses the same unqualified `squeeze(drop=True)` shape as baseline. FVK is stricter: it squeezes only dimensions justified by the unstacking invariant, so legitimate size-1 sample dimensions survive.
+
 Gold uses the identical `.squeeze(drop=True)`. So fvk is **strictly more correct than the official human fix** on length-1 dimensions and size-1 real levels. **GOLD_MATCH: partial** (both fix the reported MCVE; fvk additionally fixes the latent over-squeeze).
 
 ## Confidence & caveats

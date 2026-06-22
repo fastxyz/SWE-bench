@@ -1,7 +1,13 @@
-# django__django-13121 — FVK analysis
+# django__django-13121
 
 - **Verdict:** B_COMPLETENESS — fvk added a reachable branch that correctly evaluates `duration + (datetime − datetime)` expressions (with explicit `output_field=DurationField()`) that **both baseline AND the official gold patch get wrong** on SQLite/MySQL.
 - **Pitch-worthiness (1-5):** 4
+
+## Benchmark Result
+
+- Baseline arm: official SWE-bench evaluation marked the patch as resolved.
+- FVK arm: official SWE-bench evaluation marked the patch as resolved.
+- Audit category: baseline passed the benchmark but remained concretely buggy.
 
 ## The issue
 On backends without native duration columns (SQLite/MySQL), `DurationField` is stored as integer microseconds. `CombinedExpression.as_sql()` routes any duration-containing expression through `DurationExpression`, which historically formatted every duration operand as a date/time *interval*. Correct for `datetime + duration`, but wrong when the whole expression is a duration: SQLite fed the operands to `django_format_dtdelta(...)`, which returns a formatted timedelta *string*, and the `DurationField` converter then chokes. Reported failure: `F('estimated_time') + timedelta(1)` raised a conversion error.
@@ -41,7 +47,12 @@ for delta in self.deltas:
 ```
 Every `delta` is a plain `timedelta` literal — only the *direct* `DurationField + literal` shape. The suite never nests a temporal subtraction inside a duration expression. baseline's narrower check is fully exercised and passes; the nested-subtraction gap is untested — which is exactly why **gold** ships with the same latent bug.
 
-## Gold comparison
+## FVK vs. Human Fix
+
+**Human fix issue:** yes.
+
+The human fix covers direct duration arithmetic but still routes `DurationField + (DateTimeField - DateTimeField)` through the wrong backend formatting path on non-native duration backends. FVK treats same-type temporal subtraction as duration-producing before composing the outer arithmetic.
+
 Gold routes through `DurationExpression` only when types **differ** (`'DurationField' in {lhs_type, rhs_type} and lhs_type != rhs_type`). For `DurationField + (DateTime−DateTime)`: `lhs_type='DurationField'`, `rhs_type='DateTimeField'` → treated as *mixed* → interval path → same `django_format_dtdelta` string bug. So gold **confirms fvk's direct-case fix** but **not** the nested-subtraction branch; on that case fvk is the only correct one. **GOLD_MATCH: partial** (fvk is *more* correct than the official human fix here).
 
 ## Confidence & caveats

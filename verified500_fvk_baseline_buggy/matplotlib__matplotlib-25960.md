@@ -1,7 +1,13 @@
-# matplotlib__matplotlib-25960 — FVK analysis
+# matplotlib__matplotlib-25960
 
 - **Verdict:** A_GENUINE_FIX — baseline reads spacing from the public `GridSpec.wspace/hspace`, so a user-built GridSpec's *subplot* spacing leaks into `add_subfigure()` placement; fvk scopes spacing to a private marker set only by `Figure.subfigures`, restoring the historical/gold behavior.
 - **Pitch-worthiness (1-5):** 4
+
+## Benchmark Result
+
+- Baseline arm: official SWE-bench evaluation marked the patch as resolved.
+- FVK arm: official SWE-bench evaluation marked the patch as resolved.
+- Audit category: baseline passed the benchmark but remained concretely buggy.
 
 ## The issue
 `Figure.subfigures(nrows, ncols, wspace=, hspace=)` ignored `wspace`/`hspace` (the gap between subfigures was always zero). The fix should make `subfigures(...)` honor the requested spacing.
@@ -27,7 +33,12 @@ fig.add_subfigure(fig.add_gridspec(1, 2, wspace=0.5)[0, 0])   # equal width rati
 ## Why the tests missed it
 The hidden test only exercises Path 1 (`Figure.subfigures(...)` with explicit wspace/hspace), which baseline and fvk both handle. No test calls `add_subfigure()` with a user GridSpec carrying subplot spacing, so baseline's leak is invisible to grading.
 
-## Gold comparison
+## FVK vs. Human Fix
+
+**Human fix issue:** no.
+
+Gold and FVK both distinguish subfigure spacing metadata from ordinary user-created `GridSpec` subplot spacing. Baseline reads public spacing too broadly, so unrelated subplot spacing leaks into subfigure placement.
+
 Gold resets `left/right/bottom/top` only for the `subfigures`-created gridspec and routes spacing through a separate step — specifically *so* `add_subfigure` won't inherit gridspec spacing. fvk's private-marker approach reproduces gold's intent; baseline's public-attribute read does not. **GOLD_MATCH: partial.**
 
 ## Confidence & caveats

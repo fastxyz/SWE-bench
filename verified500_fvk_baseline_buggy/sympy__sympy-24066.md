@@ -1,7 +1,13 @@
-# sympy__sympy-24066 — FVK analysis
+# sympy__sympy-24066
 
 - **Verdict:** C_ROBUSTNESS — fvk wraps the new `DimensionSystem.is_dimensionless`/`equivalent_dims` calls in `try/except TypeError`, which (a) repairs a regression baseline itself introduced and (b) prevents an uncaught `TypeError` that even the human gold fix still has.
 - **Pitch-worthiness (1-5):** 4
+
+## Benchmark Result
+
+- Baseline arm: official SWE-bench evaluation marked the patch as resolved.
+- FVK arm: official SWE-bench evaluation marked the patch as resolved.
+- Audit category: baseline passed the benchmark but remained concretely buggy.
 
 ## The issue
 `SI._collect_factor_and_dimension()` raised on expressions whose dimension can't be analyzed (e.g. transcendental functions of dimensionful quantities). The gold fix normalizes a dimensionless function argument's dimension to `Dimension(1)` in the `Function` branch.
@@ -28,7 +34,12 @@ Also `exp(Q)` with the same dimension: baseline **and gold** raise `TypeError`; 
 ## Why the tests missed it
 The FAIL_TO_PASS exercises the reported transcendental-of-dimensionless case (which gold's Function-branch normalization handles). No test passes an un-analyzable dimension into the `Add` branch, so baseline's `TypeError` regression is never triggered by the suite.
 
-## Gold comparison
+## FVK vs. Human Fix
+
+**Human fix issue:** yes.
+
+Gold fixes the reported function-argument dimension case, but it leaves related un-analyzable dimension paths exposed. FVK wraps dimension-equivalence helper failures so unsupported analysis becomes a conservative public error rather than a low-level `TypeError` leak.
+
 Gold only patches the `Function` branch and shares the Function-branch `TypeError` crash on un-analyzable dims; it never touches the `Add` branch. fvk's try/except wrapping is a superset. **GOLD_MATCH: partial.**
 
 ## Confidence & caveats

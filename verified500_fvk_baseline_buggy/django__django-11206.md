@@ -1,7 +1,13 @@
-# django__django-11206 — FVK analysis
+# django__django-11206
 
 - **Verdict:** A_GENUINE_FIX — baseline's number formatter still renders zero-valued `Decimal`s with large exponents (e.g. `Decimal('0E+200')`) in broken scientific notation like `0.00e+200`; fvk correctly returns plain `0.00`.
 - **Pitch-worthiness (1-5):** 4
+
+## Benchmark Result
+
+- Baseline arm: official SWE-bench evaluation marked the patch as resolved.
+- FVK arm: official SWE-bench evaluation marked the patch as resolved.
+- Audit category: baseline passed the benchmark but remained concretely buggy.
 
 ## The issue
 `django.utils.numberformat.format()` (`nformat`) was producing scientific notation for very small/very large decimals when it shouldn't (the reported case: `1e-200` rendering wrongly instead of `0.00`). The fix handles tiny decimals by emitting a plain decimal string clamped to `decimal_pos`.
@@ -28,7 +34,12 @@ Reachable through ordinary arithmetic — `Decimal('0') * Decimal('1e200')`, sub
 ## Why the tests missed it
 The FAIL_TO_PASS/PASS_TO_PASS set exercises small nonzero magnitudes (the reported `1e-200` family) but never a zero-valued Decimal with a large positive exponent. Baseline's `exponent < 0` guard is fully covered; the zero-exponent gap is untested, so baseline scores "resolved".
 
-## Gold comparison
+## FVK vs. Human Fix
+
+**Human fix issue:** no.
+
+FVK and the human fix both recognize zero-valued `Decimal` objects as exactly representable at fixed decimal widths. The remaining sign-of-zero nuance is not introduced by FVK and is outside this issue.
+
 fvk's zero-handling output matches gold on every zero edge tested; the only residual gold divergence (`-0.00` sign-of-zero) is shared with baseline and not introduced by fvk. **GOLD_MATCH: partial** (fvk is closer to gold than baseline; fixes the bug exactly as real Django does).
 
 ## Confidence & caveats

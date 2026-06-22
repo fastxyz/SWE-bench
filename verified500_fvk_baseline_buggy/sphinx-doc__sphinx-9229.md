@@ -1,4 +1,4 @@
-# sphinx-doc__sphinx-9229 - FVK confirmed baseline-buggy analysis
+# sphinx-doc__sphinx-9229
 
 - **Verdict:** CONFIRMED baseline-buggy. Both baseline and FVK have
   `resolved: true` in the official eval reports, but baseline introduced a new
@@ -8,6 +8,12 @@
   Source Comments`.
 - **Proof status:** constructed, not machine-checked. The FVK artifacts provide
   K claims and proof obligations, but the recorded run did not execute `kprove`.
+
+## Benchmark Result
+
+- Baseline arm: official SWE-bench evaluation marked the patch as resolved.
+- FVK arm: official SWE-bench evaluation marked the patch as resolved.
+- Audit category: baseline passed the benchmark but remained concretely buggy.
 
 ## The issue
 
@@ -96,7 +102,12 @@ exercise incremental rebuild invalidation or inspect `record_dependencies`.
 Baseline and FVK therefore both pass the official tests, but only FVK preserves
 the dependency invariant.
 
-## Gold comparison
+## FVK vs. Human Fix
+
+**Human fix issue:** no.
+
+The human fix takes a different path through variable comments. FVK fixes the baseline implementation by recording the analyzer source whenever the new class-alias comment path consumes it.
+
 
 The official gold patch takes a different implementation path through
 `get_variable_comment()`. It does not directly confirm the one-line FVK change.
@@ -106,11 +117,6 @@ implementation: once baseline chooses to read class-alias comments through a
 new analyzer lookup, it must record that analyzer source. FVK fixes that real
 incremental-build defect without changing the public alias-docstring behavior.
 
-## Evidence files
-
-- FVK findings: [_materials/FINDINGS.md](_materials/FINDINGS.md)
-- FVK formal spec: [_materials/FORMAL_SPEC_ENGLISH.md](_materials/FORMAL_SPEC_ENGLISH.md)
-- FVK notes: [_materials/fvk_notes.md](_materials/fvk_notes.md)
 
 ## Confidence and caveats
 
