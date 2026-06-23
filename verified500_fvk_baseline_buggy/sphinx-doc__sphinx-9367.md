@@ -1,76 +1,231 @@
 # sphinx-doc__sphinx-9367
 
-- **Verdict:** B_COMPLETENESS — fvk fixed the *same* "1-element tuple loses its trailing comma" bug in a second, sibling code path (`visit_Subscript`) that baseline, the gold patch, and even the real upstream fix all missed.
-- **Pitch-worthiness (1-5):** 5
-- **Harness-verified regression test:** FAILS on baseline (RED), PASSES on FVK (GREEN), and FAILS on the official human fix (gold), via the official SWE-bench Docker harness.
+## Summary
 
-## Benchmark Result
+**Severity:** Low — baseline silently renders one-element tuple subscript syntax
+(`obj[1,]`) as a different operation, but only for that uncommon form, so the
+practical blast radius is small.
 
-- Baseline arm: official SWE-bench evaluation marked the patch as resolved.
-- FVK arm: official SWE-bench evaluation marked the patch as resolved.
-- Audit category: baseline passed the benchmark but remained concretely buggy.
+Baseline and FVK both passed the official SWE-bench evaluation for issue #9367,
+with **different** patches. The FVK patch fixed a **second instance of the same
+bug** in a sibling renderer (`visit_Subscript`) that the baseline patch, the
+official gold patch, and even the real upstream Sphinx fix all left unrepaired.
+The defect itself is minor; the case matters because FVK located it by
+**formalizing the issue as an invariant and auditing every path that must satisfy
+it** — not by running more tests.
 
-## The issue
-`sphinx/pycode/ast._UnparseVisitor` turns a Python AST back into source text (used by autodoc to render default argument values and type annotations). Python requires a trailing comma to denote a 1-element tuple: `(1,)` is a tuple, `(1)` is just the integer `1`. Issue #9367 reports that `(1,)` was rendered as `(1)`, dropping the comma and silently changing a tuple into a scalar. The fix must keep the comma for the 1-element case while leaving `()` (0-tuple) and `(a, b, ...)` (n-tuple) unchanged.
+| Arm | [`test_unparse_one_element_tuple_subscript`](../verified500_analysis/sphinx-doc__sphinx-9367/enhanced_tests/test_fvk_regression.py) | Resolved |
+|---|---|---|
+| baseline | [**FAIL (RED)**](../verified500_analysis/sphinx-doc__sphinx-9367/enhanced_tests/_proof/baseline.report.json) | no |
+| gold (human oracle) | [**FAIL (RED)**](../verified500_analysis/sphinx-doc__sphinx-9367/enhanced_tests/_proof/gold.report.json) | no |
+| **fvk** | [**PASS (GREEN)**](../verified500_analysis/sphinx-doc__sphinx-9367/enhanced_tests/_proof/fvk.report.json) | **yes** |
 
-## What baseline did
-Baseline added a `len(node.elts) == 1` branch to `visit_Tuple()` returning `"(%s,)"`. This is correct and is **logically identical to the gold patch** for the reported case. Baseline explicitly considered the subscript path and *declined* to touch it (see `baseline_notes.md`: "I considered changing subscript tuple handling ... but that code intentionally removes tuple parentheses ... and is not needed for the reported `(1,)` failure"). That reasoning is half-right (it correctly must strip the *parens*) but it overlooked that the *comma* still matters.
+## 1. The issue and the real defect
 
-## What fvk changed and why
-fvk kept baseline's `visit_Tuple` fix **and** added a `render_simple_tuple()` helper inside `visit_Subscript()`, routing both the modern `node.slice` tuple branch and the legacy `ast.Index(...).value` branch through it. The helper appends a comma when the tuple slice has exactly one element. Rationale (fvk_FINDINGS F-002): a one-element *tuple slice* such as `obj[1,]` was being rendered as `obj[1]`, which is a different subscript (`__getitem__((1,))` vs `__getitem__(1)`) — the identical bug class as the headline issue, just in a sibling renderer that feeds the same `unparse()` output.
+**GitHub issue [sphinx-doc/sphinx#9367](https://github.com/sphinx-doc/sphinx/issues/9367)** —
+*"1-element tuple rendered incorrectly":* `(1,)` is rendered as `(1)` but should
+keep the trailing comma
+([`problem_statement.md`](../verified500_analysis/sphinx-doc__sphinx-9367/_materials/problem_statement.md#L7)).
 
-## FVK Formal Argument
+`sphinx/pycode/ast._UnparseVisitor` turns a Python AST back into source text,
+used by autodoc to render default arguments and annotations
+(`sphinx/ext/autodoc/preserve_defaults.py` calls `unparse()`). The trailing comma
+is load-bearing: `(1,)` is a **tuple**, `(1)` is the integer `1`. The original
+`visit_Tuple()` dropped it:
 
-- **FVK status:** constructed, not machine-checked.
-- **FVK formal argument:** PO-3/PO-4: one-element tuple slices in subscripts must preserve tuple cardinality; the trailing comma is the semantic witness for a one-element tuple.
-- **Why it catches baseline:** baseline preserves one-element tuple cardinality in `visit_Tuple()` but not in `visit_Subscript()`, so the proof obligation fails on the sibling unparse path.
+```python
+def visit_Tuple(self, node: ast.Tuple) -> str:
+    if node.elts:
+        return "(" + ", ".join(self.visit(e) for e in node.elts) + ")"
+    else:
+        return "()"
+```
 
-## Concrete demonstration
-Input source: **`obj[1,]`** (a subscript whose slice is the 1-element tuple `(1,)`; parses to `Subscript(slice=Tuple(elts=[Constant(1)]))`).
+For a one-element tuple this **silently turns a tuple into a scalar** in rendered
+output.
+
+## 2. Baseline's fix — and where it stopped
+
+[Baseline](../verified500_analysis/sphinx-doc__sphinx-9367/_materials/baseline.patch)
+added the obvious branch — correct for the reported case and **logically
+identical to [gold](../verified500_analysis/sphinx-doc__sphinx-9367/_materials/gold.patch)**:
+
+```python
+if len(node.elts) == 1:
+    return "(%s,)" % self.visit(node.elts[0])
+elif node.elts:
+    ...
+```
+
+Baseline was not careless. Its notes show it *consciously considered* the
+neighboring subscript renderer and chose to leave it alone:
+
+> *"I considered changing subscript tuple handling in `visit_Subscript()`, but
+> that code intentionally removes tuple parentheses for simple subscription lists
+> such as `Tuple[int, int]`; changing it would affect a separate behavior and is
+> not needed for the reported `(1,)` failure."*
+> — [`reports/baseline_notes.md`](../results/verified042-codex-wsl-ubuntu-260615221107/sphinx-doc__sphinx-9367/reports/baseline_notes.md#L26)
+
+That reasoning is **half right**: `visit_Subscript()` *should* strip the parens.
+But it overlooked that the **comma**, not the parens, encodes tuple cardinality.
+So baseline (and gold, and upstream) fixed exactly one of the two code paths that
+feed `unparse()`.
+
+## 3. How FVK formally captured the gap
+
+FVK started from a spec, not from the symptom. The decisive intent item
+generalizes the issue beyond the single reported method:
+
+> **I-004:** *If `pycode.ast.unparse()` formats a tuple through an alternate local
+> contributor, that contributor must preserve tuple cardinality as well. In
+> particular, a one-element tuple slice in a subscript must retain a comma,
+> because `obj[1,]` and `obj[1]` are different AST shapes.*
+> — [`fvk/SPEC.md`](../results/verified042-codex-wsl-ubuntu-260615221107/sphinx-doc__sphinx-9367/fvk/SPEC.md#L33)
+
+The evidence ledger pins that intent to a concrete code fact found by source
+audit — **not** to the reported test:
+
+> **E-005 (implementation):** *`visit_Subscript()` manually joins simple tuple
+> slice elements instead of calling `visit_Tuple()`* → *sibling formatter must be
+> audited for the same one-element cardinality defect.*
+> — [`fvk/SPEC.md`](../results/verified042-codex-wsl-ubuntu-260615221107/sphinx-doc__sphinx-9367/fvk/SPEC.md#L48)
+
+Which is discharged into a formal obligation:
+
+> **PO-3 — One-element simple tuple slice in subscript.** The rendered subscript
+> must include the tuple comma: `visit(value) + "[" + visit(E) + ",]"`. *The
+> parentheses may be omitted … but the comma cannot, because it carries the tuple
+> cardinality.*
+> — [`fvk/PROOF_OBLIGATIONS.md`](../results/verified042-codex-wsl-ubuntu-260615221107/sphinx-doc__sphinx-9367/fvk/PROOF_OBLIGATIONS.md#L34)
+
+This is the crux of FVK's value: **the second bug was located by reasoning, not
+observation.** The issue says "a one-element tuple needs its comma"; FVK lifts
+that into an invariant over *every* contributor to the `unparse()` string, and
+the code audit (E-005) shows `visit_Subscript()` is a second such contributor
+that bypasses the fixed method.
+
+## 4. From formal output to the fix
+
+The FVK arm's repair is iterative, and the artifacts record the exact step where
+the formalism changed the patch.
+
+- **V1** (first attempt) fixed `visit_Tuple()` only — identical to what baseline
+  shipped.
+- The completeness audit against the spec raised a finding:
+
+  > **F-002: V1 left a sibling one-element tuple formatter incomplete.** … *For
+  > one element it would render `obj[1]`, erasing the comma … Classification: code
+  > bug found by FVK completeness audit. Proof obligations: PO-3, PO-4.*
+  > — [`fvk/FINDINGS.md`](../results/verified042-codex-wsl-ubuntu-260615221107/sphinx-doc__sphinx-9367/fvk/FINDINGS.md#L23)
+
+- The iteration guidance turned the finding into an instruction for the next
+  revision:
+
+  > *"Keep the V2 subscript helper fix. Finding F-002 and obligations PO-3/PO-4
+  > show that V1 did not cover the separate simple tuple-slice formatter in
+  > `visit_Subscript()`."*
+  > — [`fvk/ITERATION_GUIDANCE.md`](../results/verified042-codex-wsl-ubuntu-260615221107/sphinx-doc__sphinx-9367/fvk/ITERATION_GUIDANCE.md#L10)
+
+- The decision log records the resulting code change and its provenance:
+
+  > **D-002: Add a V2 fix for one-element simple tuple slices in
+  > `visit_Subscript()`.** *Trace: Finding F-002 … PO-3 requires preserving the
+  > comma … The new `render_simple_tuple()` helper satisfies both.*
+  > — [`reports/fvk_notes.md`](../results/verified042-codex-wsl-ubuntu-260615221107/sphinx-doc__sphinx-9367/reports/fvk_notes.md#L12)
+
+The causal chain is fully on the record:
+
+```
+SPEC I-004  ->  E-005 (code audit: visit_Subscript bypasses visit_Tuple)
+            ->  F-002 (V1 audit: sibling formatter still erases the comma)
+            ->  PO-3  (obligation: subscript must keep the comma)
+            ->  ITERATION_GUIDANCE / D-002  ->  V2 patch
+```
+
+The resulting [V2 patch](../verified500_analysis/sphinx-doc__sphinx-9367/_materials/fvk.patch)
+routes both the modern and legacy subscript branches through one helper:
+
+```python
+def render_simple_tuple(value: ast.Tuple) -> str:
+    elts = ", ".join(self.visit(e) for e in value.elts)
+    if len(value.elts) == 1:
+        return elts + ","
+    else:
+        return elts
+```
+
+The `V1 -> V2` transition was driven by `F-002`/`PO-3`, **not** by a new failing
+test — no test for `obj[1,]` exists anywhere in the suite (see §5).
+
+## 5. Verification
+
+**Harness (official SWE-bench Docker).** A regression test for the *subscript*
+case was run against all three patched trees
+([baseline](../verified500_analysis/sphinx-doc__sphinx-9367/enhanced_tests/_proof/baseline.report.json) →
+**RED**,
+[gold](../verified500_analysis/sphinx-doc__sphinx-9367/enhanced_tests/_proof/gold.report.json) →
+**RED**,
+[fvk](../verified500_analysis/sphinx-doc__sphinx-9367/enhanced_tests/_proof/fvk.report.json) →
+**GREEN**).
+
+**Behavioral demonstration.** Input `obj[1,]` (slice is the 1-element tuple
+`(1,)`):
 
 | Variant | Output | Round-trips to same AST? |
 |---|---|---|
-| Original (pre-fix) | `obj[1]` | **No** |
-| **Baseline** | `obj[1]` | **No** — bug survives |
-| **Gold (oracle)** | `obj[1]` | **No** — bug survives |
+| original / baseline / gold | `obj[1]` | **No** — bug survives |
 | **fvk** | `obj[1,]` | **Yes** — faithful |
 
-Cited code (`sphinx/pycode/ast.py`, `visit_Subscript`):
-- Baseline/gold/original keep `elts = ", ".join(self.visit(e) for e in node.slice.elts)` -> for one element yields `"1"` -> returns `obj[1]`.
-- fvk's `render_simple_tuple` does `if len(value.elts) == 1: return elts + ","` -> yields `"1,"` -> returns `obj[1,]`.
+`p[1,]` calls `__getitem__((1,))` (tuple key); `p[1]` calls `__getitem__(1)`
+(scalar key) — genuinely different operations, so this is a correctness defect,
+not cosmetics. No regression: `is_simple_tuple` only fires on a `Tuple` slice
+node, so `Tuple[int]` (a `Name` slice), `Tuple[int, int]`, and `obj[1, 2]` render
+unchanged.
 
-Why it matters (runtime-verified): `p[1,]` calls `__getitem__((1,))` (tuple key), `p[1]` calls `__getitem__(1)` (scalar key) — these are genuinely different operations, so rendering `obj[1,]` as `obj[1]` is a correctness defect, not cosmetics. This path is reachable from real Sphinx usage: `sphinx/ext/autodoc/preserve_defaults.py` calls `unparse()` to render default arguments, so a signature like `def f(x=obj[1,]): ...` would be mis-rendered as `def f(x=obj[1]): ...`.
+**FVK beat the human oracle.** Gold changed only `visit_Tuple`. Inspection of
+Sphinx git history confirms even the real upstream fix (commit `b9158b96d`)
+left `visit_Subscript` on the plain `", ".join(...)`. FVK's extra fix goes beyond
+what the maintainers themselves shipped.
 
-No regression: `is_simple_tuple` only fires when the slice is itself a `Tuple` AST node with >=1 element. Ordinary annotations are unaffected — `Tuple[int]` parses to a `Name` slice (not a tuple), `Tuple[()]` is an empty tuple, `np.ndarray[Any, ...]` is a multi-element tuple. Verified that `Tuple[int]`, `Tuple[int, int]`, `obj[1, 2]`, `Dict[str, int]` render unchanged under fvk.
+## 6. Boundaries & honesty
 
-## Why the tests missed it
-- `tests.json` FAIL_TO_PASS is exactly one case: `test_unparse[(1,)-(1,)]`, and `gold_test.patch` adds only `("(1,)", "(1,)")` to `tests/test_pycode_ast.py`. That test exercises `visit_Tuple`, which baseline already fixed — so the hidden suite passes baseline and never touches `visit_Subscript`.
-- There is **no test anywhere** (verified via grep over `tests/`) for a one-element tuple *subscript* (`obj[1,]`). The existing subscript tests (`Tuple[int, int]`) only cover the multi-element case, where original/baseline/gold/fvk all agree. Hence both baseline and fvk are scored "resolved" despite baseline retaining the subscript defect.
+- **Severity: Low.** One-element tuple *subscripts* (`obj[1,]`) are uncommon in
+  default arguments / annotations, so the practical blast radius is small. The
+  value demonstrated here is **detection power and completeness**, not impact
+  magnitude — sell the method, not the bug.
+- **Proof status: constructed, not machine-checked.** The K artifacts
+  ([`mini-pycode-unparse.k`](../results/verified042-codex-wsl-ubuntu-260615221107/sphinx-doc__sphinx-9367/fvk/mini-pycode-unparse.k),
+  [`pycode-ast-tuple-spec.k`](../results/verified042-codex-wsl-ubuntu-260615221107/sphinx-doc__sphinx-9367/fvk/pycode-ast-tuple-spec.k))
+  and the `kprove` commands were *written but never run* — the FVK artifacts say
+  so explicitly
+  ([`fvk/PROOF.md`](../results/verified042-codex-wsl-ubuntu-260615221107/sphinx-doc__sphinx-9367/fvk/PROOF.md#L3),
+  [finding F-004](../results/verified042-codex-wsl-ubuntu-260615221107/sphinx-doc__sphinx-9367/fvk/FINDINGS.md#L63)).
+  We therefore claim **proof-structured reasoning** (a formal spec with
+  obligations discharged by construction), **not a machine-checked proof**. The
+  bug-detection value does not depend on the unrun `kprove`; the fix's
+  correctness is independently confirmed by the harness RED→GREEN above.
+- **Attribution.** The `V1 -> V2` iteration is documented across `FINDINGS.md`,
+  `ITERATION_GUIDANCE.md`, and `fvk_notes.md`; the full ordering can be
+  timestamped from
+  [`transcripts/fvk.jsonl.gz`](../results/verified042-codex-wsl-ubuntu-260615221107/sphinx-doc__sphinx-9367/transcripts/fvk.jsonl.gz)
+  if a reviewer wants the raw trace.
 
-## FVK vs. Human Fix
+## Artifact map
 
-**Human fix issue:** yes.
-
-The human fix repairs tuple rendering in the reported path, but it does not repair the sibling `visit_Subscript` path. FVK preserves tuple cardinality there too, so `obj[1,]` does not collapse into `obj[1]`.
-
-Gold (`gold.patch`) changes **only** `visit_Tuple`:
-```python
-     def visit_Tuple(self, node: ast.Tuple) -> str:
--        if node.elts:
--            return "(" + ", ".join(self.visit(e) for e in node.elts) + ")"
--        else:
--            return "()"
-+        if len(node.elts) == 0:
-+            return "()"
-+        elif len(node.elts) == 1:
-+            return "(%s,)" % self.visit(node.elts[0])
-+        else:
-+            return "(" + ", ".join(self.visit(e) for e in node.elts) + ")"
-```
-Gold does **not** touch `visit_Subscript`. fvk matches gold on this hunk (GOLD_MATCH = partial) and adds a strictly-additional `visit_Subscript` fix. I confirmed against the actual sphinx git history that even commit `b9158b96d` ("Fix #9364: 1-element tuple on the defarg is wrongly rendered" — the real upstream fix for this issue) left `visit_Subscript` using the plain `", ".join(...)`; the trailing-comma fix was **never** applied to the subscript path anywhere in the file's history. So fvk's extra change goes beyond what the Sphinx maintainers themselves shipped.
-
-## Confidence & caveats
-- **High confidence** the demonstration is correct: AST parsing, the three-variant render comparison, the round-trip check, and the runtime `__getitem__` distinction were all executed directly (Python 3.10). The `Tuple[int]`-vs-`obj[1,]` AST distinction is the load-bearing fact and is verified.
-- fvk's change is correct and regression-free for the affected case; it is a genuine completeness improvement over both baseline and gold.
-- **Honesty caveat:** fvk_FINDINGS.md / fvk_notes.md state the "formal proof" (K framework artifacts, `kprove`, etc.) was *constructed but never machine-checked* — no tooling was run. So the methodology's formal-verification claims are aspirational here; the *value delivered* is a real audit-driven completeness fix, not a machine-checked proof. The fix's correctness rests on my independent verification above, which holds.
-- **Real-world impact is modest in frequency:** one-element tuple subscripts (`obj[1,]`) are uncommon in default args / annotations, so the practical blast radius is small — but when it occurs the output is unambiguously wrong, and fvk is the only variant that gets it right.
+| Claim | Source |
+|---|---|
+| Issue text, repro | [`_materials/problem_statement.md`](../verified500_analysis/sphinx-doc__sphinx-9367/_materials/problem_statement.md#L7) |
+| Baseline patch | [`_materials/baseline.patch`](../verified500_analysis/sphinx-doc__sphinx-9367/_materials/baseline.patch) |
+| Baseline reasoning | [`reports/baseline_notes.md`](../results/verified042-codex-wsl-ubuntu-260615221107/sphinx-doc__sphinx-9367/reports/baseline_notes.md#L26) |
+| FVK patch | [`_materials/fvk.patch`](../verified500_analysis/sphinx-doc__sphinx-9367/_materials/fvk.patch) |
+| Gold patch | [`_materials/gold.patch`](../verified500_analysis/sphinx-doc__sphinx-9367/_materials/gold.patch) |
+| Intent I-004 | [`fvk/SPEC.md#L33`](../results/verified042-codex-wsl-ubuntu-260615221107/sphinx-doc__sphinx-9367/fvk/SPEC.md#L33) |
+| Evidence E-005 | [`fvk/SPEC.md#L48`](../results/verified042-codex-wsl-ubuntu-260615221107/sphinx-doc__sphinx-9367/fvk/SPEC.md#L48) |
+| Obligation PO-3 | [`fvk/PROOF_OBLIGATIONS.md#L34`](../results/verified042-codex-wsl-ubuntu-260615221107/sphinx-doc__sphinx-9367/fvk/PROOF_OBLIGATIONS.md#L34) |
+| Finding F-002 | [`fvk/FINDINGS.md#L23`](../results/verified042-codex-wsl-ubuntu-260615221107/sphinx-doc__sphinx-9367/fvk/FINDINGS.md#L23) |
+| Honesty note F-004 | [`fvk/FINDINGS.md#L63`](../results/verified042-codex-wsl-ubuntu-260615221107/sphinx-doc__sphinx-9367/fvk/FINDINGS.md#L63) |
+| Iteration instruction (V1→V2) | [`fvk/ITERATION_GUIDANCE.md#L10`](../results/verified042-codex-wsl-ubuntu-260615221107/sphinx-doc__sphinx-9367/fvk/ITERATION_GUIDANCE.md#L10) |
+| Decision trace D-002 | [`reports/fvk_notes.md#L12`](../results/verified042-codex-wsl-ubuntu-260615221107/sphinx-doc__sphinx-9367/reports/fvk_notes.md#L12) |
+| Constructed K core | [`fvk/mini-pycode-unparse.k`](../results/verified042-codex-wsl-ubuntu-260615221107/sphinx-doc__sphinx-9367/fvk/mini-pycode-unparse.k), [`fvk/pycode-ast-tuple-spec.k`](../results/verified042-codex-wsl-ubuntu-260615221107/sphinx-doc__sphinx-9367/fvk/pycode-ast-tuple-spec.k) |
+| Harness RED/GREEN verdicts | [`enhanced_tests/_proof/`](../verified500_analysis/sphinx-doc__sphinx-9367/enhanced_tests/_proof/) |
+| Raw model traces | [`transcripts/fvk.jsonl.gz`](../results/verified042-codex-wsl-ubuntu-260615221107/sphinx-doc__sphinx-9367/transcripts/fvk.jsonl.gz) |
